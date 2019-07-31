@@ -1,21 +1,18 @@
 <template>
     <div>
         <projectInfo title="Numerical Projects" 
-                        :projectSum="numericalProjectSum" 
-                        :modelSum="numericalModelSum" 
-                        :fileSum="numericalFileSum">
+                        :project-sum="numericalProjectSum"
+                        :project-list="numericalProjectList">
         </projectInfo>
         <projectInfo style="margin-top: 16px"
                         title="Natural Language Processing Projects" 
-                        :projectSum="numericalProjectSum" 
-                        :modelSum="numericalModelSum" 
-                        :fileSum="numericalFileSum">
+                        :project-sum="numericalProjectSum"
+                        :project-list="numericalProjectList">
         </projectInfo>
         <projectInfo style="margin-top: 16px"
-                        title="Computer Vison Projects" 
-                        :projectSum="numericalProjectSum" 
-                        :modelSum="numericalModelSum" 
-                        :fileSum="numericalFileSum">
+                        title="Computer Vision Projects"
+                        :project-sum="numericalProjectSum"
+                        :project-list="numericalProjectList">
         </projectInfo>
     </div>
 </template>
@@ -26,11 +23,18 @@
         data: function () {
             return {
                 numericalProjectSum: '20',
-                numericalModelSum: '20',
-                numericalFileSum: '20',
+                numericalProjectList: [
+                    {
+                        name: 'test1',
+                        id: 'aaa'
+                    },
+                    {
+                        name: 'test2',
+                        id: 'bbb'
+                    }
+                ],
                 APISum: '10',
                 isShowNumericalDetail: false,
-                tableData: []
             }
         },
         methods:{

@@ -13,7 +13,7 @@
             <div class="rightBlock">
                 <el-link class="button"><i class="fas fa-file-alt icon-right"></i>Document</el-link>
                 <el-link class="button"><i class="fas fa-user icon-right"></i>{{userName}}</el-link>
-                <el-link class="button"><i class="fas fa-sign-out-alt icon-right"></i>Sign Out</el-link>
+                <el-link class="button" @click="onSignOutClick"><i class="fas fa-sign-out-alt icon-right"></i>Sign Out</el-link>
             </div>
         </el-header>
         <el-container>
@@ -38,7 +38,7 @@
                         </el-menu-item-group>
                     </el-submenu>
                     <el-submenu index="3">
-                        <template slot="title"><i class="el-icon-message"></i>Computer Vison Project</template>
+                        <template slot="title"><i class="el-icon-message"></i>Computer Vision Project</template>
                         <el-menu-item-group  class="submenu">
                             <el-menu-item index="3-1">选项1</el-menu-item>
                             <el-menu-item index="3-2">选项2</el-menu-item>
@@ -64,7 +64,10 @@
         },
         methods:{
             onProjectMangementClick() {
-                this.$router.push('manage')
+                this.$router.push('manage');
+            },
+            onSignOutClick() {
+                this.$router.push('/');
             }
         },
         components: {
