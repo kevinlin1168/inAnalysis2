@@ -1,9 +1,9 @@
 <template>
     <el-row>
-        <el-col :span="13" class="grid-title"> {{title}} </el-col>
-        <el-col :span="6" class="grid-title"> Total Projects</el-col>
-        <el-col :span="2" class="grid-title"> {{projectSum}}</el-col>
-        <el-col :span="2" class="grid-title">
+        <el-col :span="13" class="gridTitle"> {{title}} </el-col>
+        <el-col :span="6" class="gridTitle"> Total Projects</el-col>
+        <el-col :span="2" class="gridTitle"> {{projectSum}}</el-col>
+        <el-col :span="2" class="gridTitle">
             <el-tooltip content="Add project" placement="bottom" effect="light">
                 <i class="el-icon-circle-plus" @click="isShowAddProjectPopup = true"></i>
             </el-tooltip>
@@ -13,7 +13,7 @@
                 <el-form :model="form">
                     <el-form-item label="Project Type" :label-width="addProjectPopupWidth">
                         <el-select v-model="form.projectType" placeholder="please select project type">
-                            <el-option class="option" v-for="(item, index) in ProjectTypeOption" :label="item" :value="index" :key="index"></el-option>
+                            <el-option class="option" v-for="(item, index) in projectTypeOption" :label="item" :value="index" :key="index"></el-option>
                         </el-select>
                     </el-form-item>
                     <el-form-item label="Project Name" :label-width="addProjectPopupWidth">
@@ -26,11 +26,11 @@
                 </div>
             </el-dialog>
         </el-col>
-        <el-col :span="1" class="grid-title projectInfo">
-            <i class="el-icon-arrow-right" v-if="!isShowNumericalDetail" @click="showDetail"></i>
-            <i class="el-icon-arrow-down" v-if="isShowNumericalDetail" @click="showDetail"></i>
+        <el-col :span="1" class="gridTitle projectInfo">
+            <i class="el-icon-arrow-right" v-if="!isShowProjectDetail" @click="onShowDetailClick"></i>
+            <i class="el-icon-arrow-down" v-if="isShowProjectDetail" @click="onShowDetailClick"></i>
         </el-col>
-        <el-col :span="24" v-show="isShowNumericalDetail">
+        <el-col :span="24" v-show="isShowProjectDetail">
             <el-table
                     :data="projectList"
                     style="width: 100%">
@@ -49,30 +49,6 @@
                 </el-table-column>
             </el-table>
         </el-col>
-        <!--<el-col :span="24">-->
-            <!--<el-row class="projectBlock">-->
-                <!--<el-col :span="3" class="projectInfo"> Total Projects</el-col>-->
-                <!--<el-col :span="2" class="projectInfo"> {{projectSum}}</el-col>-->
-                <!--<el-col :span="3" class="projectInfo"> Total models</el-col>-->
-                <!--<el-col :span="2" class="projectInfo"> {{modelSum}}</el-col>-->
-                <!--<el-col :span="3" class="projectInfo"> Total Files</el-col>-->
-                <!--<el-col :span="2" class="projectInfo"> {{fileSum}}</el-col>-->
-                <!--<el-col :span="5" class="projectInfo">-->
-                    <!--<el-button type="primary">management</el-button>-->
-                <!--</el-col>-->
-                <!--<el-col :span="1" class="projectInfo"> -->
-                    <!--<i class="el-icon-arrow-right" v-if="!isShowNumericalDetail" @click="showNumericalDetail"></i>-->
-                    <!--<i class="el-icon-arrow-down" v-if="isShowNumericalDetail" @click="showNumericalDetail"></i> -->
-                <!--</el-col>-->
-            <!--</el-row>-->
-            <!--<el-col v-if="isShowNumericalDetail" :span="24">-->
-                <!--<el-table :data="tableData" style="width: 100%">-->
-                    <!--<el-table-column prop="date" label="日期" width="180"> </el-table-column>-->
-                    <!--<el-table-column prop="name" label="姓名" width="180"> </el-table-column>-->
-                    <!--<el-table-column prop="address" label="地址"></el-table-column>-->
-                <!--</el-table>-->
-            <!--</el-col>-->
-        <!--</el-col>-->
     </el-row>
 </template>
 <script>
@@ -85,14 +61,14 @@
         ],
         data: function () {
             return {
-                isShowNumericalDetail: false,
+                isShowProjectDetail: false,
                 isShowAddProjectPopup: false,
                 addProjectPopupWidth: '120px',
                 form: {
                     projectType: '',
                     projectName: ''
                 },
-                ProjectTypeOption: [
+                projectTypeOption: [
                     'Abnormal Detection',
                     'Regression',
                     'Classification',
@@ -101,11 +77,10 @@
             }
         },
         methods:{
-            showDetail() {
-                this.isShowNumericalDetail = !this.isShowNumericalDetail;
+            onShowDetailClick() {
+                this.isShowProjectDetail = !this.isShowProjectDetail;
             },
             onProjectManagementClick(projectID) {
-                console.warn(projectID);
                 this.$router.push({name: 'project', params: {id: projectID}})
             },
             onProjectDeleteClick(projectID) {
@@ -137,13 +112,17 @@
     }
 </script>
 <style lang="scss" scoped>
-.grid-title {
+.gridTitle {
     border-bottom-style: solid;
     font-size: 24px;
     border-width: 2px;
 
     .el-select {
         width: 100%;
+    }
+
+    .projectInfo {
+        margin: auto;
     }
 }
 

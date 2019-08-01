@@ -1,10 +1,138 @@
 <template>
     <el-row>
-        <el-col :span="24" class="grid-title">
+
+        <el-col :span="24" class="gridTitle">
             <el-breadcrumb separator-class="el-icon-arrow-right">
                 <el-breadcrumb-item :to="{ path: '/manage' }">Management</el-breadcrumb-item>
                 <el-breadcrumb-item>Project name</el-breadcrumb-item>
             </el-breadcrumb>
+        </el-col>
+        <!-- modle block -->
+        <el-col :span="16" class="gridSubTitle"> Model List </el-col>
+        <el-col :span="3" class="gridSubTitle"> Total Models</el-col>
+        <el-col :span="2" class="gridSubTitle"> {{modelSum}}</el-col>
+        <el-col :span="2" class="gridSubTitle">
+            <el-tooltip content="Add model" placement="bottom" effect="light">
+                <i class="el-icon-circle-plus" @click="onAddModelClick"></i>
+            </el-tooltip>
+        </el-col>
+        <el-col :span="1" class="gridSubTitle projectInfo">
+            <i class="el-icon-arrow-right" v-if="!isShowModelDetail" @click="onShowDetailClick"></i>
+            <i class="el-icon-arrow-down" v-if="isShowModelDetail" @click="onShowDetailClick"></i>
+        </el-col>
+
+            <!-- add model popup-->
+            <el-dialog :title='"Add Model"' :visible.sync="isShowAddModelPopup">
+                <el-form :model="modelForm">
+                    <el-form-item label="Model Name" :label-width="addModlePopupWidth">
+                        <el-input v-model="modelForm.modelName" autocomplete="off"></el-input>
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button @click="onAddModelCancel">Cancel</el-button>
+                    <el-button type="primary" @click="onAddModelConfirm">Confirm</el-button>
+                </div>
+            </el-dialog>
+
+        <!-- Model Detail Block -->
+        <el-col :span="24" v-show="isShowModelDetail">
+            <el-table
+                    :data="modelList"
+                    style="width: 100%">
+                <el-table-column
+                        prop="name"
+                        label="Model Name"
+                        min-width="25%">
+                </el-table-column>
+                <el-table-column
+                        prop="algo"
+                        label="Algorithm Name"
+                        min-width="25%">
+                </el-table-column>
+                <el-table-column
+                    prop="status"
+                    label="Status"
+                    min-width="20%">
+                    <template slot-scope="scope">
+                        <el-tag
+                        style="width: 80px; text-align: center;"
+                        size = 'medium'
+                        :type="modelTagTransform(scope.row.status)"
+                        disable-transitions>{{scope.row.status}}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        fixed="right"
+                        label="Actions"
+                        min-width="30%">
+                    <template slot-scope="scope" style="text-align: right">
+                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Preview</el-button>
+                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Predict</el-button>
+                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status === 'Training'">Management</el-button>
+                        <!-- Delete Button -->
+                        <el-button v-if="scope.row.status === 'Training'" type="text" size="medium" disabled>Delete</el-button>
+                        <el-button v-if="scope.row.status !== 'Training'" @click="onProjectDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-col>
+
+
+        <!-- file block -->
+        <el-col :span="16" class="gridSubTitle"> File List </el-col>
+        <el-col :span="3" class="gridSubTitle"> Total Files</el-col>
+        <el-col :span="2" class="gridSubTitle"> {{fileSum}}</el-col>
+        <el-col :span="2" class="gridSubTitle">
+            <el-tooltip content="Add model" placement="bottom" effect="light">
+                <i class="el-icon-circle-plus" @click="onAddFileClick"></i>
+            </el-tooltip>
+        </el-col>
+        <el-col :span="1" class="gridSubTitle projectInfo">
+            <i class="el-icon-arrow-right" v-if="!isShowFileDetail" @click="onShowFileClick"></i>
+            <i class="el-icon-arrow-down" v-if="isShowFileDetail" @click="onShowFileClick"></i>
+        </el-col>
+
+        <el-col :span="24" v-show="isShowFileDetail">
+            <el-table
+                    :data="fileList"
+                    style="width: 100%">
+                <el-table-column
+                        prop="name"
+                        label="File Name"
+                        min-width="25%">
+                </el-table-column>
+                <el-table-column
+                        prop="type"
+                        label="File Type"
+                        min-width="25%">
+                </el-table-column>
+                <el-table-column
+                    prop="status"
+                    label="Status"
+                    min-width="20%">
+                    <template slot-scope="scope">
+                        <el-tag
+                        style="width: 80px; text-align: center;"
+                        size = 'medium'
+                        :type="fileTagTransform(scope.row.status)"
+                        disable-transitions> Inuse
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        fixed="right"
+                        label="Actions"
+                        min-width="30%">
+                    <template slot-scope="scope" style="text-align: right">
+                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Preview</el-button>
+                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Download</el-button>
+                        <!-- Delete Button -->
+                        <el-button v-if="scope.row.status === 'Inuse'" type="text" size="medium" disabled>Delete</el-button>
+                        <el-button v-if="scope.row.status !== 'Inuse'" @click="onProjectDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
         </el-col>
     </el-row>
 </template>
@@ -13,13 +141,110 @@
     export default {
         name: "projectManage",
         created: function() {
-            console.warn(this.$route.params.id);
+            this.projectID = this.$route.params.id;
+
+            //TODO get modelSum fileSum by projectID
+        },
+        data: function() {
+            return {
+                projectID: '',
+                modelSum: 0,
+                fileSum: 0,
+                isShowModelDetail: false,
+                isShowFileDetail: false,
+                isShowAddModelPopup: false,
+                isShowAddFilePopup: false,
+                addModlePopupWidth: '120px',
+                modelList: [
+                    {
+                        name: 'aaa',
+                        algo: 'ccc',
+                        status: 'Success'
+                    }, {
+                        name: 'abc',
+                        algo: 'csad',
+                        status: 'Training'
+                    }, {
+                        name: 'aaasdfaa',
+                        algo: 'adf',
+                        status: 'Fail'
+                    }
+                ],
+                modelForm: {
+                    modelName: ''
+                },
+                fileForm: {
+                    modelName: ''
+                },
+                fileList: [
+                    {
+                        name: 'aaa',
+                        type: 'ccc',
+                        status: 'Inuse'
+                    }, {
+                        name: 'abc',
+                        type: 'csad',
+                        status: 'NotInuse'
+                    }, {
+                        name: 'aaasdfaa',
+                        type: 'adf',
+                        status: 'NotInuse'
+                    }
+                ]
+            }
+        },
+        methods:{
+            onShowDetailClick() {
+                this.isShowModelDetail = !this.isShowModelDetail;
+            },
+            onShowFileClick() {
+                this.isShowFileDetail = !this.isShowFileDetail;
+            },
+            onAddModelClick() {
+                this.isShowAddModelPopup = true;
+            },
+            onAddFileClick() {
+
+            },
+            onAddModelCancel() {
+                this.modelForm = {
+                    modelName: ''
+                };
+                this.isShowAddModelPopup = false;
+            },
+            onAddModelConfirm() {
+                //TODO check status
+                this.modelList.push({
+                    name: this.modelForm.modelName,
+                    algo: '',
+                    status: 'none'
+                })
+                this.isShowAddModelPopup = false;
+            },
+            modelTagTransform(status) {
+                if(status === 'Success') {
+                    return 'success';
+                } else if (status === 'Training') {
+                    return 'warning';
+                } else if (status === 'Fail') {
+                    return 'danger';
+                } else {
+                    return 'info';
+                }
+            },
+            fileTagTransform(status) {
+                if(status === 'Inuse') {
+                    return 'warning';
+                } else if (status === 'NotInuse') {
+                    return 'info';
+                }
+            }
         }
     }
 </script>
 
 <style lang="scss" scoped>
-    .grid-title {
+    .gridTitle {
         border-bottom-style: solid;
         font-size: 24px;
         border-width: 2px;
@@ -29,4 +254,16 @@
             margin-bottom: 5px;
         }
     }
+
+    .gridSubTitle {
+        border-bottom-style: solid;
+        font-size: 18px;
+        border-width: 1px;
+        margin-top: 5px;
+
+        .projectInfo {
+            margin: auto;
+        }
+    }
+    
 </style>

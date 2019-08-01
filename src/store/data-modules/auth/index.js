@@ -8,6 +8,7 @@ export default {
     namespaced,
     state() {
         return {
+            isLogin:false,
             user: null
         }
     },

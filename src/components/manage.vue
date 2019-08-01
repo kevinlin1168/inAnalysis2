@@ -64,7 +64,7 @@
         },
         methods:{
             onProjectMangementClick() {
-                this.$router.push('manage');
+                this.$router.push('/manage');
             },
             onSignOutClick() {
                 this.$router.push('/');
