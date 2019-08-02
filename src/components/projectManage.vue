@@ -72,7 +72,7 @@
                         <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status === 'Training'">Management</el-button>
                         <!-- Delete Button -->
                         <el-button v-if="scope.row.status === 'Training'" type="text" size="medium" disabled>Delete</el-button>
-                        <el-button v-if="scope.row.status !== 'Training'" @click="onProjectDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
+                        <el-button v-if="scope.row.status !== 'Training'" @click="onModelDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -92,6 +92,26 @@
             <i class="el-icon-arrow-right" v-if="!isShowFileDetail" @click="onShowFileClick"></i>
             <i class="el-icon-arrow-down" v-if="isShowFileDetail" @click="onShowFileClick"></i>
         </el-col>
+
+            <!-- add file pop up -->
+            <el-dialog :title='"Add File"' :visible.sync="isShowAddFilePopup" width="400px">
+                <el-upload
+                    ref = "upload"
+                    class = "upload-demo"
+                    action="no use"
+                    :http-request="uploadSectionFile"
+                    :limit= "1"
+                    :on-exceed = "handleExceed"
+                    :multiple = "false"
+                    :auto-upload= "false"
+                    drag>
+                    <i class="el-icon-upload"></i>
+                    <div class="el-upload__text">Drag file to upload or <em>Click to upload</em></div>
+                </el-upload>
+                <div slot="footer" class="dialog-footer">
+                    <el-button style="margin-left: 10px;" size="small" type="success" @click="onSubmitClick">Submit</el-button>
+                </div>
+            </el-dialog>
 
         <el-col :span="24" v-show="isShowFileDetail">
             <el-table
@@ -129,7 +149,7 @@
                         <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Download</el-button>
                         <!-- Delete Button -->
                         <el-button v-if="scope.row.status === 'Inuse'" type="text" size="medium" disabled>Delete</el-button>
-                        <el-button v-if="scope.row.status !== 'Inuse'" @click="onProjectDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
+                        <el-button v-if="scope.row.status !== 'Inuse'" @click="onFileDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -204,22 +224,102 @@
                 this.isShowAddModelPopup = true;
             },
             onAddFileClick() {
-
+                this.isShowAddFilePopup = true;
             },
             onAddModelCancel() {
                 this.modelForm = {
                     modelName: ''
                 };
+                this.$message({
+                    type: 'info',
+                    message: 'Add Canceled'
+                });
                 this.isShowAddModelPopup = false;
             },
             onAddModelConfirm() {
                 //TODO check status
+                this.$message({
+                    type: 'success',
+                    message: 'Add Succeeded!'
+                })
                 this.modelList.push({
                     name: this.modelForm.modelName,
                     algo: '',
                     status: 'none'
                 })
                 this.isShowAddModelPopup = false;
+            },
+            onModelDeleteClick(modelID) {
+                console.warn(modelID);
+                this.$confirm('Do you want to confirm the deletion?', 'Hint', {
+                    confirmButtonText: 'Conform',
+                    cancelButtonText: 'Cancel',
+                    type: 'warning'
+                }).then(() => {
+                    this.$message({
+                        type: 'success',
+                        message: 'Delete Succeeded!'
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: 'Delete Canceled'
+                    });
+                });
+            },
+            onFileDeleteClick(fileID) {
+                console.warn(fileID);
+                this.$confirm('Do you want to confirm the deletion?', 'Hint', {
+                    confirmButtonText: 'Conform',
+                    cancelButtonText: 'Cancel',
+                    type: 'warning'
+                }).then(() => {
+                    this.$message({
+                        type: 'success',
+                        message: 'Delete Succeeded!'
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: 'Delete Canceled'
+                    });
+                });
+            },
+            uploadSectionFile(params) {
+                console.warn('params',params);
+                let fileObj = params.file;
+                let FileController = "http://140.112.26.135:8787/upload";
+                let form = new FormData();
+                form.append("file", fileObj);
+                form.append("type", "num");
+                form.append("tokenstr", "ab");
+                form.append("tokenint", "293")
+                let xhr = new XMLHttpRequest();
+                xhr.open("post", FileController, true);
+                xhr.onload = function () {
+                    console.warn(xhr.response);
+                    this.$message({
+                        message: '恭喜你，上传成功!',
+                        type: 'success'
+                    });
+                };
+                xhr.send(form);
+            },
+            handleExceed(file, fileList) {
+                console.warn('file',file);
+                console.warn('fileList',fileList)
+                this.$refs.upload.clearFiles();
+                fileList.push(file[0])
+                // fileList = [{
+                //                 name: file[0].name,
+                //                 percentage: 0,
+                //                 raw: file[0],
+                //                 size: file[0].size,
+                //                 status: "ready"}];
+                // console.warn('fileListAfter',fileList)       
+            },
+            onSubmitClick() {
+                this.$refs.upload.submit();
             },
             modelTagTransform(status) {
                 if(status === 'Success') {
