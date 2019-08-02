@@ -104,11 +104,13 @@
                     :on-exceed = "handleExceed"
                     :multiple = "false"
                     :auto-upload= "false"
-                    drag>
-                    <i class="el-icon-upload"></i>
-                    <div class="el-upload__text">Drag file to upload or <em>Click to upload</em></div>
+                    :on-change = 'uploadFileChange'
+                    :on-remove = 'uploadFileRemove'	
+                    :drag = 'isShowUploadBlock'>
+                    <i class="el-icon-upload" v-if="isShowUploadBlock"></i>
+                    <div class="el-upload__text" v-if="isShowUploadBlock">Drag file to upload or <em>Click to upload</em></div>
                 </el-upload>
-                <div slot="footer" class="dialog-footer">
+                <div slot="footer" class="dialog-footer" v-if="!isShowUploadBlock">
                     <el-button style="margin-left: 10px;" size="small" type="success" @click="onSubmitClick">Submit</el-button>
                 </div>
             </el-dialog>
@@ -174,6 +176,7 @@
                 isShowFileDetail: false,
                 isShowAddModelPopup: false,
                 isShowAddFilePopup: false,
+                isShowUploadBlock: true,
                 addModlePopupWidth: '120px',
                 modelList: [
                     {
@@ -210,7 +213,8 @@
                         type: 'adf',
                         status: 'NotInuse'
                     }
-                ]
+                ],
+                uploadFileList: []
             }
         },
         methods:{
@@ -305,18 +309,19 @@
                 };
                 xhr.send(form);
             },
-            handleExceed(file, fileList) {
-                console.warn('file',file);
-                console.warn('fileList',fileList)
-                this.$refs.upload.clearFiles();
-                fileList.push(file[0])
-                // fileList = [{
-                //                 name: file[0].name,
-                //                 percentage: 0,
-                //                 raw: file[0],
-                //                 size: file[0].size,
-                //                 status: "ready"}];
-                // console.warn('fileListAfter',fileList)       
+            handleExceed() {
+                this.$message({
+                    type: 'error',
+                    message: 'Only one file can be uploaded at a time'
+                });
+            },
+            uploadFileChange(file, fileList) {
+                if(fileList.length === 1) {
+                    this.isShowUploadBlock = false;
+                }
+            },
+            uploadFileRemove() {
+                this.isShowUploadBlock = true;
             },
             onSubmitClick() {
                 this.$refs.upload.submit();
