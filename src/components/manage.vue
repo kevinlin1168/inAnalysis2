@@ -6,7 +6,7 @@
         </el-alert>
         <el-header class="header">
             <div class="leftBlock">
-                <el-link :underline="false">InAnalysis<i class="fas fa-hand-spock icon-left"></i></el-link>
+                <el-link :underline="false" @click="onHomeClick">InAnalysis<i class="fas fa-hand-spock icon-left"></i></el-link>
                 <el-link class="button" @click="onProjectMangementClick"><i class="fas fa-sitemap icon-right"></i> Management</el-link>
                 <el-link class="button"><i class="fas fa-map-signs icon-right"></i>API Management</el-link>
             </div>
@@ -69,10 +69,13 @@
         },
         methods:{
             onProjectMangementClick() {
-                this.$router.push('/manage');
+                this.$router.push('/project');
             },
             onSignOutClick() {
                 this.$router.push('/');
+            },
+            onHomeClick() {
+                this.$router.push('/home');
             }
         },
         components: {

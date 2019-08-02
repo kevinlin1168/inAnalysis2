@@ -1,9 +1,23 @@
 <template>
     <div>
-        home page
+        <projectInfo title="Numerical Projects" 
+                        :project-sum="numericalProjectSum"
+                        :project-list="numericalProjectList">
+        </projectInfo>
+        <projectInfo style="margin-top: 16px"
+                        title="Natural Language Processing Projects" 
+                        :project-sum="numericalProjectSum"
+                        :project-list="numericalProjectList">
+        </projectInfo>
+        <projectInfo style="margin-top: 16px"
+                        title="Computer Vision Projects"
+                        :project-sum="numericalProjectSum"
+                        :project-list="numericalProjectList">
+        </projectInfo>
     </div>
 </template>
 <script>
+    import projectInfo from './projectInfo';
     export default {
         name: 'home',
         data: function () {
@@ -31,6 +45,7 @@
             }
         },
         components: {
+            projectInfo
         },
         computed: {
         },

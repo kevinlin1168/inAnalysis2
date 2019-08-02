@@ -34,7 +34,7 @@
         methods:{
             login() {
                 console.log('login click');
-                this.$router.push('manage');
+                this.$router.push('home');
             }
         },
         components: {
