@@ -36,12 +36,18 @@
                     style="width: 100%">
                 <el-table-column
                         prop="name"
-                        label="Project Name">
+                        label="Project Name"
+                        min-width="25%">
+                </el-table-column>
+                <el-table-column
+                        prop="projectType"
+                        label="Project Type"
+                        min-width="25%">
                 </el-table-column>
                 <el-table-column
                         fixed="right"
                         label="Actions"
-                        width="200">
+                        min-width="10%">
                     <template slot-scope="scope">
                         <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Management</el-button>
                         <el-button @click="onProjectDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>

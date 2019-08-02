@@ -17,7 +17,7 @@
             </div>
         </el-header>
         <el-container>
-            <el-aside class="aside">
+            <!-- <el-aside class="aside">
                 <el-menu class="menu">
                     <el-submenu index="1">
                         <template slot="title"><i class="el-icon-message"></i>Numerical Project</template>
@@ -45,12 +45,17 @@
                         </el-menu-item-group>
                     </el-submenu>
                 </el-menu>
-            </el-aside>
+            </el-aside> -->
             <el-main class="main">
                 <keep-alive>
                     <router-view></router-view>
                 </keep-alive>
             </el-main>
+            <el-footer class="footer">
+                <div>
+                    Copyright © InAnalysis | Designed by Wel-Chieh Liao
+                </div>
+            </el-footer>
         </el-container>
     </el-container>
 </template>
@@ -141,7 +146,17 @@
     }
 
     .main {
-        width: 80%;
+        width: 100%;
         height: 100%;
+    }
+
+    .footer {
+        font-size: 16px;
+        background-color:#e7e7e7;
+        display:  flex;
+        align-items: center;
+        color: gray;
+        align-items: center;
+        justify-content: flex-end;
     }
 </style>

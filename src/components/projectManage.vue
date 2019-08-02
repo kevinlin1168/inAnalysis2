@@ -7,6 +7,81 @@
                 <el-breadcrumb-item>Project name</el-breadcrumb-item>
             </el-breadcrumb>
         </el-col>
+        <!-- file block -->
+        <el-col :span="16" class="gridSubTitle"> File List </el-col>
+        <el-col :span="3" class="gridSubTitle"> Total Files</el-col>
+        <el-col :span="2" class="gridSubTitle"> {{fileSum}}</el-col>
+        <el-col :span="2" class="gridSubTitle">
+            <el-tooltip content="Add model" placement="bottom" effect="light">
+                <i class="el-icon-circle-plus" @click="onAddFileClick"></i>
+            </el-tooltip>
+        </el-col>
+        <el-col :span="1" class="gridSubTitle projectInfo">
+            <i class="el-icon-arrow-right" v-if="!isShowFileDetail" @click="onShowFileClick"></i>
+            <i class="el-icon-arrow-down" v-if="isShowFileDetail" @click="onShowFileClick"></i>
+        </el-col>
+
+            <!-- add file pop up -->
+            <el-dialog :title='"Add File"' :visible.sync="isShowAddFilePopup" width="400px">
+                <el-upload
+                    ref = "upload"
+                    class = "upload-demo"
+                    action="no use"
+                    :http-request="uploadSectionFile"
+                    :limit= "1"
+                    :on-exceed = "handleExceed"
+                    :multiple = "false"
+                    :auto-upload= "false"
+                    :on-change = 'uploadFileChange'
+                    :on-remove = 'uploadFileRemove'	
+                    :drag = 'isShowUploadBlock'>
+                    <i class="el-icon-upload" v-if="isShowUploadBlock"></i>
+                    <div class="el-upload__text" v-if="isShowUploadBlock">Drag file to upload or <em>Click to upload</em></div>
+                </el-upload>
+                <div slot="footer" class="dialog-footer" v-if="!isShowUploadBlock">
+                    <el-button style="margin-left: 10px;" size="small" type="success" @click="onSubmitClick">Submit</el-button>
+                </div>
+            </el-dialog>
+
+        <el-col :span="24" v-show="isShowFileDetail">
+            <el-table
+                    :data="fileList"
+                    style="width: 100%">
+                <el-table-column
+                        prop="name"
+                        label="File Name">
+                </el-table-column>
+                <el-table-column
+                        prop="type"
+                        label="File Type">
+                </el-table-column>
+                <el-table-column
+                    prop="status"
+                    label="Status">
+                    <template slot-scope="scope">
+                        <el-tag
+                        style="width: 80px; text-align: center;"
+                        size = 'medium'
+                        :type="fileTagTransform(scope.row.status)"
+                        disable-transitions> Inuse
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        fixed="right"
+                        label="Actions"
+                        min-width="30%">
+                    <template slot-scope="scope" style="text-align: right">
+                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Preview</el-button>
+                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Download</el-button>
+                        <!-- Delete Button -->
+                        <el-button v-if="scope.row.status === 'Inuse'" type="text" size="medium" disabled>Delete</el-button>
+                        <el-button v-if="scope.row.status !== 'Inuse'" @click="onFileDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-col>
+    
         <!-- modle block -->
         <el-col :span="16" class="gridSubTitle"> Model List </el-col>
         <el-col :span="3" class="gridSubTitle"> Total Models</el-col>
@@ -73,85 +148,6 @@
                         <!-- Delete Button -->
                         <el-button v-if="scope.row.status === 'Training'" type="text" size="medium" disabled>Delete</el-button>
                         <el-button v-if="scope.row.status !== 'Training'" @click="onModelDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </el-col>
-
-
-        <!-- file block -->
-        <el-col :span="16" class="gridSubTitle"> File List </el-col>
-        <el-col :span="3" class="gridSubTitle"> Total Files</el-col>
-        <el-col :span="2" class="gridSubTitle"> {{fileSum}}</el-col>
-        <el-col :span="2" class="gridSubTitle">
-            <el-tooltip content="Add model" placement="bottom" effect="light">
-                <i class="el-icon-circle-plus" @click="onAddFileClick"></i>
-            </el-tooltip>
-        </el-col>
-        <el-col :span="1" class="gridSubTitle projectInfo">
-            <i class="el-icon-arrow-right" v-if="!isShowFileDetail" @click="onShowFileClick"></i>
-            <i class="el-icon-arrow-down" v-if="isShowFileDetail" @click="onShowFileClick"></i>
-        </el-col>
-
-            <!-- add file pop up -->
-            <el-dialog :title='"Add File"' :visible.sync="isShowAddFilePopup" width="400px">
-                <el-upload
-                    ref = "upload"
-                    class = "upload-demo"
-                    action="no use"
-                    :http-request="uploadSectionFile"
-                    :limit= "1"
-                    :on-exceed = "handleExceed"
-                    :multiple = "false"
-                    :auto-upload= "false"
-                    :on-change = 'uploadFileChange'
-                    :on-remove = 'uploadFileRemove'	
-                    :drag = 'isShowUploadBlock'>
-                    <i class="el-icon-upload" v-if="isShowUploadBlock"></i>
-                    <div class="el-upload__text" v-if="isShowUploadBlock">Drag file to upload or <em>Click to upload</em></div>
-                </el-upload>
-                <div slot="footer" class="dialog-footer" v-if="!isShowUploadBlock">
-                    <el-button style="margin-left: 10px;" size="small" type="success" @click="onSubmitClick">Submit</el-button>
-                </div>
-            </el-dialog>
-
-        <el-col :span="24" v-show="isShowFileDetail">
-            <el-table
-                    :data="fileList"
-                    style="width: 100%">
-                <el-table-column
-                        prop="name"
-                        label="File Name"
-                        min-width="25%">
-                </el-table-column>
-                <el-table-column
-                        prop="type"
-                        label="File Type"
-                        min-width="25%">
-                </el-table-column>
-                <el-table-column
-                    prop="status"
-                    label="Status"
-                    min-width="20%">
-                    <template slot-scope="scope">
-                        <el-tag
-                        style="width: 80px; text-align: center;"
-                        size = 'medium'
-                        :type="fileTagTransform(scope.row.status)"
-                        disable-transitions> Inuse
-                        </el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column
-                        fixed="right"
-                        label="Actions"
-                        min-width="30%">
-                    <template slot-scope="scope" style="text-align: right">
-                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Preview</el-button>
-                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Download</el-button>
-                        <!-- Delete Button -->
-                        <el-button v-if="scope.row.status === 'Inuse'" type="text" size="medium" disabled>Delete</el-button>
-                        <el-button v-if="scope.row.status !== 'Inuse'" @click="onFileDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>

@@ -26,10 +26,12 @@
                 numericalProjectList: [
                     {
                         name: 'test1',
+                        projectType: 'test1',
                         id: 'aaa'
                     },
                     {
                         name: 'test2',
+                        projectType: 'test2',
                         id: 'bbb'
                     }
                 ],
