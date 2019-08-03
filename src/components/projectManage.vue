@@ -21,43 +21,24 @@
             <i class="el-icon-arrow-down" v-if="isShowFileDetail" @click="onShowFileClick"></i>
         </el-col>
 
-            <!-- add file pop up -->
-            <el-dialog :title='"Add File"' :visible.sync="isShowAddFilePopup" width="400px">
-                <el-upload
-                    ref = "upload"
-                    class = "upload-demo"
-                    action="no use"
-                    :http-request="uploadSectionFile"
-                    :limit= "1"
-                    :on-exceed = "handleExceed"
-                    :multiple = "false"
-                    :auto-upload= "false"
-                    :on-change = 'uploadFileChange'
-                    :on-remove = 'uploadFileRemove'	
-                    :drag = 'isShowUploadBlock'>
-                    <i class="el-icon-upload" v-if="isShowUploadBlock"></i>
-                    <div class="el-upload__text" v-if="isShowUploadBlock">Drag file to upload or <em>Click to upload</em></div>
-                </el-upload>
-                <div slot="footer" class="dialog-footer" v-if="!isShowUploadBlock">
-                    <el-button style="margin-left: 10px;" size="small" type="success" @click="onSubmitClick">Submit</el-button>
-                </div>
-            </el-dialog>
-
         <el-col :span="24" v-show="isShowFileDetail">
             <el-table
                     :data="fileList"
                     style="width: 100%">
                 <el-table-column
-                        prop="name"
-                        label="File Name">
+                    prop="name"
+                    label="File Name"
+                    min-width="20%">
                 </el-table-column>
                 <el-table-column
-                        prop="type"
-                        label="File Type">
+                    prop="type"
+                    label="File Type"
+                    min-width="35%">
                 </el-table-column>
                 <el-table-column
                     prop="status"
-                    label="Status">
+                    label="Status"
+                    min-width="15%">
                     <template slot-scope="scope">
                         <el-tag
                         style="width: 80px; text-align: center;"
@@ -72,8 +53,10 @@
                         label="Actions"
                         min-width="30%">
                     <template slot-scope="scope" style="text-align: right">
-                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Preview</el-button>
-                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Download</el-button>
+                        <el-button @click="onFilePreviewClick(scope.row.id)" type="text" size="medium">Preview</el-button>
+                        <el-button @click="onFileDownloadClick(scope.row.id)" type="text" size="medium">Download</el-button>
+                        <el-button @click="onPreProcessingClick(scope.row.id)" type="text" size="medium">Pre-processing</el-button>
+                        <el-button @click="onSelectToTrainClick(scope.row.id)" type="text" size="medium">Select to train</el-button>
                         <!-- Delete Button -->
                         <el-button v-if="scope.row.status === 'Inuse'" type="text" size="medium" disabled>Delete</el-button>
                         <el-button v-if="scope.row.status !== 'Inuse'" @click="onFileDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
@@ -82,32 +65,25 @@
             </el-table>
         </el-col>
     
-        <!-- modle block -->
+        <!-- model block -->
         <el-col :span="16" class="gridSubTitle"> Model List </el-col>
         <el-col :span="3" class="gridSubTitle"> Total Models</el-col>
         <el-col :span="2" class="gridSubTitle"> {{modelSum}}</el-col>
-        <el-col :span="2" class="gridSubTitle">
+        <el-col :span="2" class="gridSubTitle" v-show="fileList.length">
             <el-tooltip content="Add model" placement="bottom" effect="light">
                 <i class="el-icon-circle-plus" @click="onAddModelClick"></i>
             </el-tooltip>
+        </el-col>
+        <!-- for space-->
+        <el-col :span="2" class="gridSubTitle" v-show="!fileList.length">
+            <div>
+                &nbsp
+            </div>
         </el-col>
         <el-col :span="1" class="gridSubTitle projectInfo">
             <i class="el-icon-arrow-right" v-if="!isShowModelDetail" @click="onShowDetailClick"></i>
             <i class="el-icon-arrow-down" v-if="isShowModelDetail" @click="onShowDetailClick"></i>
         </el-col>
-
-            <!-- add model popup-->
-            <el-dialog :title='"Add Model"' :visible.sync="isShowAddModelPopup">
-                <el-form :model="modelForm">
-                    <el-form-item label="Model Name" :label-width="addModlePopupWidth">
-                        <el-input v-model="modelForm.modelName" autocomplete="off"></el-input>
-                    </el-form-item>
-                </el-form>
-                <div slot="footer" class="dialog-footer">
-                    <el-button @click="onAddModelCancel">Cancel</el-button>
-                    <el-button type="primary" @click="onAddModelConfirm">Confirm</el-button>
-                </div>
-            </el-dialog>
 
         <!-- Model Detail Block -->
         <el-col :span="24" v-show="isShowModelDetail">
@@ -117,17 +93,22 @@
                 <el-table-column
                         prop="name"
                         label="Model Name"
-                        min-width="25%">
+                        min-width="20%">
+                </el-table-column>
+                <el-table-column
+                        prop="fileName"
+                        label="Using File"
+                        min-width="20%">
                 </el-table-column>
                 <el-table-column
                         prop="algo"
                         label="Algorithm Name"
-                        min-width="25%">
+                        min-width="15%">
                 </el-table-column>
                 <el-table-column
                     prop="status"
                     label="Status"
-                    min-width="20%">
+                    min-width="15%">
                     <template slot-scope="scope">
                         <el-tag
                         style="width: 80px; text-align: center;"
@@ -152,7 +133,95 @@
                 </el-table-column>
             </el-table>
         </el-col>
+
+        <!-- Popup -->
+
+        <!-- add file pop up -->
+        <el-dialog :title='"Add File"' :visible.sync="isShowAddFilePopup" width="400px">
+            <el-upload
+                    ref = "upload"
+                    class = "upload-demo"
+                    action="no use"
+                    :http-request="uploadSectionFile"
+                    :limit= "1"
+                    :on-exceed = "handleExceed"
+                    :multiple = "false"
+                    :auto-upload= "false"
+                    :on-change = 'uploadFileChange'
+                    :on-remove = 'uploadFileRemove'
+                    :drag = 'isShowUploadBlock'>
+                <i class="el-icon-upload" v-if="isShowUploadBlock"></i>
+                <div class="el-upload__text" v-if="isShowUploadBlock">Drag file to upload or <em>Click to upload</em></div>
+            </el-upload>
+            <div slot="footer" class="dialog-footer" v-if="!isShowUploadBlock">
+                <el-button style="margin-left: 10px;" size="small" type="success" @click="onSubmitClick">Submit</el-button>
+            </div>
+        </el-dialog>
+
+        <!-- add model popup-->
+        <el-dialog :title='"Add Model"' :visible.sync="isShowAddModelPopup">
+            <el-form :model="modelForm">
+                <el-form-item label="Model Name" :label-width="labelWidth">
+                    <el-input v-model="modelForm.modelName" autocomplete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="File" :label-width="labelWidth">
+                    <el-select v-model="modelForm.fileID" placeholder="Please select file">
+                        <el-option class="option" v-for="item in fileList" :label="item.name" :value="item.id" :key="item.id"></el-option>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="onAddModelCancel">Cancel</el-button>
+                <el-button type="primary" @click="onAddModelConfirm">Confirm</el-button>
+            </div>
+        </el-dialog>
+
+        <!-- select to train popup-->
+        <el-dialog :title='"Add Model"' :visible.sync="isShowSelectToTrainPopup">
+            <el-form :model="modelForm">
+                <el-form-item label="Model Name" :label-width="labelWidth">
+                    <el-input v-model="modelForm.modelName" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="onAddModelCancel">Cancel</el-button>
+                <el-button type="primary" @click="onAddModelConfirm">Confirm</el-button>
+            </div>
+        </el-dialog>
+
+        <!-- preview file popup-->
+        <el-dialog class="filePreview" :title='selectFileName + " Preview"' :visible.sync="isShowFilePreviewPopup">
+            <el-form>
+                <el-form-item label="Chart" :label-width="labelWidth">
+                    <el-select v-model="selectChart" placeholder="Please select chart">
+                        <el-option
+                                v-for="item in chartOptionList"
+                                :key="item"
+                                :label="item"
+                                :value="item">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <el-form v-if="selectChart" :rules="featureRule">
+                <el-form-item label="Feature" :label-width="labelWidth" prop="feature">
+                    <el-select v-for="(item, index) in featureOptionList" v-model="selectFeature[index]" placeholder="Please select feature" :key="index">
+                        <el-option
+                                v-for="option in item.option"
+                                :key="option"
+                                :label="option"
+                                :value="option">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="onFilePreviewClose">Close</el-button>
+            </div>
+        </el-dialog>
     </el-row>
+
+
 </template>
 
 <script>
@@ -163,7 +232,23 @@
 
             //TODO get modelSum fileSum by projectID
         },
-        data: function() {
+        data() {
+            let validateFeature = (rule, value, callback) => {
+                console.warn('test');
+                let errorFlag = false;
+                for (let i = 0; i < this.selectFeature.length - 1; i++) {
+                    for (let j = i+1; i < this.selectFeature.length; j++) {
+                        if (this.selectFeature[i] === this.selectFeature[j]) {
+                            errorFlag = true;
+                        }
+                    }
+                }
+                if (errorFlag) {
+                    callback(new Error('Select same feature'));
+                } else {
+                    callback();
+                }
+            };
             return {
                 projectID: '',
                 modelSum: 0,
@@ -172,25 +257,34 @@
                 isShowFileDetail: false,
                 isShowAddModelPopup: false,
                 isShowAddFilePopup: false,
+                isShowSelectToTrainPopup: false,
+                isShowFilePreviewPopup: false,
                 isShowUploadBlock: true,
-                addModlePopupWidth: '120px',
+                labelWidth: '120px',
+                selectFileName: '',
+                selectChart: '',
+                selectFeature: [],
                 modelList: [
                     {
                         name: 'aaa',
+                        fileName: 'aaa',
                         algo: 'ccc',
                         status: 'Success'
                     }, {
                         name: 'abc',
+                        fileName: 'aaa',
                         algo: 'csad',
                         status: 'Training'
                     }, {
                         name: 'aaasdfaa',
+                        fileName: 'aaa',
                         algo: 'adf',
                         status: 'Fail'
                     }
                 ],
                 modelForm: {
-                    modelName: ''
+                    modelName: '',
+                    fileID: ''
                 },
                 fileForm: {
                     modelName: ''
@@ -198,19 +292,45 @@
                 fileList: [
                     {
                         name: 'aaa',
+                        id: 'test1',
                         type: 'ccc',
                         status: 'Inuse'
                     }, {
                         name: 'abc',
+                        id: 'test2',
                         type: 'csad',
                         status: 'NotInuse'
                     }, {
                         name: 'aaasdfaa',
+                        id: 'test3',
                         type: 'adf',
                         status: 'NotInuse'
                     }
                 ],
-                uploadFileList: []
+                chartOptionList: [
+                    'test1', 'test2'
+                ],
+                featureOptionList: [
+                    {
+                        name: 'aaa',
+                        option: [
+                            'test',
+                            'test1'
+                        ]
+                    },
+                    {
+                        name: 'bbb',
+                        option: [
+                            'test',
+                            'test1'
+                        ]
+                    }
+                ],
+                featureRule: {
+                    feature: [
+                        { validator: validateFeature, trigger: 'blur' }
+                    ]
+                }
             }
         },
         methods:{
@@ -227,13 +347,12 @@
                 this.isShowAddFilePopup = true;
             },
             onAddModelCancel() {
-                this.modelForm = {
-                    modelName: ''
-                };
                 this.$message({
                     type: 'info',
                     message: 'Add Canceled'
                 });
+                this.clearModelForm();
+                this.isShowSelectToTrainPopup = false;
                 this.isShowAddModelPopup = false;
             },
             onAddModelConfirm() {
@@ -241,12 +360,17 @@
                 this.$message({
                     type: 'success',
                     message: 'Add Succeeded!'
-                })
+                });
+                let file = this.findSelectFile(this.modelForm.fileID);
+
                 this.modelList.push({
                     name: this.modelForm.modelName,
+                    fileName: file.name,
                     algo: '',
                     status: 'none'
-                })
+                });
+                this.clearModelForm();
+                this.isShowSelectToTrainPopup = false;
                 this.isShowAddModelPopup = false;
             },
             onModelDeleteClick(modelID) {
@@ -274,6 +398,7 @@
                     cancelButtonText: 'Cancel',
                     type: 'warning'
                 }).then(() => {
+                    //TODO delete file and refresh fileList
                     this.$message({
                         type: 'success',
                         message: 'Delete Succeeded!'
@@ -286,7 +411,6 @@
                 });
             },
             uploadSectionFile(params) {
-                console.warn('params',params);
                 let fileObj = params.file;
                 let FileController = "http://140.112.26.135:8787/upload";
                 let form = new FormData();
@@ -295,15 +419,29 @@
                 form.append("tokenstr", "ab");
                 form.append("tokenint", "293")
                 let xhr = new XMLHttpRequest();
-                xhr.open("post", FileController, true);
-                xhr.onload = function () {
-                    console.warn(xhr.response);
-                    this.$message({
-                        message: '恭喜你，上传成功!',
-                        type: 'success'
-                    });
-                };
-                xhr.send(form);
+                // TODO upload and refresh fileList
+                // xhr.open("post", FileController, true);
+                // xhr.onload = function () {
+                //     console.warn(xhr.response);
+                //     this.$message({
+                //         message: '恭喜你，上传成功!',
+                //         type: 'success'
+                //     });
+                // };
+                // xhr.send(form);
+
+                console.warn(fileObj);
+
+                // TODO delete this block
+                this.fileList.push({
+                    name: fileObj.name,
+                    id: fileObj.uid,
+                    type: fileObj.type,
+                    status: 'NotInuse'
+                });
+                this.$refs.upload.clearFiles();
+                this.isShowUploadBlock = true;
+                this.isShowAddFilePopup = false;
             },
             handleExceed() {
                 this.$message({
@@ -339,6 +477,38 @@
                 } else if (status === 'NotInuse') {
                     return 'info';
                 }
+            },
+            onSelectToTrainClick(fileID) {
+                this.modelForm.fileID = fileID;
+                this.isShowSelectToTrainPopup = true;
+            },
+            onPreProcessingClick(fileID) {
+                this.findSelectFile(fileID);
+            },
+            onFilePreviewClick(fileID) {
+                this.findSelectFile(fileID);
+                this.isShowFilePreviewPopup = true;
+            },
+            onFileDownloadClick(fileID) {
+                // TODO download file
+                console.warn('Download', fileID);
+            },
+            clearModelForm() {
+                this.modelForm = {
+                    modelName: '',
+                    fileID: ''
+                }
+            },
+            findSelectFile(fileID) {
+                let file = this.fileList.find(function(element) {
+                    return fileID === element.id;
+                });
+                this.selectFileName = file.name;
+                return file;
+            },
+            onFilePreviewClose() {
+                this.isShowFilePreviewPopup = false;
+                this.selectChart = '';
             }
         }
     }
@@ -364,6 +534,16 @@
 
         .projectInfo {
             margin: auto;
+        }
+    }
+
+    .el-select {
+        width: 100%;
+    }
+
+    .filePreview {
+        .chart {
+
         }
     }
     
