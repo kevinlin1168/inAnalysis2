@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import solid from '@fortawesome/fontawesome-free-solid';
 import regular from '@fortawesome/fontawesome-free-regular';
 import brands from '@fortawesome/fontawesome-free-brands';
+import VueResource from 'vue-resource';
 
 fontawesome.library.add(solid);
 fontawesome.library.add(regular);
@@ -23,6 +24,8 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.config.productionTip = false;
 Vue.use(ElementUI);
 Vue.use(BootstrapVue);
+Vue.use(VueResource);
+
 
 new Vue({
   el: '#app',

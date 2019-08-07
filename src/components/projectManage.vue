@@ -205,7 +205,11 @@
             </el-form>
             <el-form v-if="selectChart" :rules="featureRule">
                 <el-form-item label="Feature" :label-width="labelWidth" prop="feature">
-                    <el-select v-for="(item, index) in featureOptionList" v-model="selectFeature[index]" placeholder="Please select feature" :key="index">
+                    <el-select v-for="(item, index) in featureOptionList" 
+                                v-model="selectFeature[index]" 
+                                placeholder="Please select feature"
+                                @change="onSelectFeatureChange()" 
+                                :key="index">
                         <el-option
                                 v-for="option in item.option"
                                 :key="option"
@@ -215,6 +219,15 @@
                     </el-select>
                 </el-form-item>
             </el-form>
+            <div class="block">
+                <span class="demonstration">ModelPreview</span>
+                <el-carousel trigger="click" height="400px" :autoplay="false">
+                    <el-carousel-item v-for="item in imgList" :key="item">
+                        <div v-html="item">
+                        </div>
+                    </el-carousel-item>
+                </el-carousel>
+            </div>
             <div slot="footer" class="dialog-footer">
                 <el-button type="primary" @click="onFilePreviewClose">Close</el-button>
             </div>
@@ -250,6 +263,7 @@
                 }
             };
             return {
+                html: '',
                 projectID: '',
                 modelSum: 0,
                 fileSum: 0,
@@ -264,6 +278,8 @@
                 selectFileName: '',
                 selectChart: '',
                 selectFeature: [],
+                imgList: [],
+                imgIndexList: [],
                 modelList: [
                     {
                         name: 'aaa',
@@ -315,7 +331,9 @@
                         name: 'aaa',
                         option: [
                             'test',
-                            'test1'
+                            'test1',
+                            'sdf',
+                            'asdf'
                         ]
                     },
                     {
@@ -509,6 +527,61 @@
             onFilePreviewClose() {
                 this.isShowFilePreviewPopup = false;
                 this.selectChart = '';
+            },
+            onSelectFeatureChange() {
+                let bokehVersion = '1.3.4';
+                this.imgList = [];
+                console.warn('featureChange');
+                let option = {
+                    headers:{
+                        'Content-Type': 'application/form-urlencoded',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                }
+                let link = document.createElement('link')
+                link.setAttribute('rel', 'stylesheet')
+                link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
+                link.setAttribute('type', 'text/css')
+                document.head.appendChild(link)
+                // 在头部插入js代码
+                let script = document.createElement('script')
+                script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
+                script.async = 'async'
+                document.head.appendChild(script)
+                // cdn的js加载完毕后再请求bokeh参数
+                let _this = this;
+                script.onload = () => {
+                    _this.$http.get("http://140.112.26.135:8787/img1com", option).then((response) => {
+                        console.warn('success',response);
+                        let temp = response.data.div;
+                        _this.imgList.push(temp)
+                        // 插入绘制script代码
+                        let bokehRunScript = document.createElement('SCRIPT')
+                        bokehRunScript.setAttribute('type', 'text/javascript')
+                        let t = document.createTextNode(response.data.script)
+                        bokehRunScript.appendChild(t)
+                        document.body.appendChild(bokehRunScript)
+                        // 绘制代码执行完后关闭等待画面
+                        _this.loading = false
+                    }, (response) => {
+                        console.warn('error',response);
+                    });
+                    _this.$http.get("http://140.112.26.135:8787/circle1com", option).then((response) => {
+                        console.warn('success',response);
+                        let temp = response.data.div;
+                        _this.imgList.push(temp)
+                        // 插入绘制script代码
+                        let bokehRunScript = document.createElement('SCRIPT')
+                        bokehRunScript.setAttribute('type', 'text/javascript')
+                        let t = document.createTextNode(response.data.script)
+                        bokehRunScript.appendChild(t)
+                        document.body.appendChild(bokehRunScript)
+                        // 绘制代码执行完后关闭等待画面
+                        _this.loading = false
+                    }, (response) => {
+                        console.warn('error',response);
+                    });
+                }
             }
         }
     }
@@ -541,10 +614,20 @@
         width: 100%;
     }
 
-    .filePreview {
-        .chart {
+    .el-carousel__item h3 {
+        color: #475669;
+        font-size: 14px;
+        opacity: 0.75;
+        line-height: 150px;
+        margin: 0;
+    }
 
-        }
+    .el-carousel__item:nth-child(2n) {
+        background-color: #99a9bf;
+    }
+    
+    .el-carousel__item:nth-child(2n+1) {
+        background-color: #d3dce6;
     }
     
 </style>
