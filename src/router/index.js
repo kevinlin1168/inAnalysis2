@@ -6,6 +6,9 @@ import manage from '@/components/manage';
 import dataProjectManage from '@/components/dataProjectManage';
 import projectManage from '@/components/projectManage'
 import home from '@/components/home';
+import filePreProcessing from '@/components/filePreProcessing';
+import modelPredict from '@/components/modelPredict';
+import modelManagement from '@/components/modelManagement';
 
 Vue.use(Router);
 
@@ -26,9 +29,21 @@ export default new Router({
             name: 'dataProjectManage',
             component: dataProjectManage
         },{
-            path: '/project/:id',
+            path: '/project/:projectID',
             name: 'project',
             component: projectManage
+        }, {
+            path: '/project/:projectID/filePreProcessing/:fileID',
+            name: 'filePreProcessing',
+            component: filePreProcessing
+        },{
+            path:'/project/:projectID/modelPredict/:modelID',
+            name: 'modelPredict',
+            component: modelPredict
+        }, {
+            path:'/project/:projectID/modelManagement/:modelID',
+            name: 'modelManagement',
+            component: modelManagement
         }]
     }]
 })

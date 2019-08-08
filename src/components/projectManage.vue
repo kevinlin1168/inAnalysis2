@@ -33,12 +33,12 @@
                 <el-table-column
                     prop="type"
                     label="File Type"
-                    min-width="35%">
+                    min-width="40%">
                 </el-table-column>
                 <el-table-column
                     prop="status"
                     label="Status"
-                    min-width="15%">
+                    min-width="10%">
                     <template slot-scope="scope">
                         <el-tag
                         style="width: 80px; text-align: center;"
@@ -103,12 +103,12 @@
                 <el-table-column
                         prop="algo"
                         label="Algorithm Name"
-                        min-width="15%">
+                        min-width="20%">
                 </el-table-column>
                 <el-table-column
                     prop="status"
                     label="Status"
-                    min-width="15%">
+                    min-width="10%">
                     <template slot-scope="scope">
                         <el-tag
                         style="width: 80px; text-align: center;"
@@ -123,9 +123,9 @@
                         label="Actions"
                         min-width="30%">
                     <template slot-scope="scope" style="text-align: right">
-                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Preview</el-button>
-                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Predict</el-button>
-                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status === 'Training'">Management</el-button>
+                        <el-button @click="onModelPreviewClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status === 'Training'">Preview</el-button>
+                        <el-button @click="onModelPredictClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Predict</el-button>
+                        <el-button @click="onModelManagementClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status === 'Training'">Management</el-button>
                         <!-- Delete Button -->
                         <el-button v-if="scope.row.status === 'Training'" type="text" size="medium" disabled>Delete</el-button>
                         <el-button v-if="scope.row.status !== 'Training'" @click="onModelDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
@@ -190,7 +190,7 @@
         </el-dialog>
 
         <!-- preview file popup-->
-        <el-dialog class="filePreview" :title='selectFileName + " Preview"' :visible.sync="isShowFilePreviewPopup">
+        <el-dialog class="filePreview" :title='selectFile.name + " Preview"' :visible.sync="isShowFilePreviewPopup" :show-close='false'>
             <el-form>
                 <el-form-item label="Chart" :label-width="labelWidth">
                     <el-select v-model="selectChart" placeholder="Please select chart">
@@ -222,7 +222,7 @@
             <div class="imgBlock" v-if="isShowFilePreviewBlock">
                 <div class="title">FilePreview</div>
                 <el-carousel trigger="click" height="400px" :autoplay="false">
-                    <el-carousel-item v-for="item in imgList" :key="item">
+                    <el-carousel-item v-for="item in fileImgList" :key="item">
                         <div v-html="item">
                         </div>
                     </el-carousel-item>
@@ -233,19 +233,26 @@
             </div>
         </el-dialog>
 
-        <!-- preview file popup-->
-        <el-dialog :title='selectModelName + " Preview"' :visible.sync="isShowModelPreviewPopup">
+        <!-- preview model popup-->
+        <el-dialog :title='selectModel.name + " Preview"' :visible.sync="isShowModelPreviewPopup" :show-close='false'>
+            <div class="textBolck">
+                <div class="title">TextPreview</div>
+                
+            </div>
+            <div class="formBlock">
+                <div class="title">FormPreview</div>
+            </div>
             <div class="imgBlock">
                 <div class="title">ModelPreview</div>
                 <el-carousel trigger="click" height="400px" :autoplay="false">
-                    <el-carousel-item v-for="item in imgList" :key="item">
+                    <el-carousel-item v-for="item in modelImgList" :key="item">
                         <div v-html="item">
                         </div>
                     </el-carousel-item>
                 </el-carousel>
             </div>
             <div slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="onFilePreviewClose">Close</el-button>
+                <el-button type="primary" @click="onModelPreviewClose">Close</el-button>
             </div>
         </el-dialog>
     </el-row>
@@ -254,13 +261,13 @@
 </template>
 
 <script>
-import { truncateSync } from 'fs';
     export default {
         name: "projectManage",
         created: function() {
-            this.projectID = this.$route.params.id;
-
-            //TODO get modelSum fileSum by projectID
+            this.fetchData();
+        },
+        watch: {
+            '$route': 'fetchData'
         },
         data() {
             let validateFeature = (rule, value, callback) => {
@@ -290,31 +297,34 @@ import { truncateSync } from 'fs';
                 isShowAddFilePopup: false,
                 isShowSelectToTrainPopup: false,
                 isShowFilePreviewPopup: false,
-                isShowModelPreviewPopup:　false,
+                isShowModelPreviewPopup: false,
                 isShowUploadBlock: true,
                 isSelectFectureError: false,
                 isShowFilePreviewBlock: false,
                 labelWidth: '120px',
-                selectFileName: '',
-                selectModelName: '',
+                selectFile: {},
+                selectModel: {},
                 selectChart: '',
                 selectFeature: [],
-                imgList: [],
-                imgIndexList: [],
+                fileImgList: [],
+                modelImgList: [],
                 modelList: [
                     {
                         name: 'aaa',
                         fileName: 'aaa',
+                        id: '123',
                         algo: 'ccc',
                         status: 'Success'
                     }, {
                         name: 'abc',
                         fileName: 'aaa',
+                        id: '456',
                         algo: 'csad',
                         status: 'Training'
                     }, {
                         name: 'aaasdfaa',
                         fileName: 'aaa',
+                        id: '231',
                         algo: 'adf',
                         status: 'Fail'
                     }
@@ -373,6 +383,10 @@ import { truncateSync } from 'fs';
             }
         },
         methods:{
+            fetchData() {
+                this.projectID = this.$route.params.projectID;
+                //TODO get modelSum fileSum by projectID
+            },
             onShowDetailClick() {
                 this.isShowModelDetail = !this.isShowModelDetail;
             },
@@ -523,10 +537,21 @@ import { truncateSync } from 'fs';
             },
             onPreProcessingClick(fileID) {
                 this.findSelectFile(fileID);
+                this.$router.push({name: 'filePreProcessing', params: {projectID: this.projectID,fileID: fileID}})
             },
             onFilePreviewClick(fileID) {
-                this.findSelectFile(fileID);
+                this.selectFile = this.findSelectFile(fileID);
                 this.isShowFilePreviewPopup = true;
+            },
+            onModelPreviewClick(modelID) {
+                this.selectModel = this.findSelectModel(modelID);
+                this.isShowModelPreviewPopup = true
+            },
+            onModelPredictClick(modelID) {
+                this.$router.push({name: 'modelPredict', params: {projectID: this.projectID, modelID: modelID}})
+            },
+            onModelManagementClick(modelID) {
+                this.$router.push({name: 'modelManagement', params: {projectID: this.projectID, modelID: modelID}})
             },
             onFileDownloadClick(fileID) {
                 // TODO download file
@@ -542,19 +567,30 @@ import { truncateSync } from 'fs';
                 let file = this.fileList.find(function(element) {
                     return fileID === element.id;
                 });
-                this.selectFileName = file.name;
                 return file;
+            },
+            findSelectModel(modelID) {
+                let model = this.modelList.find(function(element) {
+                    return modelID === element.id;
+                });
+                return model;
             },
             onFilePreviewClose() {
                 this.isShowFilePreviewPopup = false;
                 this.selectChart = '';
+                this.selectFeature = [];
+                this.isShowFilePreviewBlock = false;
+            },
+            onModelPreviewClose() {
+                this.isShowModelPreviewPopup = false;
+                this.selectModel = {};
             },
             onSelectFeatureChange() {
                 console.warn('featureChange');
                 this.isShowFilePreviewBlock = false;
                 this.isSelectFectureError = false;
                 let bokehVersion = '1.3.4';
-                this.imgList = [];
+                this.fileImgList = [];
                 for(let i = 0; i < this.featureOptionList.length; i++) {
                     console.warn('selectFeature', this.selectFeature[i]);
                     if(this.selectFeature[i] === null || this.selectFeature[i] === undefined) {
@@ -593,7 +629,7 @@ import { truncateSync } from 'fs';
                         _this.$http.get("http://140.112.26.135:8787/img1com", option).then((response) => {
                             console.warn('success',response);
                             let temp = response.data.div;
-                            _this.imgList.push(temp)
+                            _this.fileImgList.push(temp)
                             // 插入绘制script代码
                             let bokehRunScript = document.createElement('SCRIPT')
                             bokehRunScript.setAttribute('type', 'text/javascript')
@@ -608,7 +644,7 @@ import { truncateSync } from 'fs';
                         _this.$http.get("http://140.112.26.135:8787/circle1com", option).then((response) => {
                             console.warn('success',response);
                             let temp = response.data.div;
-                            _this.imgList.push(temp)
+                            _this.fileImgList.push(temp)
                             // 插入绘制script代码
                             let bokehRunScript = document.createElement('SCRIPT')
                             bokehRunScript.setAttribute('type', 'text/javascript')
@@ -651,6 +687,21 @@ import { truncateSync } from 'fs';
     }
 
     .filePreview {
+        .imgBlock{
+            .title {
+                text-align: center;
+                font-size: 18px;
+            }
+        }
+    }
+
+    .ModelPreview {
+        .textBlock {
+
+        }
+        .formBlock {
+
+        }
         .imgBlock{
             .title {
                 text-align: center;

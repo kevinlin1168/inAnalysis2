@@ -87,7 +87,7 @@
                 this.isShowProjectDetail = !this.isShowProjectDetail;
             },
             onProjectManagementClick(projectID) {
-                this.$router.push({name: 'project', params: {id: projectID}})
+                this.$router.push({name: 'project', params: {projectID: projectID}})
             },
             onProjectDeleteClick(projectID) {
                 console.warn(projectID);

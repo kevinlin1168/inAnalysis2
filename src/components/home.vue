@@ -1,7 +1,7 @@
 <template>
     <div>
         <el-row class="cardContainer">
-            <el-col :span="4" :offset="7">
+            <el-col :span="6" :offset="5">
                 <el-card  shadow="hover" class="clickable" @click.native="OnProjectCardClick">
                     <div class="cardHeader">Project Sum</div>
                     <div class="cardMain">
@@ -11,7 +11,7 @@
                     </div>
                 </el-card>
             </el-col>
-            <el-col :span="4" :offset="2">
+            <el-col :span="6" :offset="2">
                 <el-card shadow="hover" class="clickable" @click.native="OnApiCardClick">
                     <div class="cardHeader">Api Sum</div>
                     <div class="cardMain">
@@ -23,7 +23,7 @@
             </el-col>
         </el-row>
         <el-row class="cardContainer">
-            <el-col :span="4" :offset="7">
+            <el-col :span="6" :offset="5">
                 <el-card  shadow="never">
                     <div class="cardHeader">Model Sum</div>
                     <div class="cardMain">
@@ -33,7 +33,7 @@
                     </div>
                 </el-card>
             </el-col>
-            <el-col :span="4" :offset="2">
+            <el-col :span="6" :offset="2">
                 <el-card shadow="never">
                     <div class="cardHeader">File Sum</div>
                     <div class="cardMain">
