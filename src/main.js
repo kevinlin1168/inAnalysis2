@@ -18,7 +18,7 @@ fontawesome.library.add(solid);
 fontawesome.library.add(regular);
 fontawesome.library.add(brands);
 
-Vue.component('font-awesome-icon', FontAwesomeIcon)
+Vue.component('font-awesome-icon', FontAwesomeIcon);
 // import locale from 'element-ui/lib/locale/lang/zh-TW'
 
 Vue.config.productionTip = false;

@@ -249,6 +249,7 @@
         border-top: none;
         border-width: 1px;
         padding: 10px;
+        border-radius:10px;
 
         .title {
             font-size: 18px;
