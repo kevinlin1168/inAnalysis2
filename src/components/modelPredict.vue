@@ -31,7 +31,7 @@
                 <el-row class="labelBlock" v-if="selectFileID !== ''">
                     <el-col :span="8" :offset="8">
                         Select Label
-                        <draggable class="list-group selectItem" :list="columnList" group="label" @change="$forceUpdate()">
+                        <draggable class="list-group selectItem" :list="columnList" group="label">
                             <div
                                     class="list-group-item"
                                     v-for="element in columnList"
@@ -43,12 +43,12 @@
                     </el-col>
                 </el-row>
                 <el-row class="selectBlock" v-if="selectFileID !== ''">
-                    <el-col class="inputBlock" :span="8" :offset="3">
+                    <el-col class="inputBlock" :span="8" :offset="2">
                         <div class="title"> Input </div>
                         <el-row v-for="(label, index) in labelList" :key="index">
                             <el-col v-if="label.type === 'input'" :span="24" :key="index">
                                 {{label.name}}
-                                <draggable class="list-group selectItem" :list="label.selection" group="label" :move="checkMove"  @change="$forceUpdate()" >
+                                <draggable class="list-group selectItem" :list="label.selection" group="label" >
                                     <div
                                             class="list-group-item"
                                             v-for="selection in label.selection"
@@ -61,11 +61,17 @@
                         </el-row>
                     </el-col>
                     <el-col class="outputBlock" :span="8" :offset="3">
-                        <div class="title"> Output </div>
+                        <div class="title"> Output
+                            <el-alert
+                                    title="If all output labels are empty will execute model predict"
+                                    type="warning"
+                                    :closable="false">
+                            </el-alert>
+                        </div>
                         <el-row v-for="(label, index) in labelList"  :key="index">
                             <el-col v-if="label.type === 'output'" :span="24" :key="index">
                                 {{label.name}}
-                                <draggable class="list-group selectItem" :list="label.selection" group="label" :move="checkMove"  @change="$forceUpdate()" >
+                                <draggable class="list-group selectItem" :list="label.selection" group="label" >
                                     <div
                                             class="list-group-item"
                                             v-for="selection in label.selection"
@@ -128,19 +134,10 @@
             fetchData() {
                 this.projectID = this.$route.params.projectID;
                 this.modelID = this.$route.params.modelID;
+                this.selectFileID = '';
             },
             onConfirmClick() {
                 console.warn('onConfirmClick');
-            },
-            checkMove(evt) {
-                console.log(evt.draggedContext.index)
-                console.log(evt.draggedContext.element)
-                console.log(evt.draggedContext.futureIndex)
-                console.log(evt.relatedContext.index)
-                console.log(evt.relatedContext.element)
-                console.log(evt.relatedContext.list)
-                console.log(evt.relatedContext.component)
-                return (evt.draggedContext.element.name!== 'b')
             }
         },
         components: {
@@ -186,57 +183,56 @@
                 display:  flex;
                 align-items: center;
             }
-        }
 
-        .labelBlock {
-            margin-top: 10px;
-            .selectItem {
-                border-style:solid;
-                border-width: 1px;
-                border-radius:10px;
-                min-height: 50px;
-                padding: 5px;
-            }
-        }
-
-
-        .selectBlock {
-            margin-top: 10px;
-            display:flex;
-            align-items:center;
-
-            .inputBlock{
-                border-style:solid;
-                border-width: 1px;
-                border-radius:10px;
-                min-height: 50px;
-                padding: 5px;
-
-                .title {
-                    margin-bottom: 10px;
-                    font-size: 18px;
+            .labelBlock {
+                margin-top: 10px;
+                .selectItem {
+                    border-style:solid;
+                    border-width: 1px;
+                    border-radius:10px;
+                    min-height: 50px;
+                    padding: 5px;
                 }
             }
-            .outputBlock {
-                height: 100%;
-                border-style:solid;
-                border-width: 1px;
-                border-radius:10px;
-                min-height: 50px;
-                padding: 5px;
-                vertical-align: middle;
 
-                .title {
-                    margin-bottom: 10px;
-                    font-size: 18px;
+            .selectBlock {
+                margin-top: 10px;
+                display:flex;
+                align-items:center;
+
+                .inputBlock{
+                    border-style:solid;
+                    border-width: 1px;
+                    border-radius:10px;
+                    min-height: 50px;
+                    padding: 5px;
+
+                    .title {
+                        margin-bottom: 10px;
+                        font-size: 18px;
+                    }
                 }
-            }
-            .selectItem {
-                border-style:solid;
-                border-width: 1px;
-                border-radius:10px;
-                min-height: 50px;
-                padding: 5px;
+                .outputBlock {
+                    height: 100%;
+                    border-style:solid;
+                    border-width: 1px;
+                    border-radius:10px;
+                    min-height: 50px;
+                    padding: 5px;
+                    vertical-align: middle;
+
+                    .title {
+                        margin-bottom: 10px;
+                        font-size: 18px;
+                    }
+                }
+                .selectItem {
+                    border-style:solid;
+                    border-width: 1px;
+                    border-radius:10px;
+                    min-height: 50px;
+                    padding: 5px;
+                }
             }
         }
 
