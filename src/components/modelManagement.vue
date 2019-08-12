@@ -51,10 +51,18 @@
                         <draggable class="list-group selectItem" :list="columnList" group="label" @change="onLabelChange">
                             <div
                                     class="list-group-item"
-                                    v-for="element in columnList"
-                                    :key="element"
+                                    v-for="selection in columnList"
+                                    :key="selection.name"
                             >
-                                {{ element }}
+                                <div class="itemTitle">
+                                            {{ selection.name }}
+                                </div>
+                                <div class="itemImg">
+                                    <img v-if="selection.type === 'int'" src="@/assets/integer.png" height="25" width="25">
+                                    <img v-if="selection.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                    <img v-if="selection.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
+                                    <img v-if="selection.type === 'path'" src="@/assets/image.png" height="25" width="25">
+                                </div>
                             </div>
                         </draggable>
                     </el-col>
@@ -68,14 +76,32 @@
                         <div class="title"> Input </div>
                         <el-row v-for="(label, index) in labelList" :key="index">
                             <el-col v-if="label.type === 'input'" :span="24" :key="index">
-                                {{label.name}}
+                                <div class="labelNameBlock">
+                                    <div class="labelTitle">
+                                        {{label.name}}
+                                    </div>
+                                    <div class="labelImg">
+                                        <img v-if="label.acceptType === 'int'" src="@/assets/integer.png" height="25" width="25">
+                                        <img v-if="label.acceptType === 'float'" src="@/assets/float.png" height="25" width="25">
+                                        <img v-if="label.acceptType === 'string'" src="@/assets/nlp.png" height="25" width="25">
+                                        <img v-if="label.acceptType === 'path'" src="@/assets/image.png" height="25" width="25">
+                                    </div>
+                                </div>
                                 <draggable class="list-group selectItem" :list="label.selection" group="label" @change="onLabelChange">
                                     <div
                                             class="list-group-item"
                                             v-for="selection in label.selection"
-                                            :key="selection"
+                                            :key="selection.name"
                                     >
-                                        {{ selection }}
+                                        <div class="itemTitle">
+                                            {{ selection.name }}
+                                        </div>
+                                        <div class="itemImg">
+                                            <img v-if="selection.type === 'int'" src="@/assets/integer.png" height="25" width="25">
+                                            <img v-if="selection.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                            <img v-if="selection.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
+                                            <img v-if="selection.type === 'path'" src="@/assets/image.png" height="25" width="25">
+                                        </div>
                                     </div>
                                 </draggable>
                             </el-col>
@@ -85,14 +111,31 @@
                         <div class="title"> Output</div>
                         <el-row v-for="(label, index) in labelList"  :key="index">
                             <el-col v-if="label.type === 'output'" :span="24" :key="index">
-                                {{label.name}}
+                                <div class="labelNameBlock">
+                                    <div class="labelTitle">
+                                        {{label.name}}
+                                    </div>
+                                    <div class="labelImg">
+                                        <img v-if="label.acceptType === 'int'" src="@/assets/integer.png" height="25" width="25">
+                                        <img v-if="label.acceptType === 'float'" src="@/assets/float.png" height="25" width="25">
+                                        <img v-if="label.acceptType === 'string'" src="@/assets/nlp.png" height="25" width="25">
+                                        <img v-if="label.acceptType === 'path'" src="@/assets/image.png" height="25" width="25">
+                                    </div>
+                                </div>
                                 <draggable class="list-group selectItem" :list="label.selection" group="label" @change="onLabelChange">
                                     <div
                                             class="list-group-item"
                                             v-for="selection in label.selection"
-                                            :key="selection"
-                                    >
-                                        {{ selection }}
+                                            :key="selection.name">
+                                        <div class="itemTitle">
+                                            {{ selection.name }}
+                                        </div>
+                                        <div class="itemImg">
+                                            <img v-if="selection.type === 'int'" src="@/assets/integer.png" height="25" width="25">
+                                            <img v-if="selection.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                            <img v-if="selection.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
+                                            <img v-if="selection.type === 'path'" src="@/assets/image.png" height="25" width="25">
+                                        </div>
                                     </div>
                                 </draggable>
                             </el-col>
@@ -151,6 +194,7 @@
 </template>
 <script>
     import draggable from "vuedraggable";
+
     export default {
         name: 'modelManagement',
         created: function() {
@@ -171,22 +215,38 @@
                 correlationImg: '',
                 correlationAlgorithmList: ['correlationAlgo1', 'correlationAlgo2', 'correlationAlgo3', 'correlationAlgo4'],
                 algorithmList: ['algo1', 'algo2', 'algo3', 'algo4'],
-                columnList: ['column1', 'column2', 'column3', 'column4'],
+                columnList: [{
+                    name: 'column1',
+                    type: 'int'
+                }, {
+                    name: 'column2',
+                    type: 'float'
+                }, {
+                    name: 'column3',
+                    type: 'string'
+                }, {
+                    name: 'column4',
+                    type: 'path'
+                }],
                 labelList: [{
                     name: 'label1',
                     type: 'input',
+                    acceptType: 'string',
                     selection: []
                 }, {
                     name: 'label2',
                     type: 'input',
+                    acceptType: 'int',
                     selection: []
                 }, {
                     name: "label3",
                     type: 'input',
+                    acceptType: 'float',
                     selection: []
                 }, {
                     name: "label4",
                     type: 'output',
+                    acceptType: 'path',
                     selection: []
                 }],
                 parameterList: [{
@@ -212,7 +272,10 @@
             fetchData() {
                 this.projectID = this.$route.params.projectID;
                 this.modelID = this.$route.params.modelID;
-                this.active = 0
+                this.active = 0;
+                this.selectCorrelationAlgorithm = '';
+                this.selectAlgorithm = '';
+                this.isLabelConfirm = false;
             },
             onSelectCorrelationAlgorithmChange() {
                 if(this.selectCorrelationAlgorithm !== '') {
@@ -300,6 +363,22 @@
                     min-height: 50px;
                     padding: 5px;
                 }
+
+                .list-group-item {
+
+                    .itemTitle {
+                        width: 75%;
+                        align-items: center;
+                        display: inline-block;
+                    }
+
+                    .itemImg {
+                        width: 25%;
+                        align-items: center;
+                        display: inline-block;
+                        text-align: center;
+                    }
+                }
             }
 
 
@@ -332,6 +411,38 @@
                     .title {
                         margin-bottom: 10px;
                         font-size: 18px;
+                    }
+                }
+
+                .labelNameBlock {
+                    .labelTitle {
+                        width: 75%;
+                        align-items: center;
+                        display: inline-block;
+                    }
+
+                    .labelImg {
+                        width: 25%;
+                        align-items: center;
+                        display: inline-block;
+                        text-align: center;
+                    }
+                }
+                
+
+                .list-group-item {
+
+                    .itemTitle {
+                        width: 75%;
+                        align-items: center;
+                        display: inline-block;
+                    }
+
+                    .itemImg {
+                        width: 25%;
+                        align-items: center;
+                        display: inline-block;
+                        text-align: center;
                     }
                 }
                 .selectItem {
