@@ -633,10 +633,10 @@
                             "algoname":"lineXY",
                             "datacol":"{\"x\":\"a\",\"y\":\"b\"}"
                         }
-                        _this.$http.post("http://localhost:8787/viz/data/do",content, {emulateJSON:true}).then((response) => {
+                        _this.$http.post("http://140.112.26.135:8787/viz/data/do",content, {emulateJSON:true}).then((response) => {
                             console.warn('success',response);
                             let temp = response.data.data.div;
-                            _this.imgList.push(temp)
+                            _this.fileImgList.push(temp)
                             // 插入绘制script代码
                             let bokehRunScript = document.createElement('SCRIPT')
                             bokehRunScript.setAttribute('type', 'text/javascript')
