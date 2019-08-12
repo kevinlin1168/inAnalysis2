@@ -626,29 +626,21 @@
                     // cdn的js加载完毕后再请求bokeh参数
                     let _this = this;
                     script.onload = () => {
-                        _this.$http.get("http://140.112.26.135:8787/img1com", option).then((response) => {
+                        let content = {
+                            "tokenstr": "ab",
+                            "tokenint": "293",
+                            "fileUid":"num",
+                            "algoname":"lineXY",
+                            "datacol":"{\"x\":\"a\",\"y\":\"b\"}"
+                        }
+                        _this.$http.post("http://localhost:8787/viz/data/do",content, {emulateJSON:true}).then((response) => {
                             console.warn('success',response);
-                            let temp = response.data.div;
-                            _this.fileImgList.push(temp)
+                            let temp = response.data.data.div;
+                            _this.imgList.push(temp)
                             // 插入绘制script代码
                             let bokehRunScript = document.createElement('SCRIPT')
                             bokehRunScript.setAttribute('type', 'text/javascript')
-                            let t = document.createTextNode(response.data.script)
-                            bokehRunScript.appendChild(t)
-                            document.body.appendChild(bokehRunScript)
-                            // 绘制代码执行完后关闭等待画面
-                            _this.loading = false
-                        }, (response) => {
-                            console.warn('error',response);
-                        });
-                        _this.$http.get("http://140.112.26.135:8787/circle1com", option).then((response) => {
-                            console.warn('success',response);
-                            let temp = response.data.div;
-                            _this.fileImgList.push(temp)
-                            // 插入绘制script代码
-                            let bokehRunScript = document.createElement('SCRIPT')
-                            bokehRunScript.setAttribute('type', 'text/javascript')
-                            let t = document.createTextNode(response.data.script)
+                            let t = document.createTextNode(response.data.data.script)
                             bokehRunScript.appendChild(t)
                             document.body.appendChild(bokehRunScript)
                             // 绘制代码执行完后关闭等待画面
