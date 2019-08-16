@@ -168,7 +168,7 @@
                 outlierOptionList: ['algo1', 'algo2', 'algo3'],
                 characterProcessingOptionList: ['algo1', 'algo2', 'algo3'],
                 formOffset: 0, //Todo change offset when isHasStringType change 0 or3
-                selectAllMissingValue: false,
+                selectAllMissingValue: true,
                 selectAllNormalizeAlgorithm: '',
                 selectAllOutliersAlgo: '',
                 selectAllCharterProcessing: [],
@@ -179,7 +179,7 @@
             fetchData() {
                 this.projectID = this.$route.params.projectID;
                 this.fileID = this.$route.params.fileID;
-                //TODO get file column list
+                //TODO get file column list && set item.selectMissingValue = true
             },
             onBreadcrumbProjectClick() {
                this.$router.push({name: 'project', params: {projectID: this.projectID}});

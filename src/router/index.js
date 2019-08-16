@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 
 import login from '@/components/login';
+import signup from '@/components/signup';
 import manage from '@/components/manage';
 import dataProjectManage from '@/components/dataProjectManage';
 import projectManage from '@/components/projectManage'
@@ -17,6 +18,9 @@ export default new Router({
     routes: [{
         path: '/',
         component: login
+    },{
+        path: '/signup',
+        component: signup
     },{
         path: '/home',
         component: manage,

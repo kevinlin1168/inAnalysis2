@@ -6,13 +6,14 @@
                     <el-image :src="inAnalysisLogo"></el-image>
                     <p> Please sign in </p>
                     <el-alert v-if="isError" class="loginAlert"
-                        title="Invalid ID and password." 
+                        title="Invalid ID or password." 
                         type="error" 
                         effect="dark" 
                         :closable="false">
                     </el-alert>
                     <el-input v-model="userID" placeholder="User ID"></el-input>
-                    <el-input v-model="userPassward" placeholder="Password"></el-input>
+                    <el-input v-model="userPassward" placeholder="Password" type="password"></el-input>
+                    <el-button class="loginButton" type="info" @click="signup">Sign Up</el-button>
                     <el-button class="loginButton" type="primary" @click="login">Sign In</el-button>
                 </div>
             </div>
@@ -21,6 +22,7 @@
 </template>
 <script>
     import inAnalysisLogo from '@/assets/InAnalysisLogo.png';
+    import {user_signin_url} from '@/config/api.js';
     export default {
         name: 'login',
         data: function () {
@@ -28,13 +30,25 @@
                 inAnalysisLogo: inAnalysisLogo,
                 userID: '',
                 userPassward: '',
-                isError: true
+                isError: false
             }
         },
         methods:{
             login() {
-                console.log('login click');
-                this.$router.push('home');
+                let userFrom = {
+                    account: this.userID,
+                    password: this.userPassward
+                }
+                this.$http.post(user_signin_url, userFrom).then((response) => {
+                    if(response.body.status == 'success') {
+                        this.$router.push('home');
+                    } else {
+                        this.isError = true
+                    }
+                })
+            },
+            signup() {
+                this.$router.push('signup');
             }
         },
         components: {
@@ -67,7 +81,8 @@
 
             .loginButton {
                 width: 100%;
-                margin-top: 10px
+                margin-top: 10px;
+                margin-left: 0px;
             }
 
             .loginAlert {
