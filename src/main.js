@@ -13,6 +13,7 @@ import solid from '@fortawesome/fontawesome-free-solid';
 import regular from '@fortawesome/fontawesome-free-regular';
 import brands from '@fortawesome/fontawesome-free-brands';
 import VueResource from 'vue-resource';
+import VueCookie from 'vue-cookie';
 
 fontawesome.library.add(solid);
 fontawesome.library.add(regular);
@@ -25,6 +26,7 @@ Vue.config.productionTip = false;
 Vue.use(ElementUI);
 Vue.use(BootstrapVue);
 Vue.use(VueResource);
+Vue.use(VueCookie);
 
 
 new Vue({

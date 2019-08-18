@@ -19,7 +19,7 @@
                         </el-select>
                     </el-form-item>
                     <el-form-item label="Project Name" :label-width="addProjectPopupWidth">
-                        <el-input v-model="form.name" autocomplete="off"></el-input>
+                        <el-input v-model="form.projectName" autocomplete="off"></el-input>
                     </el-form-item>
                 </el-form>
                 <div slot="footer" class="dialog-footer">
@@ -42,7 +42,7 @@
                         min-width="25%">
                 </el-table-column>
                 <el-table-column
-                        prop="dataType"
+                        prop="projectType"
                         label="Project Type"
                         min-width="25%">
                 </el-table-column>
@@ -113,7 +113,16 @@
                 });
             },
             onAddProjectClick() {
-                console.warn(window.localStorage.getItem('userID'));
+                let form = {
+                    projectName: this.form.projectName,
+                    dataType: this.dataType,
+                    projectType: this.form.projectType,
+                    userID: window.localStorage.getItem('userID'),
+                    token: window.localStorage.getItem('token')
+                }
+                this.$http.post(project_add_url, form).then((response) => {
+                    console.warn('resp', response);
+                })
                 this.isShowAddProjectPopup = false
             }
         },

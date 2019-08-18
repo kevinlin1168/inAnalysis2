@@ -52,11 +52,27 @@
         methods:{
             fetchData() {
                 let userFrom = {
-                    userID: window.localStorage.getItem('userID')
+                    userID: window.localStorage.getItem('userID'),
+                    token: window.localStorage.getItem('token')
                 };
-                console.warn(userFrom)
-                this.$http.post(project_getProjectByUser_url, userFrom, {emulateJSON:true}).then((response) => {
+                this.numericalProjectList = [];
+                this.NLPProjectList = [];
+                this.CVProjectList = []
+                this.$http.post(project_getProjectByUser_url, userFrom).then((response) => {
                     console.warn('resp', response);
+                    response.body.data.projectList.forEach((item) => {
+                        switch(item.dataType) {
+                            case 'num':
+                                this.numericalProjectList.push(item);
+                                break;
+                            case 'nlp':
+                                this.NLPProjectList.push(item);
+                                break;
+                            case 'cv':
+                                this.CVProjectList.push(item);
+                                break;
+                        }
+                    })
                 }, () => {
                     console.error('getProjectListError')
                 });

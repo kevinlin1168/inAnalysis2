@@ -40,8 +40,10 @@
                     password: this.userPassward
                 }
                 this.$http.post(user_signin_url, userFrom).then((response) => {
+                    console.warn('resp', response)
                     if(response.body.status == 'success') {
-                        window.localStorage.setItem('userID', response.body.data)
+                        window.localStorage.setItem('userID', response.body.data.userID)
+                        window.localStorage.setItem('token', response.body.data.token)
                         this.$router.push('home');
                     } else {
                         this.isError = true;
