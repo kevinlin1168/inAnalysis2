@@ -385,7 +385,7 @@
         methods:{
             fetchData() {
                 this.projectID = this.$route.params.projectID;
-                //TODO get modelSum fileSum by projectID
+                //TODO get modelSum fileSum by projectID && get project
             },
             onShowDetailClick() {
                 this.isShowModelDetail = !this.isShowModelDetail;
@@ -468,6 +468,7 @@
                 let FileController = "http://140.112.26.135:8787/upload";
                 let form = new FormData();
                 form.append("file", fileObj);
+                //TODO get type
                 form.append("type", "num");
                 form.append("tokenstr", "ab");
                 form.append("tokenint", "293")
@@ -660,6 +661,7 @@
         border-bottom-style: solid;
         font-size: 24px;
         border-width: 2px;
+        border-radius: 0px;
 
         .el-breadcrumb__item {
             font-size: 24px;
@@ -672,6 +674,7 @@
         font-size: 18px;
         border-width: 1px;
         margin-top: 5px;
+        border-radius: 0px;
 
         .projectInfo {
             margin: auto;

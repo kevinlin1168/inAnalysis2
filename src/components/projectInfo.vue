@@ -13,7 +13,9 @@
                 <el-form :model="form">
                     <el-form-item label="Project Type" :label-width="addProjectPopupWidth">
                         <el-select v-model="form.projectType" placeholder="please select project type">
-                            <el-option class="option" v-for="(item, index) in projectTypeOption" :label="item" :value="index" :key="index"></el-option>
+                            <template v-if="dataType == 'num'">
+                                <el-option class="option" v-for="(item, index) in numProjectTypeOption" :label="item" :value="item" :key="index"></el-option>
+                            </template>
                         </el-select>
                     </el-form-item>
                     <el-form-item label="Project Name" :label-width="addProjectPopupWidth">
@@ -22,7 +24,7 @@
                 </el-form>
                 <div slot="footer" class="dialog-footer">
                     <el-button @click="isShowAddProjectPopup = false">Cancel</el-button>
-                    <el-button type="primary" @click="isShowAddProjectPopup = false">Confirm</el-button>
+                    <el-button type="primary" @click="onAddProjectClick">Confirm</el-button>
                 </div>
             </el-dialog>
         </el-col>
@@ -35,12 +37,12 @@
                     :data="projectList"
                     style="width: 100%">
                 <el-table-column
-                        prop="name"
+                        prop="projectName"
                         label="Project Name"
                         min-width="25%">
                 </el-table-column>
                 <el-table-column
-                        prop="projectType"
+                        prop="dataType"
                         label="Project Type"
                         min-width="25%">
                 </el-table-column>
@@ -58,12 +60,15 @@
     </el-row>
 </template>
 <script>
+    import {project_add_url} from '@/config/api.js';
+
     export default {
         name: 'projectInfo',
         props: [
             'title',
             'projectSum',
-            'projectList'
+            'projectList',
+            'dataType'
         ],
         data: function () {
             return {
@@ -74,7 +79,7 @@
                     projectType: '',
                     projectName: ''
                 },
-                projectTypeOption: [
+                numProjectTypeOption: [
                     'Abnormal Detection',
                     'Regression',
                     'Classification',
@@ -108,7 +113,8 @@
                 });
             },
             onAddProjectClick() {
-
+                console.warn(window.localStorage.getItem('userID'));
+                this.isShowAddProjectPopup = false
             }
         },
         components: {
@@ -120,6 +126,7 @@
 <style lang="scss" scoped>
 .gridTitle {
     border-bottom-style: solid;
+    border-radius: 0px;
     font-size: 24px;
     border-width: 2px;
 

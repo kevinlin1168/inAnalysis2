@@ -152,6 +152,7 @@
         border-bottom-style: solid;
         font-size: 24px;
         border-width: 2px;
+        border-radius: 0px;
 
         .el-breadcrumb__item {
             font-size: 24px;

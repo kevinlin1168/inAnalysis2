@@ -1,47 +1,65 @@
 <template>
     <div>
         <projectInfo title="Numerical Projects" 
-                        :project-sum="numericalProjectSum"
-                        :project-list="numericalProjectList">
+                        :project-sum="numericalProjectList.length"
+                        :project-list="numericalProjectList"
+                        :data-type="'num'">
         </projectInfo>
         <projectInfo style="margin-top: 16px"
                         title="Natural Language Processing Projects" 
-                        :project-sum="numericalProjectSum"
-                        :project-list="numericalProjectList">
+                        :project-sum="NLPProjectList.length"
+                        :project-list="NLPProjectList">
         </projectInfo>
         <projectInfo style="margin-top: 16px"
                         title="Computer Vision Projects"
-                        :project-sum="numericalProjectSum"
-                        :project-list="numericalProjectList">
+                        :project-sum="CVProjectList.length"
+                        :project-list="CVProjectList">
         </projectInfo>
     </div>
 </template>
 <script>
     import projectInfo from './projectInfo';
+    import {project_getProjectByUser_url} from '@/config/api.js';
+
     export default {
         name: 'home',
+        created: function() {
+            this.fetchData();
+        },
+        watch: {
+            '$route': 'fetchData'
+        },
         data: function () {
             return {
-                numericalProjectSum: '20',
                 numericalProjectList: [
                     {
-                        name: 'test1',
-                        projectType: 'test1',
-                        id: 'aaa'
+                        projectName: 'test1',
+                        projectType: 'num',
+                        dataType: 'test1',
+                        projectID: 'aaa'
                     },
                     {
-                        name: 'test2',
-                        projectType: 'test2',
-                        id: 'bbb'
+                        projectName: 'test2',
+                        projectType: 'num',
+                        dataType: 'test2',
+                        projectID: 'bbb'
                     }
                 ],
-                APISum: '10',
-                isShowNumericalDetail: false,
+                NLPProjectList: [],
+                CVProjectList: []
             }
         },
         methods:{
-            showNumericalDetail() {
-                this.isShowNumericalDetail = !this.isShowNumericalDetail;
+            fetchData() {
+                let userFrom = {
+                    userID: window.localStorage.getItem('userID')
+                };
+                console.warn(userFrom)
+                this.$http.post(project_getProjectByUser_url, userFrom, {emulateJSON:true}).then((response) => {
+                    console.warn('resp', response);
+                }, () => {
+                    console.error('getProjectListError')
+                });
             }
         },
         components: {
