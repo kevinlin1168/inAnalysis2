@@ -64,7 +64,7 @@
         name: 'manage',
         data: function () {
             return {
-                userName: 'UserName'
+                userName: window.localStorage.getItem('userName')
             }
         },
         methods:{
@@ -72,6 +72,7 @@
                 this.$router.push('/project');
             },
             onSignOutClick() {
+                window.sessionStorage.setItem('isLogin', false)
                 this.$router.push('/');
             },
             onHomeClick() {

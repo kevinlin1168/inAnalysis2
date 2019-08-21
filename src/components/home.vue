@@ -55,7 +55,6 @@
         },
         methods:{
             OnProjectCardClick() {
-                console.warn('projectCard Click')
                 this.$router.push('/project')
             },
             OnApiCardClick() {

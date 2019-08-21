@@ -3,7 +3,9 @@
         <projectInfo title="Numerical Projects" 
                         :project-sum="numericalProjectList.length"
                         :project-list="numericalProjectList"
-                        :data-type="'num'">
+                        :data-type="'num'"
+                        @projectUpdate= 'fetchData'
+                        >
         </projectInfo>
         <projectInfo style="margin-top: 16px"
                         title="Natural Language Processing Projects" 
@@ -18,7 +20,7 @@
     </div>
 </template>
 <script>
-    import projectInfo from './projectInfo';
+    import projectInfo from './dataProjectInfo';
     import {project_getProjectByUser_url} from '@/config/api.js';
 
     export default {
@@ -59,7 +61,6 @@
                 this.NLPProjectList = [];
                 this.CVProjectList = []
                 this.$http.post(project_getProjectByUser_url, userFrom).then((response) => {
-                    console.warn('resp', response);
                     response.body.data.projectList.forEach((item) => {
                         switch(item.dataType) {
                             case 'num':

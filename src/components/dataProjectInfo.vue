@@ -51,8 +51,8 @@
                         label="Actions"
                         min-width="10%">
                     <template slot-scope="scope">
-                        <el-button @click="onProjectManagementClick(scope.row.id)" type="text" size="medium">Management</el-button>
-                        <el-button @click="onProjectDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
+                        <el-button @click="onProjectManagementClick(scope.row.projectID)" type="text" size="medium">Management</el-button>
+                        <el-button @click="onProjectDeleteClick(scope.row.projectID)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -60,7 +60,7 @@
     </el-row>
 </template>
 <script>
-    import {project_add_url} from '@/config/api.js';
+    import {project_add_url, project_delete_url } from '@/config/api.js';
 
     export default {
         name: 'projectInfo',
@@ -95,12 +95,23 @@
                 this.$router.push({name: 'project', params: {projectID: projectID}})
             },
             onProjectDeleteClick(projectID) {
-                console.warn(projectID);
                 this.$confirm('Do you want to confirm the deletion?', 'Hint', {
                     confirmButtonText: 'Conform',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
                 }).then(() => {
+                    let form = {
+                        projectID: projectID,
+                        token: window.localStorage.getItem('token')
+                    }
+                    this.$http.post(project_delete_url, form).then((response) => {
+                        if (response.data.status == 'success') {
+                            console.warn('delete success');
+                            this.$emit('projectUpdate');
+                        } else {
+                            this.$message.error('Delete error please try again');
+                        }
+                    })
                     this.$message({
                         type: 'success',
                         message: 'Delete Succeeded!'
@@ -121,9 +132,11 @@
                     token: window.localStorage.getItem('token')
                 }
                 this.$http.post(project_add_url, form).then((response) => {
-                    console.warn('resp', response);
+                    if (response.data.status == 'success') {
+                        this.$emit('projectUpdate');
+                        this.isShowAddProjectPopup = false;
+                    }
                 })
-                this.isShowAddProjectPopup = false
             }
         },
         components: {

@@ -11,6 +11,7 @@ export const user_signup_url = userUrl + '/signup';
 // project Api
 export const project_add_url = projectUrl + '/add';
 export const project_getProjectByUser_url = projectUrl + '/getProjectByUserID';
+export const project_delete_url = projectUrl + '/delete';
 
 // file Api
 export const file_upload_url = fileUrl + '/upload';

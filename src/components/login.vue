@@ -42,7 +42,9 @@
                 this.$http.post(user_signin_url, userFrom).then((response) => {
                     console.warn('resp', response)
                     if(response.body.status == 'success') {
+                        window.sessionStorage.setItem('isLogin', true)
                         window.localStorage.setItem('userID', response.body.data.userID)
+                        window.localStorage.setItem('userName', response.body.data.userName)
                         window.localStorage.setItem('token', response.body.data.token)
                         this.$router.push('home');
                     } else {

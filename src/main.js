@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import App from './App.vue';
 import ElementUI from 'element-ui';
+import locale from 'element-ui/lib/locale/lang/en'
 import router from './router';
 // import store from './store';
 import BootstrapVue from 'bootstrap-vue';
@@ -23,11 +24,10 @@ Vue.component('font-awesome-icon', FontAwesomeIcon);
 // import locale from 'element-ui/lib/locale/lang/zh-TW'
 
 Vue.config.productionTip = false;
-Vue.use(ElementUI);
+Vue.use(ElementUI, {locale});
 Vue.use(BootstrapVue);
 Vue.use(VueResource);
 Vue.use(VueCookie);
-
 
 new Vue({
   el: '#app',
