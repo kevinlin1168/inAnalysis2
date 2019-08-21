@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="fillcontain" @mouseover="OperatingWebsite()">
+  <div id="app" class="fillcontain" @click="OperatingWebsite()">
     <transition mode="out-in">
       <router-view></router-view>
     </transition>
@@ -21,17 +21,16 @@ export default {
     OperatingWebsite() {
       let currentTime = this.currentTime;
       let lastTime = new Date().getTime();
-      let timeOut = 1 * 60 * 1000; //設定時間 10分鐘
+      let timeOut = 60 * 60 * 1000; //設定時間 60分鐘
+      console.warn(lastTime - currentTime > timeOut)
       if (lastTime - currentTime > timeOut) {
+        this.currentTime = new Date().getTime(); 
+      } else {
         // 未操作頁面，跳轉登入頁面
         this.currentTime = new Date().getTime(); 
+        sessionStorage.setItem('isLogin', false);
         this.$router.push('/');
-      } else {
-        this.currentTime = new Date().getTime(); 
       }
-
-      // const truthPathQuery = this.$route.query.type;
-      // const truthPath = this.$Base64.decode(truthPathQuery); //點選登入的時候跳轉這個地址
     }
   }
 }
