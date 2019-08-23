@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="fillcontain" @click="OperatingWebsite()">
+  <div id="app" class="fillcontain" @mouseover="OperatingWebsite()">
     <transition mode="out-in">
       <router-view></router-view>
     </transition>

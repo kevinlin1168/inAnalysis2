@@ -10,7 +10,7 @@
         <!-- file block -->
         <el-col :span="16" class="gridSubTitle"> File List </el-col>
         <el-col :span="3" class="gridSubTitle"> Total Files</el-col>
-        <el-col :span="2" class="gridSubTitle"> {{fileSum}}</el-col>
+        <el-col :span="2" class="gridSubTitle"> {{fileList.length}}</el-col>
         <el-col :span="2" class="gridSubTitle">
             <el-tooltip content="Add model" placement="bottom" effect="light">
                 <i class="el-icon-circle-plus" @click="onAddFileClick"></i>
@@ -26,24 +26,24 @@
                     :data="fileList"
                     style="width: 100%">
                 <el-table-column
-                    prop="name"
+                    prop="fileName"
                     label="File Name"
                     min-width="20%">
                 </el-table-column>
                 <el-table-column
-                    prop="type"
+                    prop="fileType"
                     label="File Type"
                     min-width="40%">
                 </el-table-column>
                 <el-table-column
-                    prop="status"
+                    prop="fileStatus"
                     label="Status"
                     min-width="10%">
                     <template slot-scope="scope">
                         <el-tag
                         style="width: 80px; text-align: center;"
                         size = 'medium'
-                        :type="fileTagTransform(scope.row.status)"
+                        :type="fileTagTransform(scope.row.fileStatus)"
                         disable-transitions> Inuse
                         </el-tag>
                     </template>
@@ -53,13 +53,13 @@
                         label="Actions"
                         min-width="30%">
                     <template slot-scope="scope" style="text-align: right">
-                        <el-button @click="onFilePreviewClick(scope.row.id)" type="text" size="medium">Preview</el-button>
-                        <el-button @click="onFileDownloadClick(scope.row.id)" type="text" size="medium">Download</el-button>
-                        <el-button @click="onPreProcessingClick(scope.row.id)" type="text" size="medium">Pre-processing</el-button>
-                        <el-button @click="onSelectToTrainClick(scope.row.id)" type="text" size="medium">Select to train</el-button>
+                        <el-button @click="onFilePreviewClick(scope.row.fileID)" type="text" size="medium">Preview</el-button>
+                        <el-button @click="onFileDownloadClick(scope.row.fileID)" type="text" size="medium">Download</el-button>
+                        <el-button @click="onPreProcessingClick(scope.row.fileID)" type="text" size="medium">Pre-processing</el-button>
+                        <el-button @click="onSelectToTrainClick(scope.row.fileID)" type="text" size="medium">Select to train</el-button>
                         <!-- Delete Button -->
                         <el-button v-if="scope.row.status === 'Inuse'" type="text" size="medium" disabled>Delete</el-button>
-                        <el-button v-if="scope.row.status !== 'Inuse'" @click="onFileDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
+                        <el-button v-if="scope.row.status !== 'Inuse'" @click="onFileDeleteClick(scope.row.fileID)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -261,7 +261,7 @@
 </template>
 
 <script>
-    import { file_upload_url } from '@/config/api.js';
+    import { file_upload_url, file_getFileList_url, file_delete_url } from '@/config/api.js';
     export default {
         name: "projectManage",
         created: function() {
@@ -339,20 +339,20 @@
                 },
                 fileList: [
                     {
-                        name: 'aaa',
-                        id: 'test1',
-                        type: 'ccc',
-                        status: 'Inuse'
+                        fileName: 'aaa',
+                        fileID: 'test1',
+                        fileType: 'ccc',
+                        fileStatus: 'Inuse'
                     }, {
-                        name: 'abc',
-                        id: 'test2',
-                        type: 'csad',
-                        status: 'NotInuse'
+                        fileName: 'abc',
+                        fileID: 'test2',
+                        fileType: 'csad',
+                        fileStatus: 'NotInuse'
                     }, {
-                        name: 'aaasdfaa',
-                        id: 'test3',
-                        type: 'adf',
-                        status: 'NotInuse'
+                        fileName: 'aaasdfaa',
+                        fileID: 'test3',
+                        fileType: 'adf',
+                        fileStatus: 'NotInuse'
                     }
                 ],
                 chartOptionList: [
@@ -386,6 +386,17 @@
         methods:{
             fetchData() {
                 this.projectID = this.$route.params.projectID;
+                let form = {
+                    projectID: this.projectID,
+                    token: window.localStorage.getItem('token')
+                }
+                this.$http.post(file_getFileList_url, form).then((resp) => {
+                    if(resp.body.status == "success") {
+                        this.fileList = resp.body.data.fileList;
+                    } else {
+                        console.error('getFileListError', resp.body.msg)
+                    }
+                })
                 //TODO get modelSum fileSum by projectID && get project
             },
             onShowDetailClick() {
@@ -446,17 +457,25 @@
                 });
             },
             onFileDeleteClick(fileID) {
-                console.warn(fileID);
                 this.$confirm('Do you want to confirm the deletion?', 'Hint', {
                     confirmButtonText: 'Conform',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
                 }).then(() => {
-                    //TODO delete file and refresh fileList
-                    this.$message({
-                        type: 'success',
-                        message: 'Delete Succeeded!'
-                    });
+                    let form = {
+                        fileID: fileID,
+                        token: window.localStorage.getItem('token')
+                    }
+                    this.$http.post(file_delete_url, form).then((resp) => {
+                        if(resp.body.status == "success") {
+                            this.$message({
+                                type: 'success',
+                                message: 'Delete Succeeded!'
+                            });
+                            this.fetchData();
+                        }
+                    })
+                    
                 }).catch(() => {
                     this.$message({
                         type: 'info',
@@ -471,19 +490,14 @@
                 //TODO get type
                 form.append("type", "num");
                 form.append("userID", window.localStorage.getItem('userID'));
+                form.append("projectID", this.projectID)
                 form.append("token", window.localStorage.getItem('token'))
                 this.$http.post(file_upload_url, form).then((response) => {
-                    console.warn(response);
+                    if (response.body.status == "success") {
+                        this.fetchData();
+                    }
                 })
-                console.warn(fileObj);
 
-                // TODO delete this block
-                this.fileList.push({
-                    name: fileObj.name,
-                    id: fileObj.uid,
-                    type: fileObj.type,
-                    status: 'NotInuse'
-                });
                 this.$refs.upload.clearFiles();
                 this.isShowUploadBlock = true;
                 this.isShowAddFilePopup = false;
@@ -517,9 +531,9 @@
                 }
             },
             fileTagTransform(status) {
-                if(status === 'Inuse') {
+                if(status) {
                     return 'warning';
-                } else if (status === 'NotInuse') {
+                } else {
                     return 'info';
                 }
             },

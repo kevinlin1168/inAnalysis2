@@ -15,4 +15,6 @@ export const project_delete_url = projectUrl + '/delete';
 
 // file Api
 export const file_upload_url = fileUrl + '/upload';
+export const file_delete_url = fileUrl + '/delete';
+export const file_getFileList_url = fileUrl + '/getFileList';
 
