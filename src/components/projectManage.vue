@@ -261,6 +261,7 @@
 </template>
 
 <script>
+    import { file_upload_url } from '@/config/api.js';
     export default {
         name: "projectManage",
         created: function() {
@@ -465,25 +466,15 @@
             },
             uploadSectionFile(params) {
                 let fileObj = params.file;
-                let FileController = "http://140.112.26.135:8787/upload";
                 let form = new FormData();
                 form.append("file", fileObj);
                 //TODO get type
                 form.append("type", "num");
-                form.append("tokenstr", "ab");
-                form.append("tokenint", "293")
-                let xhr = new XMLHttpRequest();
-                // TODO upload and refresh fileList
-                // xhr.open("post", FileController, true);
-                // xhr.onload = function () {
-                //     console.warn(xhr.response);
-                //     this.$message({
-                //         message: '恭喜你，上传成功!',
-                //         type: 'success'
-                //     });
-                // };
-                // xhr.send(form);
-
+                form.append("userID", window.localStorage.getItem('userID'));
+                form.append("token", window.localStorage.getItem('token'))
+                this.$http.post(file_upload_url, form).then((response) => {
+                    console.warn(response);
+                })
                 console.warn(fileObj);
 
                 // TODO delete this block
