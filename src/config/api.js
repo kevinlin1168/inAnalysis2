@@ -17,4 +17,5 @@ export const project_delete_url = projectUrl + '/delete';
 export const file_upload_url = fileUrl + '/upload';
 export const file_delete_url = fileUrl + '/delete';
 export const file_getFileList_url = fileUrl + '/getFileList';
+export const file_getColumn_url = fileUrl + '/getColumn';
 

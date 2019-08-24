@@ -4,7 +4,7 @@
         <el-col :span="24" class="gridTitle">
             <el-breadcrumb separator-class="el-icon-arrow-right">
                 <el-breadcrumb-item :to="{ path: '/project' }">Project Management</el-breadcrumb-item>
-                <el-breadcrumb-item>Project name</el-breadcrumb-item>
+                <el-breadcrumb-item>{{projectName}}</el-breadcrumb-item>
             </el-breadcrumb>
         </el-col>
         <!-- file block -->
@@ -190,10 +190,10 @@
         </el-dialog>
 
         <!-- preview file popup-->
-        <el-dialog class="filePreview" :title='selectFile.name + " Preview"' :visible.sync="isShowFilePreviewPopup" :show-close='false'>
+        <el-dialog class="filePreview" :title='selectFile.fileName + " Preview"' :visible.sync="isShowFilePreviewPopup" :show-close='false'>
             <el-form>
                 <el-form-item label="Chart" :label-width="labelWidth">
-                    <el-select v-model="selectChart" placeholder="Please select chart">
+                    <el-select v-model="selectChart" @change="onSelectChartChange" placeholder="Please select chart">
                         <el-option
                                 v-for="item in chartOptionList"
                                 :key="item"
@@ -205,16 +205,16 @@
             </el-form>
             <el-form v-if="selectChart" :rules="featureRule">
                 <el-form-item label="Feature" :label-width="labelWidth" prop="feature">
-                    <el-select v-for="(item, index) in featureOptionList" 
+                    <el-select v-for="(item, index) in featureList" 
                                 v-model="selectFeature[index]" 
                                 placeholder="Please select feature"
                                 @change="onSelectFeatureChange()" 
                                 :key="index">
                         <el-option
-                                v-for="option in item.option"
-                                :key="option"
-                                :label="option"
-                                :value="option">
+                                v-for="option in columnList"
+                                :key="option.name"
+                                :label="option.name"
+                                :value="option.name">
                         </el-option>
                     </el-select>
                 </el-form-item>
@@ -261,7 +261,7 @@
 </template>
 
 <script>
-    import { file_upload_url, file_getFileList_url, file_delete_url } from '@/config/api.js';
+    import { file_upload_url, file_getFileList_url, file_delete_url, file_getColumn_url } from '@/config/api.js';
     export default {
         name: "projectManage",
         created: function() {
@@ -290,6 +290,7 @@
             return {
                 html: '',
                 projectID: '',
+                projectName: 'projectName',
                 modelSum: 0,
                 fileSum: 0,
                 isShowModelDetail: false,
@@ -309,6 +310,7 @@
                 selectFeature: [],
                 fileImgList: [],
                 modelImgList: [],
+                columnList: [],
                 modelList: [
                     {
                         name: 'aaa',
@@ -337,43 +339,16 @@
                 fileForm: {
                     modelName: ''
                 },
-                fileList: [
-                    {
-                        fileName: 'aaa',
-                        fileID: 'test1',
-                        fileType: 'ccc',
-                        fileStatus: 'Inuse'
-                    }, {
-                        fileName: 'abc',
-                        fileID: 'test2',
-                        fileType: 'csad',
-                        fileStatus: 'NotInuse'
-                    }, {
-                        fileName: 'aaasdfaa',
-                        fileID: 'test3',
-                        fileType: 'adf',
-                        fileStatus: 'NotInuse'
-                    }
-                ],
+                fileList: [],
                 chartOptionList: [
                     'test1', 'test2'
                 ],
-                featureOptionList: [
+                featureList: [
                     {
-                        name: 'aaa',
-                        option: [
-                            'test',
-                            'test1',
-                            'sdf',
-                            'asdf'
-                        ]
+                        x: 'int',
                     },
                     {
-                        name: 'bbb',
-                        option: [
-                            'test',
-                            'test1'
-                        ]
+                        y: 'int',
                     }
                 ],
                 featureRule: {
@@ -385,18 +360,21 @@
         },
         methods:{
             fetchData() {
-                this.projectID = this.$route.params.projectID;
-                let form = {
-                    projectID: this.projectID,
-                    token: window.localStorage.getItem('token')
-                }
-                this.$http.post(file_getFileList_url, form).then((resp) => {
-                    if(resp.body.status == "success") {
-                        this.fileList = resp.body.data.fileList;
-                    } else {
-                        console.error('getFileListError', resp.body.msg)
+                if(this.$route.name == 'project') {
+                    this.projectName = window.localStorage.getItem('projectName');
+                    this.projectID = this.$route.params.projectID;
+                    let form = {
+                        projectID: this.projectID,
+                        token: window.localStorage.getItem('token')
                     }
-                })
+                    this.$http.post(file_getFileList_url, form).then((resp) => {
+                        if(resp.body.status == "success") {
+                            this.fileList = resp.body.data.fileList;
+                        } else {
+                            console.error('getFileListError', resp.body.msg)
+                        }
+                    });
+                }
                 //TODO get modelSum fileSum by projectID && get project
             },
             onShowDetailClick() {
@@ -547,7 +525,21 @@
             },
             onFilePreviewClick(fileID) {
                 this.selectFile = this.findSelectFile(fileID);
-                this.isShowFilePreviewPopup = true;
+                let fileColumnForm = {
+                        fileID: fileID,
+                        token: window.localStorage.getItem('token')
+                    }
+                console.warn('fileColumnForm', fileColumnForm)
+                this.$http.post(file_getColumn_url, fileColumnForm).then((resp) => {
+                    if(resp.body.status == 'success') {
+                        this.columnList = resp.body.data.cols;
+                        console.warn('columnList', this.columnList)
+                        this.isShowFilePreviewPopup = true;
+                    } else {
+                        console.error(resp);
+                    }
+                })
+                
             },
             onModelPreviewClick(modelID) {
                 this.selectModel = this.findSelectModel(modelID);
@@ -571,7 +563,7 @@
             },
             findSelectFile(fileID) {
                 let file = this.fileList.find(function(element) {
-                    return fileID === element.id;
+                    return fileID === element.fileID;
                 });
                 return file;
             },
@@ -590,6 +582,9 @@
             onModelPreviewClose() {
                 this.isShowModelPreviewPopup = false;
                 this.selectModel = {};
+            },
+            onSelectChartChange() {
+
             },
             onSelectFeatureChange() {
                 console.warn('featureChange');

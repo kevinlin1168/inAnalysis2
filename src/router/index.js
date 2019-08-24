@@ -81,8 +81,7 @@ const router = new Router({
 
 router.beforeEach((to, from, next) => {
 
-    let isLogin = (sessionStorage.getItem("isLogin") === 'true');
-    console.warn('isLogin', isLogin)
+    let isLogin = (localStorage.getItem("isLogin") === 'true');
   
     if(isLogin){
         next()

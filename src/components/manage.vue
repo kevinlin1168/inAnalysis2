@@ -72,7 +72,7 @@
                 this.$router.push('/project');
             },
             onSignOutClick() {
-                window.sessionStorage.setItem('isLogin', false)
+                window.localStorage.setItem('isLogin', false)
                 this.$router.push('/');
             },
             onHomeClick() {

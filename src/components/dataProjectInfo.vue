@@ -51,7 +51,7 @@
                         label="Actions"
                         min-width="10%">
                     <template slot-scope="scope">
-                        <el-button @click="onProjectManagementClick(scope.row.projectID)" type="text" size="medium">Management</el-button>
+                        <el-button @click="onProjectManagementClick(scope.row.projectName, scope.row.projectID)" type="text" size="medium">Management</el-button>
                         <el-button @click="onProjectDeleteClick(scope.row.projectID)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
@@ -91,7 +91,8 @@
             onShowDetailClick() {
                 this.isShowProjectDetail = !this.isShowProjectDetail;
             },
-            onProjectManagementClick(projectID) {
+            onProjectManagementClick(projectName, projectID) {
+                window.localStorage.setItem('projectName', projectName);
                 this.$router.push({name: 'project', params: {projectID: projectID}})
             },
             onProjectDeleteClick(projectID) {

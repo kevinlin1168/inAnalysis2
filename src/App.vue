@@ -10,7 +10,10 @@
 export default {
   name: 'app',
   created: function() {
-    window.localStorage.setItem('isLogin', false)
+    let userString = decodeURIComponent(escape(window.atob(window.localStorage.getItem('token').split('.')[1])))
+    let user = JSON.parse(userString)
+    if((user.exp * 1000) < new Date().getTime())
+      window.localStorage.setItem('isLogin', false)
   },
   data() {
     return {
@@ -26,7 +29,7 @@ export default {
         console.warn('timeOut')
         // 未操作頁面，跳轉登入頁面
         this.currentTime = new Date().getTime(); 
-        sessionStorage.setItem('isLogin', false);
+        localStorage.setItem('isLogin', false);
         this.$router.push('/');
       } else {
         this.currentTime = new Date().getTime(); 
