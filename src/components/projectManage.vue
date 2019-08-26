@@ -54,7 +54,7 @@
                         min-width="30%">
                     <template slot-scope="scope" style="text-align: right">
                         <el-button @click="onFilePreviewClick(scope.row.fileID)" type="text" size="medium">Preview</el-button>
-                        <el-button @click="onFileDownloadClick(scope.row.fileID)" type="text" size="medium">Download</el-button>
+                        <el-button @click="onFileDownloadClick(scope.row)" type="text" size="medium">Download</el-button>
                         <el-button @click="onPreProcessingClick(scope.row.fileID)" type="text" size="medium">Pre-processing</el-button>
                         <el-button @click="onSelectToTrainClick(scope.row.fileID)" type="text" size="medium">Select to train</el-button>
                         <!-- Delete Button -->
@@ -261,7 +261,7 @@
 </template>
 
 <script>
-    import { file_upload_url, file_getFileList_url, file_delete_url, file_getColumn_url } from '@/config/api.js';
+    import { file_upload_url, file_getFileList_url, file_delete_url, file_getColumn_url, file_download_url } from '@/config/api.js';
     export default {
         name: "projectManage",
         created: function() {
@@ -551,9 +551,22 @@
             onModelManagementClick(modelID) {
                 this.$router.push({name: 'modelManagement', params: {projectID: this.projectID, modelID: modelID}})
             },
-            onFileDownloadClick(fileID) {
+            onFileDownloadClick(file) {
                 // TODO download file
-                console.warn('Download', fileID);
+                console.warn('Download', file);
+                let fileForm = {
+                    fileID: file.fileID,
+                    fileName: file.fileName+'.'+file.fileType,
+                    token: window.localStorage.getItem('token')
+                }
+                this.$http.post(file_download_url, fileForm).then((resp) => {
+                    console.warn(resp);
+                    let blob = new Blob([resp.body], {type:resp.headers.get('Content-Type')});
+                    let link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = fileForm.fileName;
+                    link.click();
+                })
             },
             clearModelForm() {
                 this.modelForm = {
