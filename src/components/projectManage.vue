@@ -53,9 +53,9 @@
                         label="Actions"
                         min-width="30%">
                     <template slot-scope="scope" style="text-align: right">
-                        <el-button @click="onFilePreviewClick(scope.row.fileID)" type="text" size="medium">Preview</el-button>
+                        <el-button @click="onFilePreviewClick(scope.row)" type="text" size="medium">Preview</el-button>
                         <el-button @click="onFileDownloadClick(scope.row)" type="text" size="medium">Download</el-button>
-                        <el-button @click="onPreProcessingClick(scope.row.fileID)" type="text" size="medium">Pre-processing</el-button>
+                        <el-button @click="onPreProcessingClick(scope.row)" type="text" size="medium">Pre-processing</el-button>
                         <el-button @click="onSelectToTrainClick(scope.row.fileID)" type="text" size="medium">Select to train</el-button>
                         <!-- Delete Button -->
                         <el-button v-if="scope.row.status === 'Inuse'" type="text" size="medium" disabled>Delete</el-button>
@@ -196,26 +196,26 @@
                     <el-select v-model="selectChart" @change="onSelectChartChange" placeholder="Please select chart">
                         <el-option
                                 v-for="item in chartOptionList"
-                                :key="item"
-                                :label="item"
-                                :value="item">
+                                :key="item.algoname"
+                                :label="item.friendlyname"
+                                :value="item.algoname">
                         </el-option>
                     </el-select>
                 </el-form-item>
             </el-form>
-            <el-form v-if="selectChart" :rules="featureRule">
-                <el-form-item label="Feature" :label-width="labelWidth" prop="feature">
-                    <el-select v-for="(item, index) in featureList" 
-                                v-model="selectFeature[index]" 
+            <el-form v-if="selectChart">
+                <el-form-item v-for="(item, index) in featureList" :label="'Feature: ' + item.name" :label-width="labelWidth" prop="feature" :key="index">
+                    <el-select  v-model="selectColumn[index]" 
                                 placeholder="Please select feature"
-                                @change="onSelectFeatureChange()" 
-                                :key="index">
-                        <el-option
-                                v-for="option in columnList"
+                                @change="onSelectColumnChange()" >
+                        <template v-for="option in columnList">
+                            <el-option
+                                v-if="option.type == featureList[index].type || (option.type == 'int' && featureList[index].type == 'float')"
                                 :key="option.name"
                                 :label="option.name"
                                 :value="option.name">
-                        </el-option>
+                            </el-option>
+                        </template>
                     </el-select>
                 </el-form-item>
             </el-form>
@@ -261,7 +261,7 @@
 </template>
 
 <script>
-    import { file_upload_url, file_getFileList_url, file_delete_url, file_getColumn_url, file_download_url } from '@/config/api.js';
+    import { file_upload_url, file_getFileList_url, file_delete_url, file_getColumn_url, file_download_url, visualize_getAlgo_url, visualize_doVisualize_url } from '@/config/api.js';
     export default {
         name: "projectManage",
         created: function() {
@@ -271,22 +271,6 @@
             '$route': 'fetchData'
         },
         data() {
-            let validateFeature = (rule, value, callback) => {
-                console.warn('test');
-                let errorFlag = false;
-                for (let i = 0; i < this.selectFeature.length - 1; i++) {
-                    for (let j = i+1; i < this.selectFeature.length; j++) {
-                        if (this.selectFeature[i] === this.selectFeature[j]) {
-                            errorFlag = true;
-                        }
-                    }
-                }
-                if (errorFlag) {
-                    callback(new Error('Select same feature'));
-                } else {
-                    callback();
-                }
-            };
             return {
                 html: '',
                 projectID: '',
@@ -307,7 +291,7 @@
                 selectFile: {},
                 selectModel: {},
                 selectChart: '',
-                selectFeature: [],
+                selectColumn: [],
                 fileImgList: [],
                 modelImgList: [],
                 columnList: [],
@@ -340,22 +324,8 @@
                     modelName: ''
                 },
                 fileList: [],
-                chartOptionList: [
-                    'test1', 'test2'
-                ],
-                featureList: [
-                    {
-                        x: 'int',
-                    },
-                    {
-                        y: 'int',
-                    }
-                ],
-                featureRule: {
-                    feature: [
-                        { validator: validateFeature, trigger: 'blur' }
-                    ]
-                }
+                chartOptionList: [],
+                featureList: [],
             }
         },
         methods:{
@@ -370,6 +340,15 @@
                     this.$http.post(file_getFileList_url, form).then((resp) => {
                         if(resp.body.status == "success") {
                             this.fileList = resp.body.data.fileList;
+                            let form = {
+                                token: window.localStorage.getItem('token')
+                            }
+                            this.$http.post(visualize_getAlgo_url, form).then((resp) => {
+                                if(resp.body.status == "success") {
+                                    this.chartOptionList = resp.body.data.algos
+                                }
+                            
+                            });
                         } else {
                             console.error('getFileListError', resp.body.msg)
                         }
@@ -417,7 +396,6 @@
                 this.isShowAddModelPopup = false;
             },
             onModelDeleteClick(modelID) {
-                console.warn(modelID);
                 this.$confirm('Do you want to confirm the deletion?', 'Hint', {
                     confirmButtonText: 'Conform',
                     cancelButtonText: 'Cancel',
@@ -519,21 +497,20 @@
                 this.modelForm.fileID = fileID;
                 this.isShowSelectToTrainPopup = true;
             },
-            onPreProcessingClick(fileID) {
-                this.findSelectFile(fileID);
-                this.$router.push({name: 'filePreProcessing', params: {projectID: this.projectID,fileID: fileID}})
+            onPreProcessingClick(file) {
+                window.localStorage.setItem('fileName', file.fileName)
+                window.localStorage.setItem('fileType', file.fileType)
+                this.$router.push({name: 'filePreProcessing', params: {projectID: this.projectID,fileID: file.fileID}})
             },
-            onFilePreviewClick(fileID) {
-                this.selectFile = this.findSelectFile(fileID);
+            onFilePreviewClick(file) {
+                this.selectFile = file
                 let fileColumnForm = {
-                        fileID: fileID,
+                        fileID: file.fileID,
                         token: window.localStorage.getItem('token')
                     }
-                console.warn('fileColumnForm', fileColumnForm)
                 this.$http.post(file_getColumn_url, fileColumnForm).then((resp) => {
                     if(resp.body.status == 'success') {
                         this.columnList = resp.body.data.cols;
-                        console.warn('columnList', this.columnList)
                         this.isShowFilePreviewPopup = true;
                     } else {
                         console.error(resp);
@@ -553,14 +530,12 @@
             },
             onFileDownloadClick(file) {
                 // TODO download file
-                console.warn('Download', file);
                 let fileForm = {
                     fileID: file.fileID,
                     fileName: file.fileName+'.'+file.fileType,
                     token: window.localStorage.getItem('token')
                 }
                 this.$http.post(file_download_url, fileForm).then((resp) => {
-                    console.warn(resp);
                     let blob = new Blob([resp.body], {type:resp.headers.get('Content-Type')});
                     let link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
@@ -589,7 +564,7 @@
             onFilePreviewClose() {
                 this.isShowFilePreviewPopup = false;
                 this.selectChart = '';
-                this.selectFeature = [];
+                this.selectColumn = [];
                 this.isShowFilePreviewBlock = false;
             },
             onModelPreviewClose() {
@@ -597,22 +572,33 @@
                 this.selectModel = {};
             },
             onSelectChartChange() {
-
+                this.featureList = [];
+                this.selectColumn = [];
+                this.isShowFilePreviewBlock = false;
+                let selectChartList = this.chartOptionList.filter(item => item.algoname == this.selectChart);
+                let dataKeyList = Object.keys(selectChartList[0].data);
+                dataKeyList.forEach((key) => {
+                    if(selectChartList[0].data[key] !== 'none') {
+                        let featureItem = {
+                            name: key,
+                            type: selectChartList[0].data[key]
+                        }
+                        this.featureList.push(featureItem);
+                    }
+                });
             },
-            onSelectFeatureChange() {
-                console.warn('featureChange');
+            onSelectColumnChange() {
                 this.isShowFilePreviewBlock = false;
                 this.isSelectFectureError = false;
                 let bokehVersion = '1.3.4';
                 this.fileImgList = [];
-                for(let i = 0; i < this.featureOptionList.length; i++) {
-                    console.warn('selectFeature', this.selectFeature[i]);
-                    if(this.selectFeature[i] === null || this.selectFeature[i] === undefined) {
+                for(let i = 0; i < this.featureList.length; i++) {
+                    if(this.selectColumn[i] === null || this.selectColumn[i] === undefined) {
                         this.isSelectFectureError = true;
                         break;
                     }
-                    for(let j = i+1; j <= this.featureOptionList.length; j++) {
-                        if(this.selectFeature[i] === this.selectFeature[j]) {
+                    for(let j = i+1; j <= this.featureList.length; j++) {
+                        if(this.selectColumn[i] === this.selectColumn[j]) {
                             this.isSelectFectureError = true;
                             break;
                         }
@@ -620,35 +606,62 @@
                 }
                 console.log('isSelectFectureError', this.isSelectFectureError)
                 if (!this.isSelectFectureError) {
-                    this.isShowFilePreviewBlock = true;
-                    let option = {
-                        headers:{
-                            'Content-Type': 'application/form-urlencoded',
-                            'Access-Control-Allow-Origin': '*'
-                        }
-                    }
+                    // let option = {
+                    //     headers:{
+                    //         'Content-Type': 'application/form-urlencoded',
+                    //         'Access-Control-Allow-Origin': '*'
+                    //     }
+                    // }
                     let link = document.createElement('link')
                     link.setAttribute('rel', 'stylesheet')
                     link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
                     link.setAttribute('type', 'text/css')
                     document.head.appendChild(link)
-                    // 在头部插入js代码
+                    // 在header插入js
                     let script = document.createElement('script')
                     script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
                     script.async = 'async'
                     document.head.appendChild(script)
-                    // cdn的js加载完毕后再请求bokeh参数
+                    // cdn的js載入完畢再请求bokeh參數
                     let _this = this;
                     script.onload = () => {
-                        let content = {
-                            "tokenstr": "ab",
-                            "tokenint": "293",
-                            "fileUid":"num",
-                            "algoname":"lineXY",
-                            "datacol":"{\"x\":\"a\",\"y\":\"b\"}"
+                        // let content = {
+                        //     "tokenstr": "ab",
+                        //     "tokenint": "293",
+                        //     "fileUid":"num",
+                        //     "algoname":"lineXY",
+                        //     "datacol":"{\"x\":\"a\",\"y\":\"b\"}"
+                        // }
+                        let dataCol = {}
+                        switch(this.selectColumn.length) {
+                            case 1: 
+                                dataCol = {
+                                    'x': this.selectColumn[0]
+                                };
+                                break;
+                            case 2:
+                                dataCol = {
+                                    'x': this.selectColumn[0],
+                                    'y': this.selectColumn[1]
+                                };
+                                break;
+                            case 3:
+                                dataCol = {
+                                    'x': this.selectColumn[0],
+                                    'y': this.selectColumn[1],
+                                    'value': this.selectColumn[2]
+                                };
+                                break;
+                            default:
+                                console.error('error')
                         }
-                        _this.$http.post("http://140.112.26.135:8787/viz/data/do",content, {emulateJSON:true}).then((response) => {
-                            console.warn('success',response);
+                        let form = {
+                            'fileID': this.selectFile.fileID,
+                            'algoName': this.selectChart,
+                            'dataCol': JSON.stringify(dataCol),
+                            'token': window.localStorage.getItem('token')
+                        }
+                        _this.$http.post(visualize_doVisualize_url,form, {emulateJSON:true}).then((response) => {
                             let temp = response.data.data.div;
                             _this.fileImgList.push(temp)
                             // 插入绘制script代码
@@ -659,8 +672,9 @@
                             document.body.appendChild(bokehRunScript)
                             // 绘制代码执行完后关闭等待画面
                             _this.loading = false
+                            _this.isShowFilePreviewBlock = true;
                         }, (response) => {
-                            console.warn('error',response);
+                            console.error('error',response);
                         });
                     }
                 }
