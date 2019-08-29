@@ -100,7 +100,7 @@
                         <div v-if="item.type !== 'int' && item.type !== 'float'" style="text-align: center"> --- </div>
                     </el-col>
                     <el-col :span="5" v-if="isHasStringType">
-                        <el-select v-model="item.selectCharterProcessing" placeholder="please select" multiple v-if="item.type === 'string'" @change="$forceUpdate()">
+                        <el-select v-model="item.selectCharterProcessing" placeholder="please select" multiple v-if="item.type === 'string'" @change="onSelectCharterProcessingChange(item)">
                             <el-option
                                     v-for="item in characterProcessingOptionList"
                                     :key="item.algoname"
@@ -115,9 +115,12 @@
                     </el-col>
                 </el-row>
                 <el-row class="inputFileName">
-                    <el-col :span="6" :offset="6"> File Name After Processing </el-col>
-                    <el-col :span="6">
-                        <el-input v-model="fileNameAfterProcessing" placeholder="please input file name"></el-input>
+                    <el-col :span="12" :offset="6">
+                        <el-form ref="form" :model="form" label-width="200px" :rules="rules">
+                            <el-form-item label="File Name After Processing" prop="fileNameAfterProcessing">
+                                <el-input v-model="form.fileNameAfterProcessing" placeholder="please input file name"></el-input>
+                            </el-form-item>
+                        </el-form>
                     </el-col>
                 </el-row>
             </div>
@@ -128,14 +131,15 @@
         </el-col>
 
         <!-- preview column popup-->
-        <el-dialog :title='selectColumn.name + " Preview"' :visible.sync="isShowColumnPreviewPopup" :show-close='false'>
-            <div class="imgBlock">
-                <el-carousel trigger="click" height="400px" :autoplay="false">
-                    <el-carousel-item v-for="item in imgList" :key="item">
-                        <div v-html="item">
-                        </div>
-                    </el-carousel-item>
-                </el-carousel>
+        <el-dialog class="previewPopup" :title='selectColumn.name + " Preview"' :visible.sync="isShowColumnPreviewPopup" :show-close='false' :before-close="onColumnPreviewClose">
+            <div class="textBlock">
+                {{showText}}
+            </div>
+            <div class="imgBlock" v-if="isHasImg">
+                <div class="leftImg" v-html="leftImg">
+                </div>
+                <div class="rightImg" v-html="rightImg">
+                </div>
             </div>
             <div slot="footer" class="dialog-footer">
                 <el-button type="primary" @click="onColumnPreviewClose">Close</el-button>
@@ -144,7 +148,8 @@
     </el-row>
 </template>
 <script>
-    import { file_getColumn_url, analytic_getPreprocessAlgo_url, analytic_doPreprocess_url } from '@/config/api.js';
+    import { file_getColumn_url, analytic_getPreprocessAlgo_url, analytic_doPreprocess_url, analytic_preprocessPreview_url } from '@/config/api.js';
+    import { post } from '@/utils/requests/post.js'
     export default {
         name: 'filePreprocessing',
         created: function() {
@@ -159,30 +164,31 @@
                 projectID : '',
                 fileID: '',
                 fileName: '',
-                fileNameAfterProcessing: '',
+                form: {
+                    fileNameAfterProcessing: ''
+                },
                 projectName: '',
                 isHasStringType: true,
-                columnList: [
-                    {
-                        'name': 'col1_name',
-                        'type': 'int'
-                    }, {
-                        'name': 'col2_name',
-                        'type': 'float',
-                    },{
-                        'name': 'col3_name',
-                        'type': 'string'
-                    }],
+                columnList: [],
                 isShowColumnPreviewPopup: false,
+                isHasImg: true,
                 normalizeOptionList: [],
                 outlierOptionList: [],
                 characterProcessingOptionList: [],
-                formOffset: 0, //Todo change offset when isHasStringType change 0 or3
+                formOffset: 0,
                 selectAllMissingValue: true,
                 selectAllNormalizeAlgorithm: '',
                 selectAllOutliersAlgo: '',
-                selectAllCharterProcessing: [],
-                imgList: []
+                selectAllCharterProcessing: [''],
+                storeSelectAllCharterProcessing: [],
+                leftImg: '',
+                rightImg: '',
+                showText: '',
+                rules: {
+                    fileNameAfterProcessing: [
+                        { required: true, message: 'please input file name', trigger: 'blur' }
+                    ]
+                }
             }
         },
         methods:{
@@ -197,8 +203,9 @@
                         token: window.localStorage.getItem('token')
                     }
                     this.isHasStringType = false;
-                    this.$http.post(file_getColumn_url, fileColumnForm).then((resp) => {
+                    post(file_getColumn_url, fileColumnForm).then((resp) => {
                         if(resp.body.status == 'success') {
+                            console.warn(resp);
                             this.columnList = resp.body.data.cols;
                             for(let column of this.columnList) {
                                 if(column.type == 'string') {
@@ -206,47 +213,49 @@
                                 }
                                 column.selectMissingValue = this.selectAllMissingValue;
                             }
-                        } else {
-                            console.error(resp);
-                        }
-                    });
-                    let form = {
-                        token: window.localStorage.getItem('token')
-                    }
-                    this.normalizeOptionList = [{
-                        friendlyname: 'Not processed',
-                        algoname: ''
-                    }];
-                    this.outlierOptionList = [{
-                        friendlyname: 'Not processed',
-                        algoname: ''
-                    }];
-                    this.characterProcessingOptionList = [{
-                        friendlyname: 'Not processed',
-                        algoname: ''
-                    }];
-                    let _this = this;
-                    this.$http.post(analytic_getPreprocessAlgo_url, form).then((resp) => {
-                        if(resp.body.status == 'success') {
-                            resp.body.data.normalize.forEach((item) => {
-                                this.normalizeOptionList.push(item);
+
+                            let form = {
+                                token: window.localStorage.getItem('token')
+                            }
+                            this.normalizeOptionList = [{
+                                friendlyname: 'Not processed',
+                                algoname: ''
+                            }];
+                            this.outlierOptionList = [{
+                                friendlyname: 'Not processed',
+                                algoname: ''
+                            }];
+                            this.characterProcessingOptionList = [{
+                                friendlyname: 'Not processed',
+                                algoname: ''
+                            }];
+                            let _this = this;
+                            post(analytic_getPreprocessAlgo_url, form).then((resp) => {
+                                if(resp.body.status == 'success') {
+                                    resp.body.data.normalize.forEach((item) => {
+                                        this.normalizeOptionList.push(item);
+                                    });
+                                    resp.body.data.outlierFiltering.forEach((item) => {
+                                        this.outlierOptionList.push(item);
+                                    });
+                                    resp.body.data.stringCleaning.forEach((item) => {
+                                        this.characterProcessingOptionList.push(item);
+                                    });
+                                    _this.selectAllNormalizeAlgorithmChange();
+                                    _this.selectAllOutliersAlgoChange();
+                                    _this.selectAllCharterProcessingChange();
+                                } else {
+                                    console.error(resp);
+                                }
                             });
-                            resp.body.data.outlierFiltering.forEach((item) => {
-                                this.outlierOptionList.push(item);
+                                } else {
+                                    console.error(resp);
+                                }
                             });
-                            resp.body.data.stringCleaning.forEach((item) => {
-                                this.characterProcessingOptionList.push(item);
-                            });
-                            _this.selectAllNormalizeAlgorithmChange();
-                            _this.selectAllOutliersAlgoChange();
-                            _this.selectAllCharterProcessingChange();
-                        } else {
-                            console.error(resp);
-                        }
-                    });
                 }
                 this.projectID = this.$route.params.projectID;
                 this.fileID = this.$route.params.fileID;
+                this.form.fileNameAfterProcessing = '';
                 //TODO get file column list && set item.selectMissingValue = true
             },
             onBreadcrumbProjectClick() {
@@ -254,12 +263,67 @@
             },
             onColumnPreviewClick(column) {
                 console.warn('onColumnPreviewClick', column);
-                this.isShowColumnPreviewPopup = true;
-                this.selectColumn = column;
+                let bokehVersion = '1.3.4';
+                let link = document.createElement('link')
+                link.setAttribute('rel', 'stylesheet')
+                link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
+                link.setAttribute('type', 'text/css')
+                document.head.appendChild(link)
+                // 在header插入js
+                let script = document.createElement('script')
+                script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
+                script.async = 'async'
+                document.head.appendChild(script)
+                // cdn的js載入完畢再请求bokeh參數
+                let _this = this;
+                script.onload = () => {
+                    let action = []
+                    let actionItem = {
+                        'col': column.name,
+                        "missingFiltering": (column.selectMissingValue) ? '1' : '0' ,
+                        "outlierFiltering": (column.selectOutliersAlgo == '' || column.selectOutliersAlgo == undefined) ? '0': column.selectOutliersAlgo,
+                        "normalize": (column.selectNormalizeAlgorithm == '' || column.selectNormalizeAlgorithm == undefined) ? '0': column.selectNormalizeAlgorithm,
+                        "stringCleaning": JSON.stringify((column.selectCharterProcessing == undefined || column.selectCharterProcessing == '') ? Array('0'): column.selectCharterProcessing)
+                    }
+                    action.push(actionItem);
+                    let processForm = {
+                        fileID: this.fileID,
+                        action: JSON.stringify(action),
+                        token: window.localStorage.getItem('token')
+                    }
+                    let _this = this;
+                    post(analytic_preprocessPreview_url, processForm).then((resp) => {
+                        if(resp.body.status == 'success') {
+                            if(resp.body.data.beforeComp != 'None') {
+                                // 插入绘制script代码
+                                _this.leftImg = resp.body.data.beforeComp.div;
+                                _this.rightImg = resp.body.data.afterComp.div;
+                                let bokehRunLeftScript = document.createElement('SCRIPT')
+                                let bokehRunRightScript = document.createElement('SCRIPT')
+                                bokehRunLeftScript.setAttribute('type', 'text/javascript')
+                                bokehRunRightScript.setAttribute('type', 'text/javascript')
+                                let t = document.createTextNode(resp.body.data.beforeComp.script)
+                                bokehRunLeftScript.appendChild(t)
+                                document.body.appendChild(bokehRunLeftScript)
+                                t = document.createTextNode(resp.body.data.afterComp.script)
+                                bokehRunRightScript.appendChild(t)
+                                document.body.appendChild(bokehRunRightScript)
+                                this.isHasImg = true;
+                            }
+                            this.showText = resp.body.data.msg;
+                            this.isShowColumnPreviewPopup = true;
+                            this.selectColumn = column;  
+                        }
+                        
+                    })
+                }
+                
             },
             onColumnPreviewClose() {
+                console.warn('onColumnPreviewClose')
                 this.isShowColumnPreviewPopup = false;
                 this.selectColumn = {};
+                this.isHasImg = false
             },
             onselectAllMissingValueChange() {
                 for(let column of this.columnList) {
@@ -279,36 +343,87 @@
                 }
             },
             selectAllCharterProcessingChange() {
-                for(let column of this.columnList) {
-                    if(column.type === 'string')
-                        column.selectCharterProcessing = this.selectAllCharterProcessing;
+                if(this.selectAllCharterProcessing == '' || this.selectAllCharterProcessing.length == 0) {
+                    this.selectAllCharterProcessing = ['']
+                    for(let column of this.columnList) {
+                        if(column.type === 'string') {
+                            column.selectCharterProcessing = [''];
+                            this.onSelectCharterProcessingChange(column);
+                        }
+                    }
+                } else if(this.selectAllCharterProcessing.length > 1 && this.selectAllCharterProcessing.includes('')) {
+                    if (!this.storeSelectAllCharterProcessing.includes('')) {
+                        this.selectAllCharterProcessing = ['']
+                        for(let column of this.columnList) {
+                            if(column.type === 'string') {
+                                column.selectCharterProcessing = ['']
+                                this.onSelectCharterProcessingChange(column);
+                            }
+                        }
+                    } else {
+                        this.selectAllCharterProcessing = this.selectAllCharterProcessing.filter((item) => item != '')
+                        for(let column of this.columnList) {
+                            if(column.type === 'string') {
+                                column.selectCharterProcessing = this.selectAllCharterProcessing
+                                this.onSelectCharterProcessingChange(column);
+                            }
+                        }
+                    }
+                } else {
+                    for(let column of this.columnList) {
+                        if(column.type === 'string') {
+                            column.selectCharterProcessing = this.selectAllCharterProcessing
+                            this.onSelectCharterProcessingChange(column);
+                        }
+                    }
                 }
+                this.storeSelectAllCharterProcessing = this.selectAllCharterProcessing;
+                
+            },
+            onSelectCharterProcessingChange(item) {
+                if(item.selectCharterProcessing == '' || item.selectCharterProcessing.length == 0) {
+                    item.selectCharterProcessing = ['']
+                } else if(item.selectCharterProcessing.length > 1 && item.selectCharterProcessing.includes('')) {
+                    if (!item.storeSelectCharterProcessing.includes('')) {
+                        item.selectCharterProcessing = ['']
+                    } else {
+                        item.selectCharterProcessing = item.selectCharterProcessing.filter((item) => item != '')
+                    }
+                }
+                item.storeSelectCharterProcessing = item.selectCharterProcessing
             },
             onConfirmClick() {
-                console.warn(this.columnList);
-                let action = []
-                this.columnList.forEach((item) => {
-                    let actionItem = {
-                        'col': item.name,
-                        "missingFiltering": (item.selectMissingValue) ? '1' : '0' ,
-                        "outlierFiltering": (item.selectOutliersAlgo == '') ? '0': item.selectOutliersAlgo,
-                        "normalize": (item.selectNormalizeAlgorithm == '') ? '0': item.selectNormalizeAlgorithm,
-                        "stringCleaning": JSON.stringify((item.characterProcessingOptionList == undefined) ? Array('0'): item.characterProcessingOptionList)
+                this.$refs['form'].validate((valid) => {
+                    if (valid) {
+                        let action = []
+                        this.columnList.forEach((item) => {
+                            let actionItem = {
+                                'col': item.name,
+                                "missingFiltering": (item.selectMissingValue) ? '1' : '0' ,
+                                "outlierFiltering": (item.selectOutliersAlgo == '' || item.selectOutliersAlgo == undefined) ? '0': item.selectOutliersAlgo,
+                                "normalize": (item.selectNormalizeAlgorithm == '' || item.selectNormalizeAlgorithm == undefined) ? '0': item.selectNormalizeAlgorithm,
+                                "stringCleaning": JSON.stringify((item.selectCharterProcessing == undefined || item.selectCharterProcessing == '') ? Array('0'): item.selectCharterProcessing)
+                            }
+                            action.push(actionItem);
+                        })
+                        let processForm = {
+                            fileID: this.fileID,
+                            action: JSON.stringify(action),
+                            fileNameAfterProcessing: this.form.fileNameAfterProcessing+'.'+window.localStorage.getItem('fileType'),
+                            userID: window.localStorage.getItem('userID'),
+                            projectID: this.projectID,
+                            token: window.localStorage.getItem('token')
+                        }
+                        post(analytic_doPreprocess_url, processForm).then((resp) => {
+                            if(resp.body.status == 'success') {
+                                this.$router.push({name: 'project', params: {projectID: this.projectID}})
+                            }
+                        })
+                    } else {
+                        return false;
                     }
-                    action.push(actionItem);
-                })
-                let processForm = {
-                    fileID: this.fileID,
-                    action: JSON.stringify(action),
-                    fileNameAfterProcessing: this.fileNameAfterProcessing+'.'+window.localStorage.getItem('fileType'),
-                    userID: window.localStorage.getItem('userID'),
-                    projectID: this.projectID,
-                    token: window.localStorage.getItem('token')
-                }
-                console.warn(processForm)
-                this.$http.post(analytic_doPreprocess_url, processForm).then((resp) => {
-                    console.warn(resp);
-                })
+                });
+                
             }
         },
         components: {
@@ -391,6 +506,33 @@
             .el-button {
                 display:table;
                 margin:0 auto;
+            }
+        }
+    }
+
+    .previewPopup {
+        .textBlock {
+            font-size: 16px;
+        }
+
+        .imgBlock {
+            margin-top: 10px;
+            display:  flex;
+            align-items: center;
+            
+            .leftImg {
+                width: 300px;
+                height: 200px;
+                display:  flex;
+                align-items: center;
+            }
+
+            .rightImg {
+                margin-left: 20px;
+                width: 300px;
+                height: 200px;
+                display:  flex;
+                align-items: center;
             }
         }
     }

@@ -31,6 +31,7 @@
 <script>
     import inAnalysisLogo from '@/assets/InAnalysisLogo.png';
     import {user_signup_url} from '@/config/api.js';
+    import { post } from '@/utils/requests/post.js'
     export default {
         name: 'signup',
         data: function () {
@@ -80,7 +81,7 @@
                 }
                  this.$refs['form'].validate((valid) => {
                     if (valid) {
-                        this.$http.post(user_signup_url, userFrom).then((response) => {
+                        post(user_signup_url, userFrom).then((response) => {
                             if(response.body.status == 'success') {
                                 this.$router.push('/');
                             } else {

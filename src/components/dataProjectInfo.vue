@@ -13,9 +13,7 @@
                 <el-form :model="form">
                     <el-form-item label="Project Type" :label-width="addProjectPopupWidth">
                         <el-select v-model="form.projectType" placeholder="please select project type">
-                            <template v-if="dataType == 'num'">
-                                <el-option class="option" v-for="(item, index) in numProjectTypeOption" :label="item" :value="item" :key="index"></el-option>
-                            </template>
+                            <el-option class="option" v-for="(item, index) in projectTypeOption" :label="item" :value="item" :key="index"></el-option>
                         </el-select>
                     </el-form-item>
                     <el-form-item label="Project Name" :label-width="addProjectPopupWidth">
@@ -61,6 +59,7 @@
 </template>
 <script>
     import {project_add_url, project_delete_url } from '@/config/api.js';
+    import { post } from '@/utils/requests/post.js'
 
     export default {
         name: 'projectInfo',
@@ -68,7 +67,8 @@
             'title',
             'projectSum',
             'projectList',
-            'dataType'
+            'dataType',
+            'projectTypeOption'
         ],
         data: function () {
             return {
@@ -78,13 +78,7 @@
                 form: {
                     projectType: '',
                     projectName: ''
-                },
-                numProjectTypeOption: [
-                    'Abnormal Detection',
-                    'Regression',
-                    'Classification',
-                    'Clustering'
-                ]
+                }
             }
         },
         methods:{
@@ -93,6 +87,7 @@
             },
             onProjectManagementClick(projectName, projectID) {
                 window.localStorage.setItem('projectName', projectName);
+                window.localStorage.setItem('projectType', this.dataType);
                 this.$router.push({name: 'project', params: {projectID: projectID}})
             },
             onProjectDeleteClick(projectID) {
@@ -105,9 +100,8 @@
                         projectID: projectID,
                         token: window.localStorage.getItem('token')
                     }
-                    this.$http.post(project_delete_url, form).then((response) => {
+                    post(project_delete_url, form).then((response) => {
                         if (response.data.status == 'success') {
-                            console.warn('delete success');
                             this.$emit('projectUpdate');
                         } else {
                             this.$message.error('Delete error please try again');
@@ -132,7 +126,7 @@
                     userID: window.localStorage.getItem('userID'),
                     token: window.localStorage.getItem('token')
                 }
-                this.$http.post(project_add_url, form).then((response) => {
+                post(project_add_url, form).then((response) => {
                     if (response.data.status == 'success') {
                         this.$emit('projectUpdate');
                         this.isShowAddProjectPopup = false;

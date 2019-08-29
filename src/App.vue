@@ -24,7 +24,7 @@ export default {
     OperatingWebsite() {
       let lastTime = this.currentTime;
       let currentTime = new Date().getTime();
-      let timeOut = 60 * 60 * 1000; //設定時間 60分鐘
+      let timeOut = 30 * 60 * 1000; //設定時間 60分鐘
       if ((currentTime - lastTime) > timeOut) {
         console.warn('timeOut')
         // 未操作頁面，跳轉登入頁面

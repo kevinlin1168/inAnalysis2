@@ -137,12 +137,12 @@
         <!-- Popup -->
 
         <!-- add file pop up -->
-        <el-dialog :title='"Add File"' :visible.sync="isShowAddFilePopup" width="400px">
+        <el-dialog :title='"Add File"' :visible.sync="isShowAddFilePopup" width="400px" :before-close="onUploadSelectFileCloce">
             <el-upload
                     ref = "upload"
                     class = "upload-demo"
                     action="no use"
-                    :http-request="uploadSectionFile"
+                    :http-request="uploadSelectionFile"
                     :limit= "1"
                     :on-exceed = "handleExceed"
                     :multiple = "false"
@@ -159,7 +159,7 @@
         </el-dialog>
 
         <!-- add model popup-->
-        <el-dialog :title='"Add Model"' :visible.sync="isShowAddModelPopup">
+        <el-dialog :title='"Add Model"' :visible.sync="isShowAddModelPopup" :before-close="onAddModelCancel">
             <el-form :model="modelForm">
                 <el-form-item label="Model Name" :label-width="labelWidth">
                     <el-input v-model="modelForm.modelName" autocomplete="off"></el-input>
@@ -177,7 +177,7 @@
         </el-dialog>
 
         <!-- select to train popup-->
-        <el-dialog :title='"Add Model"' :visible.sync="isShowSelectToTrainPopup">
+        <el-dialog :title='"Add Model"' :visible.sync="isShowSelectToTrainPopup" :before-close="onAddModelCancel">
             <el-form :model="modelForm">
                 <el-form-item label="Model Name" :label-width="labelWidth">
                     <el-input v-model="modelForm.modelName" autocomplete="off"></el-input>
@@ -190,7 +190,7 @@
         </el-dialog>
 
         <!-- preview file popup-->
-        <el-dialog class="filePreview" :title='selectFile.fileName + " Preview"' :visible.sync="isShowFilePreviewPopup" :show-close='false'>
+        <el-dialog class="filePreview" :title='selectFile.fileName + " Preview"' :visible.sync="isShowFilePreviewPopup" :before-close="onFilePreviewClose" :show-close='false'>
             <el-form>
                 <el-form-item label="Chart" :label-width="labelWidth">
                     <el-select v-model="selectChart" @change="onSelectChartChange" placeholder="Please select chart">
@@ -234,7 +234,7 @@
         </el-dialog>
 
         <!-- preview model popup-->
-        <el-dialog :title='selectModel.name + " Preview"' :visible.sync="isShowModelPreviewPopup" :show-close='false'>
+        <el-dialog :title='selectModel.name + " Preview"' :visible.sync="isShowModelPreviewPopup" :before-close="onModelPreviewClose" :show-close='false'>
             <div class="textBolck">
                 <div class="title">TextPreview</div>
                 
@@ -262,6 +262,7 @@
 
 <script>
     import { file_upload_url, file_getFileList_url, file_delete_url, file_getColumn_url, file_download_url, visualize_getAlgo_url, visualize_doVisualize_url } from '@/config/api.js';
+    import { post } from '@/utils/requests/post.js'
     export default {
         name: "projectManage",
         created: function() {
@@ -295,27 +296,7 @@
                 fileImgList: [],
                 modelImgList: [],
                 columnList: [],
-                modelList: [
-                    {
-                        name: 'aaa',
-                        fileName: 'aaa',
-                        id: '123',
-                        algo: 'ccc',
-                        status: 'Success'
-                    }, {
-                        name: 'abc',
-                        fileName: 'aaa',
-                        id: '456',
-                        algo: 'csad',
-                        status: 'Training'
-                    }, {
-                        name: 'aaasdfaa',
-                        fileName: 'aaa',
-                        id: '231',
-                        algo: 'adf',
-                        status: 'Fail'
-                    }
-                ],
+                modelList: [],
                 modelForm: {
                     modelName: '',
                     fileID: ''
@@ -337,13 +318,13 @@
                         projectID: this.projectID,
                         token: window.localStorage.getItem('token')
                     }
-                    this.$http.post(file_getFileList_url, form).then((resp) => {
+                    post(file_getFileList_url, form).then((resp) => {
                         if(resp.body.status == "success") {
                             this.fileList = resp.body.data.fileList;
                             let form = {
                                 token: window.localStorage.getItem('token')
                             }
-                            this.$http.post(visualize_getAlgo_url, form).then((resp) => {
+                            post(visualize_getAlgo_url, form).then((resp) => {
                                 if(resp.body.status == "success") {
                                     this.chartOptionList = resp.body.data.algos
                                 }
@@ -422,7 +403,7 @@
                         fileID: fileID,
                         token: window.localStorage.getItem('token')
                     }
-                    this.$http.post(file_delete_url, form).then((resp) => {
+                    post(file_delete_url, form).then((resp) => {
                         if(resp.body.status == "success") {
                             this.$message({
                                 type: 'success',
@@ -439,16 +420,20 @@
                     });
                 });
             },
-            uploadSectionFile(params) {
+            onUploadSelectFileCloce() {
+                this.$refs.upload.clearFiles();
+                this.isShowUploadBlock = true;
+                this.isShowAddFilePopup = false;
+            },
+            uploadSelectionFile(params) {
                 let fileObj = params.file;
                 let form = new FormData();
                 form.append("file", fileObj);
-                //TODO get type
-                form.append("type", "num");
+                form.append("type", window.localStorage.getItem('projectType'));
                 form.append("userID", window.localStorage.getItem('userID'));
                 form.append("projectID", this.projectID)
                 form.append("token", window.localStorage.getItem('token'))
-                this.$http.post(file_upload_url, form).then((response) => {
+                post(file_upload_url, form).then((response) => {
                     if (response.body.status == "success") {
                         this.fetchData();
                     }
@@ -508,7 +493,7 @@
                         fileID: file.fileID,
                         token: window.localStorage.getItem('token')
                     }
-                this.$http.post(file_getColumn_url, fileColumnForm).then((resp) => {
+                post(file_getColumn_url, fileColumnForm).then((resp) => {
                     if(resp.body.status == 'success') {
                         this.columnList = resp.body.data.cols;
                         this.isShowFilePreviewPopup = true;
@@ -529,18 +514,21 @@
                 this.$router.push({name: 'modelManagement', params: {projectID: this.projectID, modelID: modelID}})
             },
             onFileDownloadClick(file) {
+                console.warn('onFileDownloadClick')
                 // TODO download file
                 let fileForm = {
                     fileID: file.fileID,
                     fileName: file.fileName+'.'+file.fileType,
                     token: window.localStorage.getItem('token')
                 }
-                this.$http.post(file_download_url, fileForm).then((resp) => {
+                post(file_download_url, fileForm, {responseType: 'blob'}).then((resp) => {
                     let blob = new Blob([resp.body], {type:resp.headers.get('Content-Type')});
                     let link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
                     link.download = fileForm.fileName;
                     link.click();
+                }).catch((error) => {
+                    console.error(error)   
                 })
             },
             clearModelForm() {
@@ -606,12 +594,6 @@
                 }
                 console.log('isSelectFectureError', this.isSelectFectureError)
                 if (!this.isSelectFectureError) {
-                    // let option = {
-                    //     headers:{
-                    //         'Content-Type': 'application/form-urlencoded',
-                    //         'Access-Control-Allow-Origin': '*'
-                    //     }
-                    // }
                     let link = document.createElement('link')
                     link.setAttribute('rel', 'stylesheet')
                     link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
@@ -625,43 +607,18 @@
                     // cdn的js載入完畢再请求bokeh參數
                     let _this = this;
                     script.onload = () => {
-                        // let content = {
-                        //     "tokenstr": "ab",
-                        //     "tokenint": "293",
-                        //     "fileUid":"num",
-                        //     "algoname":"lineXY",
-                        //     "datacol":"{\"x\":\"a\",\"y\":\"b\"}"
-                        // }
                         let dataCol = {}
-                        switch(this.selectColumn.length) {
-                            case 1: 
-                                dataCol = {
-                                    'x': this.selectColumn[0]
-                                };
-                                break;
-                            case 2:
-                                dataCol = {
-                                    'x': this.selectColumn[0],
-                                    'y': this.selectColumn[1]
-                                };
-                                break;
-                            case 3:
-                                dataCol = {
-                                    'x': this.selectColumn[0],
-                                    'y': this.selectColumn[1],
-                                    'value': this.selectColumn[2]
-                                };
-                                break;
-                            default:
-                                console.error('error')
-                        }
+                        this.featureList.forEach((item, index) => {
+                            dataCol[item.name] = this.selectColumn[index];
+                        })
+                        console.warn(dataCol)
                         let form = {
                             'fileID': this.selectFile.fileID,
                             'algoName': this.selectChart,
                             'dataCol': JSON.stringify(dataCol),
                             'token': window.localStorage.getItem('token')
                         }
-                        _this.$http.post(visualize_doVisualize_url,form, {emulateJSON:true}).then((response) => {
+                        post(visualize_doVisualize_url,form, {emulateJSON:true}).then((response) => {
                             let temp = response.data.data.div;
                             _this.fileImgList.push(temp)
                             // 插入绘制script代码
@@ -670,8 +627,6 @@
                             let t = document.createTextNode(response.data.data.script)
                             bokehRunScript.appendChild(t)
                             document.body.appendChild(bokehRunScript)
-                            // 绘制代码执行完后关闭等待画面
-                            _this.loading = false
                             _this.isShowFilePreviewBlock = true;
                         }, (response) => {
                             console.error('error',response);
