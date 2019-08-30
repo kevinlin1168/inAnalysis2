@@ -9,14 +9,14 @@
             </el-tooltip>
 
             <!-- add project popup-->
-            <el-dialog :title='"Add " + title' :visible.sync="isShowAddProjectPopup">
-                <el-form :model="form">
-                    <el-form-item label="Project Type" :label-width="addProjectPopupWidth">
+            <el-dialog :title='"Add " + title' :visible.sync="isShowAddProjectPopup" :before-close="onAddProjectClose">
+                <el-form :model="form" ref="form" :rules="rules">
+                    <el-form-item label="Project Type" :label-width="addProjectPopupWidth" prop="projectType">
                         <el-select v-model="form.projectType" placeholder="please select project type">
                             <el-option class="option" v-for="(item, index) in projectTypeOption" :label="item" :value="item" :key="index"></el-option>
                         </el-select>
                     </el-form-item>
-                    <el-form-item label="Project Name" :label-width="addProjectPopupWidth">
+                    <el-form-item label="Project Name" :label-width="addProjectPopupWidth" prop="projectName">
                         <el-input v-model="form.projectName" autocomplete="off"></el-input>
                     </el-form-item>
                 </el-form>
@@ -78,6 +78,14 @@
                 form: {
                     projectType: '',
                     projectName: ''
+                },
+                rules: {
+                    projectType: [
+                        { required: true, message: 'please select project type', trigger: 'blur' }
+                    ],
+                    projectName: [
+                        { required: true, message: 'please select project type', trigger: 'blur' }
+                    ]
                 }
             }
         },
@@ -119,19 +127,30 @@
                 });
             },
             onAddProjectClick() {
-                let form = {
-                    projectName: this.form.projectName,
-                    dataType: this.dataType,
-                    projectType: this.form.projectType,
-                    userID: window.localStorage.getItem('userID'),
-                    token: window.localStorage.getItem('token')
-                }
-                post(project_add_url, form).then((response) => {
-                    if (response.data.status == 'success') {
-                        this.$emit('projectUpdate');
-                        this.isShowAddProjectPopup = false;
+                this.$refs['form'].validate((valid) => {
+                    if (valid) {
+                        let form = {
+                            projectName: this.form.projectName,
+                            dataType: this.dataType,
+                            projectType: this.form.projectType,
+                            userID: window.localStorage.getItem('userID'),
+                            token: window.localStorage.getItem('token')
+                        }
+                        post(project_add_url, form).then((response) => {
+                            if (response.data.status == 'success') {
+                                this.$emit('projectUpdate');
+                                this.isShowAddProjectPopup = false;
+                            }
+                        })
+                    } else {
+                        return false
                     }
-                })
+                });
+            },
+            onAddProjectClose() {
+                this.form.projectType = '';
+                this.form.projectName = '';
+                this.isShowAddProjectPopup = false;
             }
         },
         components: {

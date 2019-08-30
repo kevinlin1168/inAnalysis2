@@ -82,7 +82,7 @@
                  this.$refs['form'].validate((valid) => {
                     if (valid) {
                         post(user_signup_url, userFrom).then((response) => {
-                            if(response.body.status == 'success') {
+                            if(response.data.status == 'success') {
                                 this.$router.push('/');
                             } else {
                                 this.isError = true

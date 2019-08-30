@@ -60,7 +60,7 @@
                     this.NLPProjectList = [];
                     this.CVProjectList = [];
                     post(project_getProjectByUser_url, userFrom).then((response) => {
-                        response.body.data.projectList.forEach((item) => {
+                        response.data.data.projectList.forEach((item) => {
                             switch(item.dataType) {
                                 case 'num':
                                     this.numericalProjectList.push(item);
@@ -81,9 +81,9 @@
                     }
                     post(system_getDataProject_url, form).then((resp) => {
                         if(resp.data.status == 'success') {
-                            this.numericalProjectOptionList = resp.body.data.num;
-                            this.NLPProjectOptionList = resp.body.data.nlp;
-                            this.CVProjectOptionList = resp.body.data.cv;  
+                            this.numericalProjectOptionList = resp.data.data.num;
+                            this.NLPProjectOptionList = resp.data.data.nlp;
+                            this.CVProjectOptionList = resp.data.data.cv;  
                         }
                         
                     })

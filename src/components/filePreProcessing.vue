@@ -204,9 +204,9 @@
                     }
                     this.isHasStringType = false;
                     post(file_getColumn_url, fileColumnForm).then((resp) => {
-                        if(resp.body.status == 'success') {
+                        if(resp.data.status == 'success') {
                             console.warn(resp);
-                            this.columnList = resp.body.data.cols;
+                            this.columnList = resp.data.data.cols;
                             for(let column of this.columnList) {
                                 if(column.type == 'string') {
                                     this.isHasStringType = true
@@ -231,14 +231,14 @@
                             }];
                             let _this = this;
                             post(analytic_getPreprocessAlgo_url, form).then((resp) => {
-                                if(resp.body.status == 'success') {
-                                    resp.body.data.normalize.forEach((item) => {
+                                if(resp.data.status == 'success') {
+                                    resp.data.data.normalize.forEach((item) => {
                                         this.normalizeOptionList.push(item);
                                     });
-                                    resp.body.data.outlierFiltering.forEach((item) => {
+                                    resp.data.data.outlierFiltering.forEach((item) => {
                                         this.outlierOptionList.push(item);
                                     });
-                                    resp.body.data.stringCleaning.forEach((item) => {
+                                    resp.data.data.stringCleaning.forEach((item) => {
                                         this.characterProcessingOptionList.push(item);
                                     });
                                     _this.selectAllNormalizeAlgorithmChange();
@@ -293,24 +293,24 @@
                     }
                     let _this = this;
                     post(analytic_preprocessPreview_url, processForm).then((resp) => {
-                        if(resp.body.status == 'success') {
-                            if(resp.body.data.beforeComp != 'None') {
+                        if(resp.data.status == 'success') {
+                            if(resp.data.data.beforeComp != 'None') {
                                 // 插入绘制script代码
-                                _this.leftImg = resp.body.data.beforeComp.div;
-                                _this.rightImg = resp.body.data.afterComp.div;
+                                _this.leftImg = resp.data.data.beforeComp.div;
+                                _this.rightImg = resp.data.data.afterComp.div;
                                 let bokehRunLeftScript = document.createElement('SCRIPT')
                                 let bokehRunRightScript = document.createElement('SCRIPT')
                                 bokehRunLeftScript.setAttribute('type', 'text/javascript')
                                 bokehRunRightScript.setAttribute('type', 'text/javascript')
-                                let t = document.createTextNode(resp.body.data.beforeComp.script)
+                                let t = document.createTextNode(resp.data.data.beforeComp.script)
                                 bokehRunLeftScript.appendChild(t)
                                 document.body.appendChild(bokehRunLeftScript)
-                                t = document.createTextNode(resp.body.data.afterComp.script)
+                                t = document.createTextNode(resp.data.data.afterComp.script)
                                 bokehRunRightScript.appendChild(t)
                                 document.body.appendChild(bokehRunRightScript)
                                 this.isHasImg = true;
                             }
-                            this.showText = resp.body.data.msg;
+                            this.showText = resp.data.data.msg;
                             this.isShowColumnPreviewPopup = true;
                             this.selectColumn = column;  
                         }
@@ -402,7 +402,7 @@
                                 "missingFiltering": (item.selectMissingValue) ? '1' : '0' ,
                                 "outlierFiltering": (item.selectOutliersAlgo == '' || item.selectOutliersAlgo == undefined) ? '0': item.selectOutliersAlgo,
                                 "normalize": (item.selectNormalizeAlgorithm == '' || item.selectNormalizeAlgorithm == undefined) ? '0': item.selectNormalizeAlgorithm,
-                                "stringCleaning": JSON.stringify((item.selectCharterProcessing == undefined || item.selectCharterProcessing == '') ? Array('0'): item.selectCharterProcessing)
+                                "stringCleaning": (item.selectCharterProcessing == undefined || item.selectCharterProcessing == '') ? Array('0'): item.selectCharterProcessing
                             }
                             action.push(actionItem);
                         })
@@ -415,7 +415,7 @@
                             token: window.localStorage.getItem('token')
                         }
                         post(analytic_doPreprocess_url, processForm).then((resp) => {
-                            if(resp.body.status == 'success') {
+                            if(resp.data.status == 'success') {
                                 this.$router.push({name: 'project', params: {projectID: this.projectID}})
                             }
                         })

@@ -5,7 +5,7 @@ let vue = new Vue()
 export function get(url, form = {}, config = {}) {
     return new Promise((resolve, reject) => {
         vue.$http.get(url, form, config).then((resp) => {
-            if (resp.body.status == 'success') {
+            if (resp.data.status == 'success') {
                 resolve(resp);
             }
         })
@@ -16,11 +16,11 @@ export function get(url, form = {}, config = {}) {
                     userName: window.localStorage.getItem('userName')
                 }
                 vue.$http.post(user_generateToken_url, userForm).then((resp) => {
-                    if(resp.body.status == 'success') {
-                        window.localStorage.setItem('token', resp.body.data.token);
-                        form.token = resp.body.data.token;
+                    if(resp.data.status == 'success') {
+                        window.localStorage.setItem('token', resp.data.data.token);
+                        form.token = resp.data.data.token;
                         vue.$http.get(url, form, config).then((resp) => {
-                            if (resp.body.status == 'success') {
+                            if (resp.data.status == 'success') {
                                 resolve(resp);
                             }
                         })

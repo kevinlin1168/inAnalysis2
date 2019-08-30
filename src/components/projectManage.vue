@@ -190,7 +190,7 @@
         </el-dialog>
 
         <!-- preview file popup-->
-        <el-dialog class="filePreview" :title='selectFile.fileName + " Preview"' :visible.sync="isShowFilePreviewPopup" :before-close="onFilePreviewClose" :show-close='false'>
+        <el-dialog class="filePreview" :title='selectFile.fileName + " Preview"' :visible.sync="isShowFilePreviewPopup" :before-close="onFilePreviewClose" :show-close='false' width="665px">
             <el-form>
                 <el-form-item label="Chart" :label-width="labelWidth">
                     <el-select v-model="selectChart" @change="onSelectChartChange" placeholder="Please select chart">
@@ -234,7 +234,7 @@
         </el-dialog>
 
         <!-- preview model popup-->
-        <el-dialog :title='selectModel.name + " Preview"' :visible.sync="isShowModelPreviewPopup" :before-close="onModelPreviewClose" :show-close='false'>
+        <el-dialog :title='selectModel.name + " Preview"' :visible.sync="isShowModelPreviewPopup" :before-close="onModelPreviewClose" :show-close='false' width="665px">
             <div class="textBolck">
                 <div class="title">TextPreview</div>
                 
@@ -244,7 +244,7 @@
             </div>
             <div class="imgBlock">
                 <div class="title">ModelPreview</div>
-                <el-carousel trigger="click" height="400px" :autoplay="false">
+                <el-carousel trigger="click" height="400px" width= "625px" :autoplay="false">
                     <el-carousel-item v-for="item in modelImgList" :key="item">
                         <div v-html="item">
                         </div>
@@ -319,19 +319,19 @@
                         token: window.localStorage.getItem('token')
                     }
                     post(file_getFileList_url, form).then((resp) => {
-                        if(resp.body.status == "success") {
-                            this.fileList = resp.body.data.fileList;
+                        if(resp.data.status == "success") {
+                            this.fileList = resp.data.data.fileList;
                             let form = {
                                 token: window.localStorage.getItem('token')
                             }
                             post(visualize_getAlgo_url, form).then((resp) => {
-                                if(resp.body.status == "success") {
-                                    this.chartOptionList = resp.body.data.algos
+                                if(resp.data.status == "success") {
+                                    this.chartOptionList = resp.data.data.algos
                                 }
                             
                             });
                         } else {
-                            console.error('getFileListError', resp.body.msg)
+                            console.error('getFileListError', resp.data.msg)
                         }
                     });
                 }
@@ -404,7 +404,7 @@
                         token: window.localStorage.getItem('token')
                     }
                     post(file_delete_url, form).then((resp) => {
-                        if(resp.body.status == "success") {
+                        if(resp.data.status == "success") {
                             this.$message({
                                 type: 'success',
                                 message: 'Delete Succeeded!'
@@ -434,7 +434,7 @@
                 form.append("projectID", this.projectID)
                 form.append("token", window.localStorage.getItem('token'))
                 post(file_upload_url, form).then((response) => {
-                    if (response.body.status == "success") {
+                    if (response.data.status == "success") {
                         this.fetchData();
                     }
                 })
@@ -494,8 +494,8 @@
                         token: window.localStorage.getItem('token')
                     }
                 post(file_getColumn_url, fileColumnForm).then((resp) => {
-                    if(resp.body.status == 'success') {
-                        this.columnList = resp.body.data.cols;
+                    if(resp.data.status == 'success') {
+                        this.columnList = resp.data.data.cols;
                         this.isShowFilePreviewPopup = true;
                     } else {
                         console.error(resp);
@@ -522,7 +522,7 @@
                     token: window.localStorage.getItem('token')
                 }
                 post(file_download_url, fileForm, {responseType: 'blob'}).then((resp) => {
-                    let blob = new Blob([resp.body], {type:resp.headers.get('Content-Type')});
+                    let blob = new Blob([resp.data], {type:resp.headers['content-type']});
                     let link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
                     link.download = fileForm.fileName;
@@ -665,6 +665,7 @@
 
     .filePreview {
         .imgBlock{
+            width: 625px;
             .title {
                 text-align: center;
                 font-size: 18px;

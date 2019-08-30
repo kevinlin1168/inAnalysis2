@@ -42,11 +42,11 @@
                 }
                 post(user_signin_url, userFrom).then((resp) => {
                     console.warn('resp', resp)
-                    if(resp.body.status == 'success') {
+                    if(resp.data.status == 'success') {
                         window.localStorage.setItem('isLogin', true)
-                        window.localStorage.setItem('userID', resp.body.data.userID)
-                        window.localStorage.setItem('userName', resp.body.data.userName)
-                        window.localStorage.setItem('token', resp.body.data.token)
+                        window.localStorage.setItem('userID', resp.data.data.userID)
+                        window.localStorage.setItem('userName', resp.data.data.userName)
+                        window.localStorage.setItem('token', resp.data.data.token)
                         this.$router.push('home');
                     } else {
                         this.isError = true;
