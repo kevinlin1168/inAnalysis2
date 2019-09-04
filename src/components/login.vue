@@ -36,11 +36,11 @@
         },
         methods:{
             login() {
-                let userFrom = {
+                let userForm = {
                     account: this.userID,
                     password: this.userPassward
                 }
-                post(user_signin_url, userFrom).then((resp) => {
+                post(user_signin_url, userForm).then((resp) => {
                     console.warn('resp', resp)
                     if(resp.data.status == 'success') {
                         window.localStorage.setItem('isLogin', true)

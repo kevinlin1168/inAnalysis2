@@ -6,6 +6,7 @@ let projectUrl = baseUrl + '/project';
 let fileUrl = baseUrl + '/file';
 let visualizeUrl = baseUrl + '/visualize';
 let analyticUrl = baseUrl + '/analytic';
+let modelUrl = baseUrl + '/model';
 
 //service Api
 export const system_getDataProject_url = systemUrl + '/getDataProject'
@@ -34,6 +35,13 @@ export const visualize_doVisualize_url = visualizeUrl + '/doVisualize';
 
 // analytic Api
 export const analytic_getPreprocessAlgo_url = analyticUrl + '/getPreprocessAlgo';
+export const analytic_getCorrelationAlgo_url = analyticUrl + '/getCorrelationAlgo';
 export const analytic_doPreprocess_url = analyticUrl + '/doPreprocess';
+export const analytic_doCorrelation_url = analyticUrl + '/doCorrelation';
 export const analytic_preprocessPreview_url = analyticUrl + '/preprocessPreview'
+
+// model Api
+export const model_addModel_url = modelUrl + '/addModel';
+export const model_getModelByProjectID_url = modelUrl + '/getModelByProjectID';
+export const model_deleteModel_url = modelUrl + '/deleteModel';
 

@@ -4,9 +4,9 @@
             <el-breadcrumb separator-class="el-icon-arrow-right">
                 <el-breadcrumb-item :to="{ path: '/project' }">Project Management</el-breadcrumb-item>
                 <el-breadcrumb-item>
-                    <router-link :to="{name:'project',params:{projectID:this.projectID}}" replace>Project Name</router-link>
+                    <router-link :to="{name:'project',params:{projectID:this.projectID}}" replace>{{projectName}}</router-link>
                 </el-breadcrumb-item>
-                <el-breadcrumb-item>Model name</el-breadcrumb-item>
+                <el-breadcrumb-item>{{modelName}}</el-breadcrumb-item>
             </el-breadcrumb>
         </el-col>
         <el-col :span="18" class="main" :offset="3">
@@ -17,27 +17,21 @@
                     </el-col>
                     <el-col :span="14" :offset="2">
                         <el-steps :space="200" :active="active" finish-status="success">
-                            <el-step title="Correlation"></el-step>
-                            <el-step title="Feature"></el-step>
                             <el-step title="Algorithm"></el-step>
                             <el-step title="Parameter"></el-step>
+                            <el-step title="Correlation"></el-step>
+                            <el-step title="Feature"></el-step>
                         </el-steps>
                     </el-col>
                 </el-row>
             </div>
             <div class="manageBlock">
                 <el-row class="selectBlock">
-                    <el-col :span="8" :offset="4" style="text-align: center">Model Name</el-col>
+                    <el-col :span="8" :offset="4" style="text-align: center">Select Algorithm</el-col>
                     <el-col :span="8">
-                        <el-input v-model="modelName"></el-input>
-                    </el-col>
-                </el-row>
-                <el-row class="selectBlock">
-                    <el-col :span="8" :offset="4" style="text-align: center">Select Correlation Algorithm</el-col>
-                    <el-col :span="8">
-                        <el-select v-model="selectCorrelationAlgorithm" placeholder="Please select correlation algorithm" @change="onSelectCorrelationAlgorithmChange">
+                        <el-select v-model="selectAlgorithm" placeholder="Please select algorithm" @change="onSelectAlgorithmChange">
                             <el-option
-                                    v-for="item in correlationAlgorithmList"
+                                    v-for="item in algorithmList"
                                     :key="item"
                                     :label="item"
                                     :value="item">
@@ -45,15 +39,56 @@
                         </el-select>
                     </el-col>
                 </el-row>
-                <el-row class="labelBlock" v-if="selectCorrelationAlgorithm !== ''">
-                    <el-col :span="8" :offset="3">
+                <el-row class="parametersBlock" v-if="selectAlgorithm !== ''">
+                    <el-col :span="12">
+                        <template v-for="(parameter, index) in parameterList" >
+                            <el-row v-if="(index % 2) === 0" class="parameterItem" :key="index">
+                                <div  class="parameter">
+                                    <el-col  :span="11" :offset="2" :key="index">
+                                        {{parameter.name}}
+                                    </el-col>
+                                    <el-col :span="11">
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"> </el-slider>
+                                        <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+                                        <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select">
+                                            <el-option v-for="item in parameter.list" :key="item" :label="item" :value="item"></el-option>
+                                        </el-select>
+                                        <el-input v-model="parameter.value" v-if="parameter.type == 'string'"></el-input>
+                                    </el-col>
+                                </div>
+                            </el-row>
+                        </template>
+                    </el-col>
+                    <el-col :span="12">
+                        <template v-for="(parameter, index) in parameterList" >
+                            <el-row v-if="(index % 2) !== 0" class="parameterItem" :key="index">
+                                <div  class="parameter">
+                                    <el-col  :span="11" :offset="2" :key="index">
+                                        {{parameter.name}}
+                                    </el-col>
+                                    <el-col :span="11">
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"> </el-slider>
+                                        <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+                                        <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select">
+                                            <el-option v-for="item in parameter.list" :key="item" :label="item" :value="item"></el-option>
+                                        </el-select>
+                                        <el-input v-model="parameter.value" v-if="parameter.type == 'string'"></el-input>
+                                    </el-col>
+                                </div>
+                            </el-row>
+                        </template>
+                    </el-col>
+                </el-row>
+                <el-row class="labelBlock" v-if="selectAlgorithm !== ''">
+                    <el-col :span="8" :offset="3" class="selectFeature">
                         Select Feature
                         <draggable class="list-group selectItem" :list="columnList" group="label" @change="onLabelChange">
                             <div
                                     class="list-group-item"
                                     v-for="selection in columnList"
-                                    :key="selection.name"
-                            >
+                                    :key="selection.name">
                                 <div class="itemTitle">
                                             {{ selection.name }}
                                 </div>
@@ -66,12 +101,30 @@
                             </div>
                         </draggable>
                     </el-col>
-                    <el-col :span="8" :offset="2">
-                        <div v-html="correlationImg">
-                        </div>
+                    <el-col :span="8" :offset="1">
+                        <el-row class="selectBlock">
+                            <el-col :span="15" :offset="1" style="text-align: center">Select Correlation Algorithm</el-col>
+                            <el-col :span="8">
+                                <el-select v-model="selectCorrelationAlgorithm" placeholder="Please select correlation algorithm" @change="onSelectCorrelationAlgorithmChange">
+                                    <el-option
+                                            v-for="item in correlationAlgorithmList"
+                                            :key="item.algoname"
+                                            :label="item.friendlyname"
+                                            :value="item.algoname">
+                                    </el-option>
+                                </el-select>
+                            </el-col>
+                        </el-row>
+                        <el-row>
+                            <el-col :span="24">
+                                <div class="correlationImg" v-html="correlationImg">
+                                </div>
+                            </el-col>
+                        </el-row>
+                        
                     </el-col>
                 </el-row>
-                <el-row class="selectLabelBlock" v-if="selectCorrelationAlgorithm !== ''">
+                <el-row class="selectLabelBlock" v-if="selectAlgorithm !== ''">
                     <el-col class="inputBlock" :span="8" :offset="3">
                         <div class="title"> Input </div>
                         <el-row v-for="(label, index) in labelList" :key="index">
@@ -142,48 +195,9 @@
                         </el-row>
                     </el-col>
                 </el-row>
-                <div class="buttonBlock" v-if="selectCorrelationAlgorithm !== '' && !isLabelConfirm">
+                <div class="buttonBlock" v-if="selectAlgorithm !== '' && !isLabelConfirm">
                     <el-button type="primary" @click="onLabelConfirmClick">Feature Confirm</el-button>
                 </div>
-                <el-row class="selectBlock" v-if="isLabelConfirm">
-                    <el-col :span="8" :offset="4" style="text-align: center">Select Algorithm</el-col>
-                    <el-col :span="8">
-                        <el-select v-model="selectAlgorithm" placeholder="Please select algorithm" @change="onSelectAlgorithmChange">
-                            <el-option
-                                    v-for="item in algorithmList"
-                                    :key="item"
-                                    :label="item"
-                                    :value="item">
-                            </el-option>
-                        </el-select>
-                    </el-col>
-                </el-row>
-                <el-row class="parametersBlock" v-if="isLabelConfirm && selectAlgorithm !== ''">
-                    <el-col :span="12">
-                        <el-row v-for="(parameter, index) in parameterList" :key="index" class="parameterItem">
-                            <div v-if="(index % 2) === 0" class="parameter">
-                                <el-col  :span="11" :offset="2" :key="index">
-                                    {{parameter.name}}
-                                </el-col>
-                                <el-col :span="11">
-                                    <el-input v-model="parameter.value"></el-input>
-                                </el-col>
-                            </div>
-                        </el-row>
-                    </el-col>
-                    <el-col :span="12">
-                        <el-row v-for="(parameter, index) in parameterList" :key="index" class="parameterItem">
-                            <div v-if="(index % 2) !== 0" class="parameter">
-                                <el-col  :span='11' :offset="2" :key="index">
-                                    {{parameter.name}}
-                                </el-col>
-                                <el-col :span="11">
-                                    <el-input v-model="parameter.value"></el-input>
-                                </el-col>
-                            </div>
-                        </el-row>
-                    </el-col>
-                </el-row>
             </div>
 
             <div class="buttonBlock" v-if="isLabelConfirm && selectAlgorithm !== ''">
@@ -194,7 +208,8 @@
 </template>
 <script>
     import draggable from "vuedraggable";
-
+    import { analytic_getCorrelationAlgo_url, analytic_doCorrelation_url} from "@/config/api.js"
+    import { post } from '@/utils/requests/post.js'
     export default {
         name: 'modelManagement',
         created: function() {
@@ -213,7 +228,7 @@
                 selectAlgorithm: '',
                 selectCorrelationAlgorithm: '',
                 correlationImg: '',
-                correlationAlgorithmList: ['correlationAlgo1', 'correlationAlgo2', 'correlationAlgo3', 'correlationAlgo4'],
+                correlationAlgorithmList: [],
                 algorithmList: ['algo1', 'algo2', 'algo3', 'algo4'],
                 columnList: [{
                     name: 'column1',
@@ -250,51 +265,116 @@
                     selection: []
                 }],
                 parameterList: [{
-                    name: 'parameter1',
-                    type: 'input',
-                    value: ''
+                    name: "param1Name",
+                    description: "param1 Description",
+                    type: "int",
+                    upperBound: 50,
+                    lowerBound: 0,
+                    default:20
                 }, {
-                    name: 'parameter2',
-                    type: 'input',
-                    value: ''
+                    name: "param2 Name",
+                    description: "param2 Description",
+                    type: "float",
+                    upperBound: 50,
+                    lowerBound: 0,
+                    default:23.2
                 }, {
-                    name: "parameter3",
-                    type: 'input',
-                    value: ''
+                    name: "param3Name",
+                    description: "param3 Description",
+                    type: "bool",
+                    default:1
                 }, {
-                    name: "parameter4",
-                    type: 'output',
-                    value: ''
+                    name: "param4Name",
+                    description: "param4 Description",
+                    type: "enum",
+                    list: ["option1","option2","option3"],
+                    default:"option2"
+                }, {
+                    name: "param5Name",
+                    description: "param5 Description",
+                    type: "string",
+                    default:"default string"
                 }]
             }
         },
         methods:{
             fetchData() {
-                this.projectID = this.$route.params.projectID;
-                this.modelID = this.$route.params.modelID;
-                this.active = 0;
-                this.selectCorrelationAlgorithm = '';
-                this.selectAlgorithm = '';
-                this.isLabelConfirm = false;
+                if(this.$route.name == 'modelManagement') {
+                    this.projectName = window.localStorage.getItem('projectName');
+                    this.modelName = window.localStorage.getItem('modelName');
+                    this.projectID = this.$route.params.projectID;
+                    this.modelIndex = this.$route.params.modelIndex;
+                    this.active = 0;
+                    this.selectCorrelationAlgorithm = '';
+                    this.selectAlgorithm = '';
+                    this.isLabelConfirm = false;
+
+                    let form = {
+                        token: window.localStorage.getItem('token')
+                    }
+                    post(analytic_getCorrelationAlgo_url, form).then((resp) => {
+                        if(resp.data.status == 'success') {
+                            this.correlationAlgorithmList = resp.data.data
+                        }
+                    }).catch((error) => {
+                        console.error('getCorrelationAlgoError', error)
+                    })
+                }
+                
             },
             onSelectCorrelationAlgorithmChange() {
-                if(this.selectCorrelationAlgorithm !== '') {
-                    this.active = 1;
-                }
+                    let bokehVersion = '1.3.4';
+                    let link = document.createElement('link')
+                    link.setAttribute('rel', 'stylesheet')
+                    link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
+                    link.setAttribute('type', 'text/css')
+                    document.head.appendChild(link)
+                    // 在header插入js
+                    let script = document.createElement('script')
+                    script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
+                    script.async = 'async'
+                    document.head.appendChild(script)
+                    // cdn的js載入完畢再请求bokeh參數
+                    let _this = this;
+                    script.onload = () => {
+                        let form = {
+                            token: window.localStorage.getItem('token'),
+                            modelIndex: this.modelIndex,
+                            correlationAlgoName: this.selectCorrelationAlgorithm
+                        }
+                        console.warn(form)
+                        let _this = this;
+                        post(analytic_doCorrelation_url, form).then((resp) => {
+                            if(resp.data.status == 'success') {
+                                this.active = 3;
+                                _this.correlationImg = resp.data.data.div;
+                                let bokehRunScript = document.createElement('SCRIPT')
+                                bokehRunScript.setAttribute('type', 'text/javascript')
+                                let t = document.createTextNode(resp.data.data.script)
+                                bokehRunScript.appendChild(t)
+                                document.body.appendChild(bokehRunScript)
+                            }
+                        }).catch((error) => {
+                            console.error('doCorrelation Error', error)
+                        });
+                    }
+                
             },
             onLabelChange() {
                 this.isLabelConfirm = false;
-                this.active = 1;
+                if(this.selectCorrelationAlgorithm == '') {
+                    this.active = 2
+                } else {
+                    this.active = 3;    
+                }
             },
             onLabelConfirmClick() {
                 //Todo check label
                 this.isLabelConfirm = true;
-                this.active = 2;
+                this.active = 4;
             },
             onSelectAlgorithmChange() {
-                if(this.selectCorrelationAlgorithm !== '') {
-                    this.active = 3;
-                }
+                this.active = 1
             },
             onConfirmClick() {
                 console.warn('onConfirmClick');
@@ -354,9 +434,22 @@
                 }
             }
 
+            .correlationImg {
+                height: 320px;
+            }
+
             .labelBlock {
                 margin-top: 10px;
+                display: flex;
+                
+                .selectFeature {
+                    height: 100px;
+                    display: block;
+                    align-items: center;
+                }
                 .selectItem {
+                    display: block;
+                    align-items: center;
                     border-style:solid;
                     border-width: 1px;
                     border-radius:10px;

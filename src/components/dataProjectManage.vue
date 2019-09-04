@@ -52,14 +52,14 @@
         methods:{
             fetchData() {
                 if (this.$route.name == 'dataProjectManage') {
-                    let userFrom = {
+                    let userForm = {
                     userID: window.localStorage.getItem('userID'),
                     token: window.localStorage.getItem('token')
                     };
                     this.numericalProjectList = [];
                     this.NLPProjectList = [];
                     this.CVProjectList = [];
-                    post(project_getProjectByUser_url, userFrom).then((response) => {
+                    post(project_getProjectByUser_url, userForm).then((response) => {
                         response.data.data.projectList.forEach((item) => {
                             switch(item.dataType) {
                                 case 'num':

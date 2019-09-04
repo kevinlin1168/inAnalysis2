@@ -12,7 +12,8 @@ export function post(url, form = {}, config = {}) {
                 }
             })
             .catch((error) => {
-                if(error.status == 401) {
+                console.error('post Error', error)
+                if(error.response.status == 401) {
                     let userForm = {
                         userID: window.localStorage.getItem('userID'),
                         userName: window.localStorage.getItem('userName')
@@ -29,7 +30,8 @@ export function post(url, form = {}, config = {}) {
                         }
                     })
                     .catch((error) => {
-                        reject(error)
+                        console.error('generateToken Error', error)
+                        this.$router.push('/');
                     })
                 } else {
                     reject(error);

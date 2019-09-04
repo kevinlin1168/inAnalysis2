@@ -73,7 +73,7 @@
         },
         methods:{
             signup() {
-                let userFrom = {
+                let userForm = {
                     account: this.signupForm.userAccount,
                     name: this.signupForm.userName,
                     password: this.signupForm.userPassword,
@@ -81,7 +81,7 @@
                 }
                  this.$refs['form'].validate((valid) => {
                     if (valid) {
-                        post(user_signup_url, userFrom).then((response) => {
+                        post(user_signup_url, userForm).then((response) => {
                             if(response.data.status == 'success') {
                                 this.$router.push('/');
                             } else {

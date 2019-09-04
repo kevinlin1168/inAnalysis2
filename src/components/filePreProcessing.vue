@@ -395,8 +395,14 @@
             onConfirmClick() {
                 this.$refs['form'].validate((valid) => {
                     if (valid) {
-                        let action = []
+                        let action = [];
+                        let isAlert = false;
+                        let alertColumnName = '';
                         this.columnList.forEach((item) => {
+                            if(item.classifiable == "1" && ((item.selectMissingValue) || !(item.selectOutliersAlgo == '' || item.selectOutliersAlgo == undefined) || !(item.selectNormalizeAlgorithm == '' || item.selectNormalizeAlgorithm == undefined) || !(item.selectCharterProcessing == undefined || item.selectCharterProcessing == ''))) {
+                                isAlert = true;
+                                alertColumnName = alertColumnName.concat(item.name, ' ');
+                            }
                             let actionItem = {
                                 'col': item.name,
                                 "missingFiltering": (item.selectMissingValue) ? '1' : '0' ,
@@ -414,11 +420,39 @@
                             projectID: this.projectID,
                             token: window.localStorage.getItem('token')
                         }
-                        post(analytic_doPreprocess_url, processForm).then((resp) => {
-                            if(resp.data.status == 'success') {
-                                this.$router.push({name: 'project', params: {projectID: this.projectID}})
-                            }
-                        })
+                        if(isAlert) {
+                            this.$confirm('You will modify classifiable column ' + alertColumnName + ' will you confirm the process', 'Tips', {
+                                confirmButtonText: 'Confirm',
+                                cancelButtonText: 'Cancel',
+                                type: 'warning'
+                            }).then(() => {
+                                post(analytic_doPreprocess_url, processForm).then((resp) => {
+                                    if(resp.data.status == 'success') {
+                                        this.$message({
+                                            type: 'success',
+                                            message: 'Preprocess success'
+                                        });
+                                        this.$router.push({name: 'project', params: {projectID: this.projectID}})
+                                    }
+                                })
+                            }).catch(() => {
+                                this.$message({
+                                    type: 'info',
+                                    message: 'Preprocess cancel'
+                                });          
+                            });
+                        } else {
+                            post(analytic_doPreprocess_url, processForm).then((resp) => {
+                                if(resp.data.status == 'success') {
+                                    this.$message({
+                                        type: 'success',
+                                        message: 'Preprocess success'
+                                    });
+                                    this.$router.push({name: 'project', params: {projectID: this.projectID}})
+                                }
+                            })
+                        }
+                        
                     } else {
                         return false;
                     }

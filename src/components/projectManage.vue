@@ -68,10 +68,10 @@
         <!-- model block -->
         <el-col :span="16" class="gridSubTitle"> Model List </el-col>
         <el-col :span="3" class="gridSubTitle"> Total Models</el-col>
-        <el-col :span="2" class="gridSubTitle"> {{modelSum}}</el-col>
+        <el-col :span="2" class="gridSubTitle"> {{modelList.length}}</el-col>
         <el-col :span="2" class="gridSubTitle" v-show="fileList.length">
             <el-tooltip content="Add model" placement="bottom" effect="light">
-                <i class="el-icon-circle-plus" @click="onAddModelClick"></i>
+                <i class="el-icon-circle-plus" @click="onModelAddClick"></i>
             </el-tooltip>
         </el-col>
         <!-- for space-->
@@ -91,7 +91,7 @@
                     :data="modelList"
                     style="width: 100%">
                 <el-table-column
-                        prop="name"
+                        prop="modelName"
                         label="Model Name"
                         min-width="20%">
                 </el-table-column>
@@ -101,7 +101,7 @@
                         min-width="20%">
                 </el-table-column>
                 <el-table-column
-                        prop="algo"
+                        prop="algoName"
                         label="Algorithm Name"
                         min-width="20%">
                 </el-table-column>
@@ -123,12 +123,13 @@
                         label="Actions"
                         min-width="30%">
                     <template slot-scope="scope" style="text-align: right">
-                        <el-button @click="onModelPreviewClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status === 'Training'">Preview</el-button>
-                        <el-button @click="onModelPredictClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Predict</el-button>
-                        <el-button @click="onModelManagementClick(scope.row.id)" type="text" size="medium" :disabled="scope.row.status === 'Training'">Management</el-button>
+                        <el-button @click="onModelPreviewClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Preview</el-button>
+                        <el-button @click="onModelPredictClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Test</el-button>
+                        <el-button @click="onModelPredictClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Predict</el-button>
+                        <el-button @click="onModelManagementClick(scope.row)" type="text" size="medium" :disabled="scope.row.status === 'Training'">Management</el-button>
                         <!-- Delete Button -->
                         <el-button v-if="scope.row.status === 'Training'" type="text" size="medium" disabled>Delete</el-button>
-                        <el-button v-if="scope.row.status !== 'Training'" @click="onModelDeleteClick(scope.row.id)" type="text" size="medium" style="color: red">Delete</el-button>
+                        <el-button v-if="scope.row.status !== 'Training'" @click="onModelDeleteClick(scope.row.modelIndex)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -166,7 +167,7 @@
                 </el-form-item>
                 <el-form-item label="File" :label-width="labelWidth">
                     <el-select v-model="modelForm.fileID" placeholder="Please select file">
-                        <el-option class="option" v-for="item in fileList" :label="item.name" :value="item.id" :key="item.id"></el-option>
+                        <el-option class="option" v-for="item in fileList" :label="item.fileName" :value="item.fileID" :key="item.fileID"></el-option>
                     </el-select>
                 </el-form-item>
             </el-form>
@@ -261,7 +262,16 @@
 </template>
 
 <script>
-    import { file_upload_url, file_getFileList_url, file_delete_url, file_getColumn_url, file_download_url, visualize_getAlgo_url, visualize_doVisualize_url } from '@/config/api.js';
+    import { file_upload_url, 
+            file_getFileList_url, 
+            file_delete_url, 
+            file_getColumn_url, 
+            file_download_url, 
+            visualize_getAlgo_url, 
+            visualize_doVisualize_url, 
+            model_addModel_url,
+            model_getModelByProjectID_url,
+            model_deleteModel_url } from '@/config/api.js';
     import { post } from '@/utils/requests/post.js'
     export default {
         name: "projectManage",
@@ -296,7 +306,25 @@
                 fileImgList: [],
                 modelImgList: [],
                 columnList: [],
-                modelList: [],
+                modelList: [{
+                        name: 'aaa',
+                        fileName: 'aaa',
+                        id: '123',
+                        algo: 'ccc',
+                        status: 'Success'
+                    }, {
+                        name: 'abc',
+                        fileName: 'aaa',
+                        id: '456',
+                        algo: 'csad',
+                        status: 'Training'
+                    }, {
+                        name: 'aaasdfaa',
+                        fileName: 'aaa',
+                        id: '231',
+                        algo: 'adf',
+                        status: 'Fail'
+                    }],
                 modelForm: {
                     modelName: '',
                     fileID: ''
@@ -322,17 +350,39 @@
                         if(resp.data.status == "success") {
                             this.fileList = resp.data.data.fileList;
                             let form = {
+                                projectID: this.projectID,
                                 token: window.localStorage.getItem('token')
                             }
-                            post(visualize_getAlgo_url, form).then((resp) => {
+                            post(model_getModelByProjectID_url, form).then((resp) => {
+                                console.warn(resp)
                                 if(resp.data.status == "success") {
-                                    this.chartOptionList = resp.data.data.algos
+                                    this.modelList = resp.data.data.modelList;
+                                    this.modelList.forEach((model) => {
+                                        // TODO get model status
+                                        if(model.status == undefined) {
+                                            model.status = 'none';
+                                        }
+                                        if(model.algoName == null) {
+                                            model.algoName = '--'
+                                        }
+                                        model['fileName'] = this.fileList.filter(item => item.id == model.id)[0].fileName
+                                    })
+                                } else {
+                                    console.error('getModelListError', resp.data.msg)
                                 }
-                            
-                            });
+                            })
                         } else {
                             console.error('getFileListError', resp.data.msg)
                         }
+                    });
+                    form = {
+                        token: window.localStorage.getItem('token')
+                    }
+                    post(visualize_getAlgo_url, form).then((resp) => {
+                        if(resp.data.status == "success") {
+                            this.chartOptionList = resp.data.data.algos
+                        }
+                    
                     });
                 }
                 //TODO get modelSum fileSum by projectID && get project
@@ -343,7 +393,7 @@
             onShowFileClick() {
                 this.isShowFileDetail = !this.isShowFileDetail;
             },
-            onAddModelClick() {
+            onModelAddClick() {
                 this.isShowAddModelPopup = true;
             },
             onAddFileClick() {
@@ -360,32 +410,56 @@
             },
             onAddModelConfirm() {
                 //TODO check status
-                this.$message({
-                    type: 'success',
-                    message: 'Add Succeeded!'
-                });
-                let file = this.findSelectFile(this.modelForm.fileID);
+                let form = {
+                    projectID: this.projectID,
+                    fileID: this.modelForm.fileID,
+                    modelName: this.modelForm.modelName,
+                    token: window.localStorage.getItem('token')
+                }
+                post(model_addModel_url, form).then((resp) => {
+                    if(resp.data.status == "success") {
+                        this.$message({
+                            type: 'success',
+                            message: 'Add Model Succeeded!'
+                        });
+                        this.clearModelForm();
+                        this.isShowSelectToTrainPopup = false;
+                        this.isShowAddModelPopup = false;
+                        this.fetchData();
+                    } else {
+                        console.error(resp.data.msg);
+                    }
 
-                this.modelList.push({
-                    name: this.modelForm.modelName,
-                    fileName: file.name,
-                    algo: '',
-                    status: 'none'
+                }).catch((error) => {
+                    console.error(error);
                 });
-                this.clearModelForm();
-                this.isShowSelectToTrainPopup = false;
-                this.isShowAddModelPopup = false;
+                
             },
-            onModelDeleteClick(modelID) {
+            onSelectToTrainClick(fileID) {
+                this.modelForm.fileID = fileID;
+                this.isShowSelectToTrainPopup = true;
+            },
+            onModelDeleteClick(modelIndex) {
                 this.$confirm('Do you want to confirm the deletion?', 'Hint', {
                     confirmButtonText: 'Conform',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
                 }).then(() => {
-                    this.$message({
-                        type: 'success',
-                        message: 'Delete Succeeded!'
-                    });
+                    let form = {
+                        modelIndex: modelIndex,
+                        token: window.localStorage.getItem('token')
+                    }
+                    post(model_deleteModel_url, form).then((resp) => {
+                        if(resp.data.status == 'success') {
+                            this.$message({
+                                type: 'success',
+                                message: 'Delete Succeeded!'
+                            });
+                            this.fetchData();
+                        }
+                    }).catch((error) => {
+                        console.error('Delete model error', error)
+                    })
                 }).catch(() => {
                     this.$message({
                         type: 'info',
@@ -478,10 +552,6 @@
                     return 'info';
                 }
             },
-            onSelectToTrainClick(fileID) {
-                this.modelForm.fileID = fileID;
-                this.isShowSelectToTrainPopup = true;
-            },
             onPreProcessingClick(file) {
                 window.localStorage.setItem('fileName', file.fileName)
                 window.localStorage.setItem('fileType', file.fileType)
@@ -503,19 +573,17 @@
                 })
                 
             },
-            onModelPreviewClick(modelID) {
-                this.selectModel = this.findSelectModel(modelID);
+            onModelPreviewClick(model) {
                 this.isShowModelPreviewPopup = true
             },
-            onModelPredictClick(modelID) {
-                this.$router.push({name: 'modelPredict', params: {projectID: this.projectID, modelID: modelID}})
+            onModelPredictClick(model) {
+                this.$router.push({name: 'modelPredict', params: {projectID: this.projectID, modelIndex: model.modelIndex}})
             },
-            onModelManagementClick(modelID) {
-                this.$router.push({name: 'modelManagement', params: {projectID: this.projectID, modelID: modelID}})
+            onModelManagementClick(model) {
+                window.localStorage.setItem('modelName', model.modelName);
+                this.$router.push({name: 'modelManagement', params: {projectID: this.projectID, modelIndex: model.modelIndex}})
             },
             onFileDownloadClick(file) {
-                console.warn('onFileDownloadClick')
-                // TODO download file
                 let fileForm = {
                     fileID: file.fileID,
                     fileName: file.fileName+'.'+file.fileType,
@@ -611,7 +679,6 @@
                         this.featureList.forEach((item, index) => {
                             dataCol[item.name] = this.selectColumn[index];
                         })
-                        console.warn(dataCol)
                         let form = {
                             'fileID': this.selectFile.fileID,
                             'algoName': this.selectChart,

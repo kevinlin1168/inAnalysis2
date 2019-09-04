@@ -62,14 +62,14 @@ const router = new Router({
                 isLogin: true
             }
         },{
-            path:'/project/:projectID/modelPredict/:modelID',
+            path:'/project/:projectID/modelPredict/:modelIndex',
             name: 'modelPredict',
             component: modelPredict,
             meta: {
                 isLogin: true
             }
         }, {
-            path:'/project/:projectID/modelManagement/:modelID',
+            path:'/project/:projectID/modelManagement/:modelIndex',
             name: 'modelManagement',
             component: modelManagement,
             meta: {
