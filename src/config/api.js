@@ -39,6 +39,7 @@ export const analytic_getCorrelationAlgo_url = analyticUrl + '/getCorrelationAlg
 export const analytic_doPreprocess_url = analyticUrl + '/doPreprocess';
 export const analytic_doCorrelation_url = analyticUrl + '/doCorrelation';
 export const analytic_preprocessPreview_url = analyticUrl + '/preprocessPreview'
+export const analytic_getAnalyticsAlgoByProject_url = analyticUrl + '/getAnalyticsAlgoByProject'
 
 // model Api
 export const model_addModel_url = modelUrl + '/addModel';
