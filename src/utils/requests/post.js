@@ -12,7 +12,7 @@ export function post(url, form = {}, config = {}) {
                 }
             })
             .catch((error) => {
-                console.error('post Error', error)
+                console.error('post Error', error.response)
                 if(error.response.status == 401) {
                     let user = window.localStorage.getItem('user')
                     let userForm = {
@@ -21,10 +21,11 @@ export function post(url, form = {}, config = {}) {
                     }
                     vue.axios.post(user_generateToken_url, userForm).then((resp) => {
                         if(resp.data.status == 'success') {
+                            console.warn('generateToken success')
                             window.localStorage.setItem('token', resp.data.data.token);
                             form.token = resp.data.data.token;
                             vue.axios.post(url, form, config).then((resp) => {
-                                if (resp.dataF.status == 'success') {
+                                if (resp.data.status == 'success') {
                                     resolve(resp);
                                 }
                             })

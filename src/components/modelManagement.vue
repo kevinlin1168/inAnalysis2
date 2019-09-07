@@ -9,7 +9,7 @@
                 <el-breadcrumb-item>{{modelName}}</el-breadcrumb-item>
             </el-breadcrumb>
         </el-col>
-        <el-col :span="18" class="main" :offset="3">
+        <el-col :span="22" class="main" :offset="1">
             <div class="titleBlock">
                 <el-row class="title">
                     <el-col :span="8" style="text-align: center">
@@ -208,7 +208,7 @@
 </template>
 <script>
     import draggable from "vuedraggable";
-    import { analytic_getCorrelationAlgo_url, analytic_doCorrelation_url} from "@/config/api.js"
+    import { analytic_getCorrelationAlgo_url, analytic_doCorrelation_url, analytic_getAnalyticsAlgoByProject_url} from "@/config/api.js"
     import { post } from '@/utils/requests/post.js'
     export default {
         name: 'modelManagement',
@@ -310,15 +310,24 @@
                     this.isLabelConfirm = false;
 
                     let form = {
+                        projectID: this.projectID,
                         token: window.localStorage.getItem('token')
                     }
-                    post(analytic_getCorrelationAlgo_url, form).then((resp) => {
+                    post(analytic_getAnalyticsAlgoByProject_url, form).then((resp) => {
                         if(resp.data.status == 'success') {
-                            this.correlationAlgorithmList = resp.data.data
+                            this.algorithmList = resp.data.data;
+                            post(analytic_getCorrelationAlgo_url, form).then((resp) => {
+                                if(resp.data.status == 'success') {
+                                    this.correlationAlgorithmList = resp.data.data
+                                }
+                            }).catch((error) => {
+                                console.error('getCorrelationAlgoError', error)
+                            })
                         }
                     }).catch((error) => {
-                        console.error('getCorrelationAlgoError', error)
+                        console.error('getAnalyticsAlgoByProjectError', error)
                     })
+                    
                 }
                 
             },
@@ -441,9 +450,9 @@
             .labelBlock {
                 margin-top: 10px;
                 display: flex;
+                align-items: center;
                 
                 .selectFeature {
-                    height: 100px;
                     display: block;
                     align-items: center;
                 }

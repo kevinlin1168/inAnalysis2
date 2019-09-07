@@ -306,25 +306,7 @@
                 fileImgList: [],
                 modelImgList: [],
                 columnList: [],
-                modelList: [{
-                        name: 'aaa',
-                        fileName: 'aaa',
-                        id: '123',
-                        algo: 'ccc',
-                        status: 'Success'
-                    }, {
-                        name: 'abc',
-                        fileName: 'aaa',
-                        id: '456',
-                        algo: 'csad',
-                        status: 'Training'
-                    }, {
-                        name: 'aaasdfaa',
-                        fileName: 'aaa',
-                        id: '231',
-                        algo: 'adf',
-                        status: 'Fail'
-                    }],
+                modelList: [],
                 modelForm: {
                     modelName: '',
                     fileID: ''
@@ -354,7 +336,6 @@
                                 token: window.localStorage.getItem('token')
                             }
                             post(model_getModelByProjectID_url, form).then((resp) => {
-                                console.warn(resp)
                                 if(resp.data.status == "success") {
                                     this.modelList = resp.data.data.modelList;
                                     this.modelList.forEach((model) => {
@@ -365,7 +346,7 @@
                                         if(model.algoName == null) {
                                             model.algoName = '--'
                                         }
-                                        model['fileName'] = this.fileList.filter(item => item.id == model.id)[0].fileName
+                                        model['fileName'] = this.fileList.filter(item => item.fileID == model.fileID)[0].fileName
                                     })
                                 } else {
                                     console.error('getModelListError', resp.data.msg)
