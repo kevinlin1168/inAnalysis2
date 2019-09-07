@@ -46,15 +46,19 @@
                 CVProjectList: [],
                 numericalProjectOptionList: [],
                 NLPProjectOptionList: [],
-                CVProjectOptionList: []
+                CVProjectOptionList: [],
+                userID: '',
+                token: ''
             }
         },
         methods:{
             fetchData() {
                 if (this.$route.name == 'dataProjectManage') {
+                    this.token = window.localStorage.getItem('token');
+                    this.userID = JSON.parse(window.localStorage.getItem('user')).userID
                     let userForm = {
-                    userID: window.localStorage.getItem('userID'),
-                    token: window.localStorage.getItem('token')
+                    userID: this.userID,
+                    token: this.token
                     };
                     this.numericalProjectList = [];
                     this.NLPProjectList = [];
@@ -77,7 +81,7 @@
                         console.error('getProjectListError')
                     });
                     let form = {
-                        token: window.localStorage.getItem('token')
+                        token: this.token
                     }
                     post(system_getDataProject_url, form).then((resp) => {
                         if(resp.data.status == 'success') {

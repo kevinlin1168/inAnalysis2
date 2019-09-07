@@ -49,7 +49,7 @@
                         label="Actions"
                         min-width="10%">
                     <template slot-scope="scope">
-                        <el-button @click="onProjectManagementClick(scope.row.projectName, scope.row.projectID)" type="text" size="medium">Management</el-button>
+                        <el-button @click="onProjectManagementClick(scope.row)" type="text" size="medium">Management</el-button>
                         <el-button @click="onProjectDeleteClick(scope.row.projectID)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
@@ -93,10 +93,9 @@
             onShowDetailClick() {
                 this.isShowProjectDetail = !this.isShowProjectDetail;
             },
-            onProjectManagementClick(projectName, projectID) {
-                window.localStorage.setItem('projectName', projectName);
-                window.localStorage.setItem('projectType', this.dataType);
-                this.$router.push({name: 'project', params: {projectID: projectID}})
+            onProjectManagementClick(project) {
+                window.localStorage.setItem('project', JSON.stringify(project));
+                this.$router.push({name: 'project', params: {projectID: project.projectID}})
             },
             onProjectDeleteClick(projectID) {
                 this.$confirm('Do you want to confirm the deletion?', 'Hint', {
@@ -133,7 +132,7 @@
                             projectName: this.form.projectName,
                             dataType: this.dataType,
                             projectType: this.form.projectType,
-                            userID: window.localStorage.getItem('userID'),
+                            userID: JSON.parse(window.localStorage.getItem('user')).userID,
                             token: window.localStorage.getItem('token')
                         }
                         post(project_add_url, form).then((response) => {

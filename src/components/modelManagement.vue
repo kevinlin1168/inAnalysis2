@@ -300,8 +300,8 @@
         methods:{
             fetchData() {
                 if(this.$route.name == 'modelManagement') {
-                    this.projectName = window.localStorage.getItem('projectName');
-                    this.modelName = window.localStorage.getItem('modelName');
+                    this.projectName = JSON.parse(window.localStorage.getItem('project')).projectName;
+                    this.modelName = JSON.parse(window.localStorage.getItem('model')).modelName;
                     this.projectID = this.$route.params.projectID;
                     this.modelIndex = this.$route.params.modelIndex;
                     this.active = 0;

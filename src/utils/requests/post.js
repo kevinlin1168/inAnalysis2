@@ -14,9 +14,10 @@ export function post(url, form = {}, config = {}) {
             .catch((error) => {
                 console.error('post Error', error)
                 if(error.response.status == 401) {
+                    let user = window.localStorage.getItem('user')
                     let userForm = {
-                        userID: window.localStorage.getItem('userID'),
-                        userName: window.localStorage.getItem('userName')
+                        userID: user.userID,
+                        userName: user.userName
                     }
                     vue.axios.post(user_generateToken_url, userForm).then((resp) => {
                         if(resp.data.status == 'success') {
@@ -45,9 +46,10 @@ export function post(url, form = {}, config = {}) {
             })
             .catch((error) => {
                 if(error.status == 401) {
+                    let user = window.localStorage.getItem('user')
                     let userForm = {
-                        userID: window.localStorage.getItem('userID'),
-                        userName: window.localStorage.getItem('userName')
+                        userID: user.userID,
+                        userName: user.userName
                     }
                     vue.axios.post(user_generateToken_url, userForm).then((resp) => {
                         if(resp.data.status == 'success') {

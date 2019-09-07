@@ -194,8 +194,8 @@
         methods:{
             fetchData() {
                 if(this.$route.name == 'filePreProcessing') {
-                    this.projectName = window.localStorage.getItem('projectName');
-                    this.fileName = window.localStorage.getItem('fileName');
+                    this.projectName = JSON.parse(window.localStorage.getItem('project')).projectName;
+                    this.fileName = JSON.parse(window.localStorage.getItem('file')).fileName;
                     this.projectID = this.$route.params.projectID;
                     this.fileID = this.$route.params.fileID;
                     let fileColumnForm = {
@@ -415,8 +415,8 @@
                         let processForm = {
                             fileID: this.fileID,
                             action: JSON.stringify(action),
-                            fileNameAfterProcessing: this.form.fileNameAfterProcessing+'.'+window.localStorage.getItem('fileType'),
-                            userID: window.localStorage.getItem('userID'),
+                            fileNameAfterProcessing: this.form.fileNameAfterProcessing+'.'+JSON.parse(window.localStorage.getItem('file')).fileType,
+                            userID: JSON.parse(window.localStorage.getItem('user')).userID,
                             projectID: this.projectID,
                             token: window.localStorage.getItem('token')
                         }
