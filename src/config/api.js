@@ -38,8 +38,9 @@ export const analytic_getPreprocessAlgo_url = analyticUrl + '/getPreprocessAlgo'
 export const analytic_getCorrelationAlgo_url = analyticUrl + '/getCorrelationAlgo';
 export const analytic_doPreprocess_url = analyticUrl + '/doPreprocess';
 export const analytic_doCorrelation_url = analyticUrl + '/doCorrelation';
-export const analytic_preprocessPreview_url = analyticUrl + '/preprocessPreview'
-export const analytic_getAnalyticsAlgoByProject_url = analyticUrl + '/getAnalyticsAlgoByProject'
+export const analytic_preprocessPreview_url = analyticUrl + '/preprocessPreview';
+export const analytic_getAnalyticsAlgoByProject_url = analyticUrl + '/getAnalyticsAlgoByProject';
+export const analytic_getAnalyticAlgoParam_url = analyticUrl + '/getAnalyticAlgoParam';
 
 // model Api
 export const model_addModel_url = modelUrl + '/addModel';

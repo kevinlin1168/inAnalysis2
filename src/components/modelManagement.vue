@@ -127,8 +127,8 @@
                 <el-row class="selectLabelBlock" v-if="selectAlgorithm !== ''">
                     <el-col class="inputBlock" :span="8" :offset="3">
                         <div class="title"> Input </div>
-                        <el-row v-for="(label, index) in labelList" :key="index">
-                            <el-col v-if="label.type === 'input'" :span="24" :key="index">
+                        <el-row v-for="(label, index) in algoInputList" :key="index">
+                            <el-col :span="24" :key="index">
                                 <div class="labelNameBlock">
                                     <div class="labelTitle">
                                         {{label.name}}
@@ -162,8 +162,8 @@
                     </el-col>
                     <el-col class="outputBlock" :span="8" :offset="2">
                         <div class="title"> Output</div>
-                        <el-row v-for="(label, index) in labelList"  :key="index">
-                            <el-col v-if="label.type === 'output'" :span="24" :key="index">
+                        <el-row v-for="(label, index) in algoOutputList"  :key="index">
+                            <el-col :span="24" :key="index">
                                 <div class="labelNameBlock">
                                     <div class="labelTitle">
                                         {{label.name}}
@@ -208,7 +208,7 @@
 </template>
 <script>
     import draggable from "vuedraggable";
-    import { analytic_getCorrelationAlgo_url, analytic_doCorrelation_url, analytic_getAnalyticsAlgoByProject_url} from "@/config/api.js"
+    import { analytic_getCorrelationAlgo_url, analytic_doCorrelation_url, analytic_getAnalyticsAlgoByProject_url, analytic_getAnalyticAlgoParam_url, file_getColumn_url} from "@/config/api.js"
     import { post } from '@/utils/requests/post.js'
     export default {
         name: 'modelManagement',
@@ -243,25 +243,54 @@
                     name: 'column4',
                     type: 'path'
                 }],
-                labelList: [{
-                    name: 'label1',
-                    type: 'input',
-                    acceptType: 'string',
+                algoInputList: [{
+                    name: "input1Name",
+                    description: "input1 description",
+                    type: "float",
+                    amount: "multiple",
                     selection: []
                 }, {
-                    name: 'label2',
-                    type: 'input',
-                    acceptType: 'int',
+                    name: "input1Name",
+                    description: "input1 description",
+                    type: "classifiable",
+                    amount: "multiple",
                     selection: []
                 }, {
-                    name: "label3",
-                    type: 'input',
-                    acceptType: 'float',
+                    name: "input1Name",
+                    description: "input1 description",
+                    type: "string",
+                    amount: "multiple",
                     selection: []
                 }, {
-                    name: "label4",
-                    type: 'output',
-                    acceptType: 'path',
+                    name: "input1Name",
+                    description: "input1 description",
+                    type: "path",
+                    amount: "multiple",
+                    selection: []
+                }],
+                algoOutputList: [{
+                    name: "output1Name",
+                    description: "output1 description",
+                    type: "float",
+                    amount: "multiple",
+                    selection: []
+                }, {
+                    name: "output2Name",
+                    description: "output2 description",
+                    type: "classifiable",
+                    amount: "multiple",
+                    selection: []
+                }, {
+                    name: "output3Name",
+                    description: "output3 description",
+                    type: "string",
+                    amount: "multiple",
+                    selection: []
+                }, {
+                    name: "output4Name",
+                    description: "output4 description",
+                    type: "path",
+                    amount: "multiple",
                     selection: []
                 }],
                 parameterList: [{
@@ -318,14 +347,27 @@
                             this.algorithmList = resp.data.data;
                             post(analytic_getCorrelationAlgo_url, form).then((resp) => {
                                 if(resp.data.status == 'success') {
-                                    this.correlationAlgorithmList = resp.data.data
+                                    this.correlationAlgorithmList = resp.data.data;
                                 }
                             }).catch((error) => {
-                                console.error('getCorrelationAlgoError', error)
+                                console.error('getCorrelationAlgoError', error);
                             })
                         }
                     }).catch((error) => {
-                        console.error('getAnalyticsAlgoByProjectError', error)
+                        console.error('getAnalyticsAlgoByProjectError', error);
+                    })
+                    let fileForm = {
+                        fileID: JSON.parse(window.localStorage.getItem('file')).fileID,
+                        toekn: window.localStorage.getItem('token')
+                    }
+                    post(file_getColumn_url,fileForm).then((resp) => {
+                        if(resp.data.status == 'success') {
+                            this.columnList = resp.data.cols;
+                        } else {
+                            console.warn('getColumn Error', resp.data.msg)
+                        }
+                    }).catch((error) => {
+                        console.warn('getColumn Error', error)
                     })
                     
                 }
@@ -333,18 +375,17 @@
             },
             onSelectCorrelationAlgorithmChange() {
                     let bokehVersion = '1.3.4';
-                    let link = document.createElement('link')
-                    link.setAttribute('rel', 'stylesheet')
-                    link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
-                    link.setAttribute('type', 'text/css')
-                    document.head.appendChild(link)
+                    let link = document.createElement('link');
+                    link.setAttribute('rel', 'stylesheet');
+                    link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css');
+                    link.setAttribute('type', 'text/css');
+                    document.head.appendChild(link);
                     // 在header插入js
-                    let script = document.createElement('script')
-                    script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
-                    script.async = 'async'
-                    document.head.appendChild(script)
+                    let script = document.createElement('script');
+                    script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js');
+                    script.async = 'async';
+                    document.head.appendChild(script);
                     // cdn的js載入完畢再请求bokeh參數
-                    let _this = this;
                     script.onload = () => {
                         let form = {
                             token: window.localStorage.getItem('token'),
@@ -357,14 +398,14 @@
                             if(resp.data.status == 'success') {
                                 this.active = 3;
                                 _this.correlationImg = resp.data.data.div;
-                                let bokehRunScript = document.createElement('SCRIPT')
-                                bokehRunScript.setAttribute('type', 'text/javascript')
-                                let t = document.createTextNode(resp.data.data.script)
-                                bokehRunScript.appendChild(t)
-                                document.body.appendChild(bokehRunScript)
+                                let bokehRunScript = document.createElement('SCRIPT');
+                                bokehRunScript.setAttribute('type', 'text/javascript');
+                                let t = document.createTextNode(resp.data.data.script);
+                                bokehRunScript.appendChild(t);
+                                document.body.appendChild(bokehRunScript);
                             }
                         }).catch((error) => {
-                            console.error('doCorrelation Error', error)
+                            console.error('doCorrelation Error', error);
                         });
                     }
                 
@@ -372,7 +413,7 @@
             onLabelChange() {
                 this.isLabelConfirm = false;
                 if(this.selectCorrelationAlgorithm == '') {
-                    this.active = 2
+                    this.active = 2;
                 } else {
                     this.active = 3;    
                 }
@@ -384,6 +425,28 @@
             },
             onSelectAlgorithmChange() {
                 this.active = 1
+                let project = JSON.parse(window.localStorage.getItem('project'));
+                let form = {
+                    dataType: project.dataType,
+                    projectType: project.projectType,
+                    algoName: this.selectAlgorithm
+                }
+                console.warn('form', form);
+                post(analytic_getAnalyticAlgoParam_url, form).then((resp) => {
+                    if(resp.data.status == 'success') {
+                        this.parameterList = resp.data.param;
+                        this.algoInputList = resp.data.input;
+                        this.algoOutputList = resp.data.output;
+                    }
+                    this.algoInputList.forEach((item) => {
+                        item['selection'] = [];
+                    })
+                    this.algoOutputList.forEach((item) => {
+                        item['selection'] = [];
+                    })
+                }).catch((error) => {
+                    console.error('getAnalyticAlgoParam Error', error)
+                });
             },
             onConfirmClick() {
                 console.warn('onConfirmClick');
