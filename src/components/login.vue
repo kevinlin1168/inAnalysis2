@@ -44,8 +44,9 @@
                     console.warn('resp', resp)
                     if(resp.data.status == 'success') {
                         window.localStorage.setItem('isLogin', true)
-                        window.localStorage.setItem('userID', resp.data.data.userID)
-                        window.localStorage.setItem('userName', resp.data.data.userName)
+                        window.localStorage.setItem('user', JSON.stringify({userID: resp.data.data.userID, userName: resp.data.data.userName}))
+                        // window.localStorage.setItem('userID', resp.data.data.userID)
+                        // window.localStorage.setItem('userName', resp.data.data.userName)
                         window.localStorage.setItem('token', resp.data.data.token)
                         this.$router.push('home');
                     } else {

@@ -322,7 +322,7 @@
         methods:{
             fetchData() {
                 if(this.$route.name == 'project') {
-                    this.projectName = window.localStorage.getItem('projectName');
+                    this.projectName = JSON.parse(window.localStorage.getItem('project')).projectName;
                     this.projectID = this.$route.params.projectID;
                     let form = {
                         projectID: this.projectID,
@@ -484,8 +484,8 @@
                 let fileObj = params.file;
                 let form = new FormData();
                 form.append("file", fileObj);
-                form.append("type", window.localStorage.getItem('projectType'));
-                form.append("userID", window.localStorage.getItem('userID'));
+                form.append("type", JSON.parse(window.localStorage.getItem('project')).dataType);
+                form.append("userID", JSON.parse(window.localStorage.getItem('user')).userID);
                 form.append("projectID", this.projectID)
                 form.append("token", window.localStorage.getItem('token'))
                 post(file_upload_url, form).then((response) => {
@@ -534,8 +534,7 @@
                 }
             },
             onPreProcessingClick(file) {
-                window.localStorage.setItem('fileName', file.fileName)
-                window.localStorage.setItem('fileType', file.fileType)
+                window.localStorage.setItem('file', JSON.stringify(file))
                 this.$router.push({name: 'filePreProcessing', params: {projectID: this.projectID,fileID: file.fileID}})
             },
             onFilePreviewClick(file) {
@@ -561,7 +560,7 @@
                 this.$router.push({name: 'modelPredict', params: {projectID: this.projectID, modelIndex: model.modelIndex}})
             },
             onModelManagementClick(model) {
-                window.localStorage.setItem('modelName', model.modelName);
+                window.localStorage.setItem('model', JSON.stringify(model));
                 this.$router.push({name: 'modelManagement', params: {projectID: this.projectID, modelIndex: model.modelIndex}})
             },
             onFileDownloadClick(file) {

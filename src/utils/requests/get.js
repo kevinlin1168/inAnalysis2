@@ -11,9 +11,10 @@ export function get(url, form = {}, config = {}) {
         })
         .catch((error) => {
             if(error.status == 401) {
+                let user = JSON.parse(window.localStorage.getItem('user'))
                 let userForm = {
-                    userID: window.localStorage.getItem('userID'),
-                    userName: window.localStorage.getItem('userName')
+                    userID: user.userID,
+                    userName: user.userName
                 }
                 vue.$http.post(user_generateToken_url, userForm).then((resp) => {
                     if(resp.data.status == 'success') {

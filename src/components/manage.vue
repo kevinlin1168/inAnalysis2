@@ -64,7 +64,7 @@
         name: 'manage',
         data: function () {
             return {
-                userName: window.localStorage.getItem('userName')
+                userName: JSON.parse(window.localStorage.getItem('user')).userName
             }
         },
         methods:{
