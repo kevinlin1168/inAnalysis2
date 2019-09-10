@@ -79,7 +79,7 @@
                     password: this.signupForm.userPassword,
                     email: this.signupForm.userEmail,
                 }
-                 this.$refs['form'].validate((valid) => {
+                this.$refs['form'].validate((valid) => {
                     if (valid) {
                         post(user_signup_url, userForm).then((response) => {
                             if(response.data.status == 'success') {

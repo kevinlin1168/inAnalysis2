@@ -39,7 +39,7 @@
                         </el-select>
                     </el-col>
                 </el-row>
-                <el-row class="parametersBlock" v-if="selectAlgorithm !== ''">
+                <el-row class="parametersBlock" v-if="selectAlgorithm !== '' && parameterList !== []">
                     <el-col :span="12">
                         <template v-for="(parameter, index) in parameterList" >
                             <el-row v-if="(index % 2) === 0" class="parameterItem" :key="index">
@@ -134,10 +134,10 @@
                                         {{label.name}}
                                     </div>
                                     <div class="labelImg">
-                                        <img v-if="label.acceptType === 'int'" src="@/assets/integer.png" height="25" width="25">
-                                        <img v-if="label.acceptType === 'float'" src="@/assets/float.png" height="25" width="25">
-                                        <img v-if="label.acceptType === 'string'" src="@/assets/nlp.png" height="25" width="25">
-                                        <img v-if="label.acceptType === 'path'" src="@/assets/image.png" height="25" width="25">
+                                        <img v-if="label.type === 'int'" src="@/assets/integer.png" height="25" width="25">
+                                        <img v-if="label.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                        <img v-if="label.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
+                                        <img v-if="label.type === 'path'" src="@/assets/image.png" height="25" width="25">
                                     </div>
                                 </div>
                                 <draggable class="list-group selectItem" :list="label.selection" group="label" @change="onLabelChange">
@@ -169,10 +169,10 @@
                                         {{label.name}}
                                     </div>
                                     <div class="labelImg">
-                                        <img v-if="label.acceptType === 'int'" src="@/assets/integer.png" height="25" width="25">
-                                        <img v-if="label.acceptType === 'float'" src="@/assets/float.png" height="25" width="25">
-                                        <img v-if="label.acceptType === 'string'" src="@/assets/nlp.png" height="25" width="25">
-                                        <img v-if="label.acceptType === 'path'" src="@/assets/image.png" height="25" width="25">
+                                        <img v-if="label.type === 'int'" src="@/assets/integer.png" height="25" width="25">
+                                        <img v-if="label.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                        <img v-if="label.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
+                                        <img v-if="label.type === 'path'" src="@/assets/image.png" height="25" width="25">
                                     </div>
                                 </div>
                                 <draggable class="list-group selectItem" :list="label.selection" group="label" @change="onLabelChange">
@@ -195,12 +195,9 @@
                         </el-row>
                     </el-col>
                 </el-row>
-                <div class="buttonBlock" v-if="selectAlgorithm !== '' && !isLabelConfirm">
-                    <el-button type="primary" @click="onLabelConfirmClick">Feature Confirm</el-button>
-                </div>
             </div>
 
-            <div class="buttonBlock" v-if="isLabelConfirm && selectAlgorithm !== ''">
+            <div class="buttonBlock" v-if="selectAlgorithm !== ''">
                 <el-button type="primary" @click="onConfirmClick">Confirm</el-button>
             </div>
         </el-col>
@@ -208,7 +205,12 @@
 </template>
 <script>
     import draggable from "vuedraggable";
-    import { analytic_getCorrelationAlgo_url, analytic_doCorrelation_url, analytic_getAnalyticsAlgoByProject_url, analytic_getAnalyticAlgoParam_url, file_getColumn_url} from "@/config/api.js"
+    import {analytic_getCorrelationAlgo_url,
+            analytic_doCorrelation_url,
+            analytic_getAnalyticsAlgoByProject_url, 
+            analytic_getAnalyticAlgoParam_url, 
+            file_getColumn_url,
+            analytic_doModelTrain_url} from "@/config/api.js"
     import { post } from '@/utils/requests/post.js'
     export default {
         name: 'modelManagement',
@@ -222,9 +224,8 @@
             return {
                 active: 0,
                 projectID : '',
-                modelID: '',
+                modelIndex: '',
                 modelName: '',
-                isLabelConfirm: false,
                 selectAlgorithm: '',
                 selectCorrelationAlgorithm: '',
                 correlationImg: '',
@@ -336,7 +337,6 @@
                     this.active = 0;
                     this.selectCorrelationAlgorithm = '';
                     this.selectAlgorithm = '';
-                    this.isLabelConfirm = false;
 
                     let form = {
                         projectID: this.projectID,
@@ -358,11 +358,11 @@
                     })
                     let fileForm = {
                         fileID: JSON.parse(window.localStorage.getItem('file')).fileID,
-                        toekn: window.localStorage.getItem('token')
+                        token: window.localStorage.getItem('token')
                     }
                     post(file_getColumn_url,fileForm).then((resp) => {
                         if(resp.data.status == 'success') {
-                            this.columnList = resp.data.cols;
+                            this.columnList = resp.data.data.cols;
                         } else {
                             console.warn('getColumn Error', resp.data.msg)
                         }
@@ -411,17 +411,11 @@
                 
             },
             onLabelChange() {
-                this.isLabelConfirm = false;
                 if(this.selectCorrelationAlgorithm == '') {
                     this.active = 2;
                 } else {
                     this.active = 3;    
                 }
-            },
-            onLabelConfirmClick() {
-                //Todo check label
-                this.isLabelConfirm = true;
-                this.active = 4;
             },
             onSelectAlgorithmChange() {
                 this.active = 1
@@ -429,15 +423,24 @@
                 let form = {
                     dataType: project.dataType,
                     projectType: project.projectType,
-                    algoName: this.selectAlgorithm
+                    algoName: this.selectAlgorithm,
+                    token: window.localStorage.getItem('token')
                 }
-                console.warn('form', form);
                 post(analytic_getAnalyticAlgoParam_url, form).then((resp) => {
                     if(resp.data.status == 'success') {
-                        this.parameterList = resp.data.param;
-                        this.algoInputList = resp.data.input;
-                        this.algoOutputList = resp.data.output;
+                        this.parameterList = resp.data.data.param;
+                        this.algoInputList = resp.data.data.input;
+                        this.algoOutputList = resp.data.data.output;
                     }
+                    this.parameterList.forEach((item) => {
+                        if(item.default !== "" || item.default !== undefined) {
+                            if(item.type == 'bool') {
+                                item.value = (item.default == 1 ? true : false)
+                            } else {
+                                item.value = item.default;
+                            }
+                        }
+                    })
                     this.algoInputList.forEach((item) => {
                         item['selection'] = [];
                     })
@@ -449,7 +452,101 @@
                 });
             },
             onConfirmClick() {
+                let isError = false;
+                let errorMassage = '';
                 console.warn('onConfirmClick');
+                console.warn('algoOutputList', this.algoOutputList)
+
+                this.algoInputList.forEach((inputItem) => {
+                    // check length
+                    if(inputItem.amount == "single") {
+                        if(item.selection.length > 1) {
+                            isError = true;
+                            errorMassage += ' Select more than one Label';
+                        }
+                    }
+                    if(inputItem.selection.length == 0) {
+                        isError = true;
+                        errorMassage += ' Do not select label';
+                    }
+                    if(this.checkLabelType(inputItem)) {
+                        isError = true;
+                        errorMassage += ' Input type error';
+                    }
+                })
+
+                this.algoOutputList.forEach((outputItem) => {
+                    if(this.checkLabelType(outputItem)) {
+                        isError = true;
+                        errorMassage += ' Output type error';
+                    }
+                })
+                if(isError == true) {
+                    this.$message.error(errorMassage);
+                } else {
+                    let project = JSON.parse(window.localStorage.getItem('project'));
+                    let params = {}
+                    this.parameterList.forEach((param) => {
+                        if(param.type == 'bool') {
+                            params[param.name] = param.value ? 1 : 0;
+                        } else {
+                            params[param.name] = param.value
+                        }  
+                    })
+                    let input = {};
+                    this.algoInputList.forEach((item) => {
+                        input[item.name] = [];
+                        item.selection.forEach((select) => {
+                            input[item.name].push(select.name)
+                        })
+                    })
+                    let output = {};
+                    this.algoOutputList.forEach((item) => {
+                        output[item.name] = item.selection[0].name;
+                    })
+                    let form = {
+                        modelIndex: this.modelIndex,
+                        fileID: JSON.parse(window.localStorage.getItem('file')).fileID,
+                        token: window.localStorage.getItem('token'),
+                        dataType: project.dataType,
+                        projectType: project.projectType,
+                        algoName: this.selectAlgorithm,
+                        param: JSON.stringify(params),
+                        input: JSON.stringify(input),
+                        output: JSON.stringify(output)
+                    }
+                    
+                    post(analytic_doModelTrain_url, form).then((resp) => {
+                        if(resp.data.status == "success") {
+                            this.$message({
+                                message: 'manage model success',
+                                type: 'success'
+                            });
+                            this.$router.push({name: 'project', params: {projectID: this.projectID}});
+                        }
+                    })
+                }
+            },
+            checkLabelType(item) {
+                let isError = false;
+                
+                item.selection.forEach((select) => {
+                    if(item.type == 'classifiable') {
+                        if(select.classifiable !== 1) {
+                            isError = true;
+                        }
+                    }else if(item.type == 'float') {
+                        if (select.type != 'float' && select.type!= 'int'){
+                            isError = true;
+                        }
+                    }else {
+                        // string && path
+                        if (select.type != item.type) {
+                            isError = true;
+                        }
+                    }
+                })
+                return isError;
             }
         },
         components: {

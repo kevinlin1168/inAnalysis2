@@ -14,7 +14,7 @@ export function post(url, form = {}, config = {}) {
             .catch((error) => {
                 console.error('post Error', error.response)
                 if(error.response.status == 401) {
-                    let user = window.localStorage.getItem('user')
+                    let user = JSON.parse(window.localStorage.getItem('user'))
                     let userForm = {
                         userID: user.userID,
                         userName: user.userName

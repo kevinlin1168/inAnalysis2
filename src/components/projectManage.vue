@@ -123,13 +123,13 @@
                         label="Actions"
                         min-width="30%">
                     <template slot-scope="scope" style="text-align: right">
-                        <el-button @click="onModelPreviewClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Preview</el-button>
-                        <el-button @click="onModelPredictClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Test</el-button>
-                        <el-button @click="onModelPredictClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'Success'">Predict</el-button>
-                        <el-button @click="onModelManagementClick(scope.row)" type="text" size="medium" :disabled="scope.row.status === 'Training'">Management</el-button>
+                        <el-button @click="onModelPreviewClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'success'">Preview</el-button>
+                        <el-button @click="onModelTestClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'success'">Test</el-button>
+                        <el-button @click="onModelPredictClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'success'">Predict</el-button>
+                        <el-button @click="onModelManagementClick(scope.row)" type="text" size="medium" :disabled="scope.row.status === 'train'">Management</el-button>
                         <!-- Delete Button -->
-                        <el-button v-if="scope.row.status === 'Training'" type="text" size="medium" disabled>Delete</el-button>
-                        <el-button v-if="scope.row.status !== 'Training'" @click="onModelDeleteClick(scope.row.modelIndex)" type="text" size="medium" style="color: red">Delete</el-button>
+                        <el-button v-if="scope.row.status === 'train'" @click="onModelStopClick(scope.row.modelIndex)" type="text" size="medium" style="color: yellow">Stop</el-button>
+                        <el-button v-if="scope.row.status !== 'train'" @click="onModelDeleteClick(scope.row.modelIndex)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -222,12 +222,8 @@
             </el-form>
             <div class="imgBlock" v-if="isShowFilePreviewBlock">
                 <div class="title">FilePreview</div>
-                <el-carousel trigger="click" height="400px" :autoplay="false">
-                    <el-carousel-item v-for="item in fileImgList" :key="item">
-                        <div v-html="item">
-                        </div>
-                    </el-carousel-item>
-                </el-carousel>
+                <div v-html="filePreviewImg">
+                </div>
             </div>
             <div slot="footer" class="dialog-footer">
                 <el-button type="primary" @click="onFilePreviewClose">Close</el-button>
@@ -235,16 +231,13 @@
         </el-dialog>
 
         <!-- preview model popup-->
-        <el-dialog :title='selectModel.name + " Preview"' :visible.sync="isShowModelPreviewPopup" :before-close="onModelPreviewClose" :show-close='false' width="665px">
-            <div class="textBolck">
-                <div class="title">TextPreview</div>
-                
-            </div>
-            <div class="formBlock">
-                <div class="title">FormPreview</div>
+        <el-dialog class="modelPreview" :title='selectModel.modelName + " Preview"' :visible.sync="isShowModelPreviewPopup" :before-close="onModelPreviewClose" :show-close='false' width="665px">
+            <div class="textBlock">
+                <div class="title"> Text Preview</div>
+                <div class="textPreview">{{textPreview}}</div>
             </div>
             <div class="imgBlock">
-                <div class="title">ModelPreview</div>
+                <div class="title">Chart Preview</div>
                 <el-carousel trigger="click" height="400px" width= "625px" :autoplay="false">
                     <el-carousel-item v-for="item in modelImgList" :key="item">
                         <div v-html="item">
@@ -254,6 +247,78 @@
             </div>
             <div slot="footer" class="dialog-footer">
                 <el-button type="primary" @click="onModelPreviewClose">Close</el-button>
+            </div>
+        </el-dialog>
+
+        <!-- test model popup-->
+        <el-dialog class="filePreview" :title='selectModel.modelName + " Test"' :visible.sync="isShowModelTestPopup" :before-close="onModelTestClose" :show-close='false' width="665px">
+            <el-form>
+                <el-form-item label="File" :label-width="labelWidth">
+                    <el-select v-model="selectTestFileID" @change="OnSelectTestFileChange" placeholder="Please select file">
+                        <template v-for="item in fileList">
+                            <el-option
+                                    v-if="item.fileID !== selectModel.fileID"
+                                    :key="item.fileName"
+                                    :label="item.fileName"
+                                    :value="item.fileID">
+                            </el-option>
+                        </template>
+                    </el-select>
+                    <!-- TODO -->
+                    <!-- <el-select v-if="projectType == 'abnormal'" v-model="selectTestFileID" @change="OnSelectTestFileChange" placeholder="Please select file">
+                        <template v-for="item in fileList">
+                            <el-option
+                                    v-if="item.fileID !== selectModel.fileID"
+                                    :key="item.fileName"
+                                    :label="item.fileName"
+                                    :value="item.fileID">
+                            </el-option>
+                        </template>
+                    </el-select> -->
+                </el-form-item>
+            </el-form>
+            <div class="imgBlock" v-if="isShowTestImg">
+                <div class="title">Chart Preview</div>
+                <el-carousel trigger="click" height="400px" width= "625px" :autoplay="false">
+                    <el-carousel-item v-for="item in modelImgList" :key="item">
+                        <div v-html="item">
+                        </div>
+                    </el-carousel-item>
+                </el-carousel>
+            </div>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="onModelTestClose">Close</el-button>
+            </div>
+        </el-dialog>
+
+        <!-- predict model popup-->
+        <el-dialog class="filePreview" :title='selectModel.modelName + " Predict"' :visible.sync="isShowModelPredictPopup" :before-close="onModelPredictClose" :show-close='false' width="665px">
+            <el-form :model="predictForm" ref="predictForm" :rules="predictRules">
+                <el-form-item label="File" :label-width="labelWidth" prop="selectPredictFileID">
+                    <el-select v-model="predictForm.selectPredictFileID" placeholder="Please select file">
+                        <template v-for="item in fileList">
+                            <el-option
+                                    v-if="item.fileID !== selectModel.fileID"
+                                    :key="item.fileName"
+                                    :label="item.fileName"
+                                    :value="item.fileID">
+                            </el-option>
+                        </template>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="Preprocess" :label-width="labelWidth">
+                    <el-switch v-model="predictForm.isPreprocess" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+                </el-form-item>
+                <el-form-item label="Preprocess File Name" :label-width="labelWidth" v-if="predictForm.isPreprocess" prop="preprocessFileName">
+                    <el-input v-model="predictForm.preprocessFileName"></el-input>
+                </el-form-item>
+                <el-form-item label="Predict File Name" :label-width="labelWidth" prop="predictFileName">
+                    <el-input v-model="predictForm.predictFileName"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="onModelPredictConfirm">Confirm</el-button>
+                <el-button type="primary" @click="onModelPredictClose">Close</el-button>
             </div>
         </el-dialog>
     </el-row>
@@ -271,7 +336,10 @@
             visualize_doVisualize_url, 
             model_addModel_url,
             model_getModelByProjectID_url,
-            model_deleteModel_url } from '@/config/api.js';
+            model_deleteModel_url,
+            analytic_getModelPreview_url,
+            analytic_doModelTest_url,
+            analytic_doModelPredict_url } from '@/config/api.js';
     import { post } from '@/utils/requests/post.js'
     export default {
         name: "projectManage",
@@ -285,7 +353,8 @@
             return {
                 html: '',
                 projectID: '',
-                projectName: 'projectName',
+                projectType: '',
+                projectName: '',
                 modelSum: 0,
                 fileSum: 0,
                 isShowModelDetail: false,
@@ -295,16 +364,22 @@
                 isShowSelectToTrainPopup: false,
                 isShowFilePreviewPopup: false,
                 isShowModelPreviewPopup: false,
+                isShowModelTestPopup: false,
+                isShowModelPredictPopup: false,
                 isShowUploadBlock: true,
                 isSelectFectureError: false,
                 isShowFilePreviewBlock: false,
-                labelWidth: '120px',
+                isShowTestImg: false,
+                labelWidth: '160px',
                 selectFile: {},
+                selectTestFileID: '',
                 selectModel: {},
                 selectChart: '',
                 selectColumn: [],
+                filePreviewImg: '',
                 fileImgList: [],
                 modelImgList: [],
+                textPreview: '',
                 columnList: [],
                 modelList: [],
                 modelForm: {
@@ -314,15 +389,33 @@
                 fileForm: {
                     modelName: ''
                 },
+                predictForm: {
+                    selectPredictFileID: '',
+                    preprocessFileName: '',
+                    predictFileName: '',
+                    isPreprocess: true
+                },
                 fileList: [],
                 chartOptionList: [],
                 featureList: [],
+                predictRules: {
+                    selectPredictFileID: [
+                        { required: true, message: 'Please select file', trigger: 'blur' }
+                    ],
+                    preprocessFileName: [
+                        { required: true, message: 'Please input preprocess file mame', trigger: 'blur' }
+                    ],
+                    predictFileName: [
+                        { required: true, message: 'Please input predict file name', trigger: 'blur' }
+                    ]
+                }
             }
         },
         methods:{
             fetchData() {
                 if(this.$route.name == 'project') {
                     this.projectName = JSON.parse(window.localStorage.getItem('project')).projectName;
+                    this.projectType = JSON.parse(window.localStorage.getItem('project')).projectType;
                     this.projectID = this.$route.params.projectID;
                     let form = {
                         projectID: this.projectID,
@@ -516,11 +609,11 @@
                 this.$refs.upload.submit();
             },
             modelTagTransform(status) {
-                if(status === 'Success') {
+                if(status === 'success') {
                     return 'success';
-                } else if (status === 'Training') {
+                } else if (status === 'train') {
                     return 'warning';
-                } else if (status === 'Fail') {
+                } else if (status === 'fail') {
                     return 'danger';
                 } else {
                     return 'info';
@@ -554,13 +647,123 @@
                 
             },
             onModelPreviewClick(model) {
-                this.isShowModelPreviewPopup = true
+                this.selectModel = model;
+                this.modelImgList = [];
+                let bokehVersion = '1.3.4';
+                let link = document.createElement('link')
+                link.setAttribute('rel', 'stylesheet')
+                link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
+                link.setAttribute('type', 'text/css')
+                document.head.appendChild(link)
+                // 在header插入js
+                let script = document.createElement('script')
+                script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
+                script.async = 'async'
+                document.head.appendChild(script)
+                // cdn的js載入完畢再请求bokeh參數
+                let _this = this;
+                script.onload = () => {
+                    let link1 = document.createElement('link')
+                    link1.setAttribute('rel', 'stylesheet')
+                    link1.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.css')
+                    link1.setAttribute('type', 'text/css')
+                    document.head.appendChild(link1)
+                    let script1 = document.createElement('script')
+                    script1.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.js')
+                    script1.async = 'async'
+                    document.head.appendChild(script1)
+                    script1.onload = () => {
+                        let form = {
+                            modelIndex: model.modelIndex,
+                            token: window.localStorage.getItem('token')
+                        }
+                        post(analytic_getModelPreview_url, form).then((resp) => {
+                            if(resp.data.status == 'success') {
+                                _this.textPreview = resp.data.data.text;
+                                let figObject = resp.data.data.fig;
+                                let imgKeyList = Object.keys(figObject);
+                                imgKeyList.forEach((key) => {
+                                    _this.modelImgList.push(figObject[key].div);
+                                    let bokehRunScript = document.createElement('SCRIPT');
+                                    bokehRunScript.setAttribute('type', 'text/javascript');
+                                    let t = document.createTextNode(figObject[key].script);
+                                    bokehRunScript.appendChild(t);
+                                    document.body.appendChild(bokehRunScript);
+                                })
+                                this.isShowModelPreviewPopup = true;
+                            }
+                         })
+                    }
+                }
+            },
+            onModelTestClick(model) {
+                this.selectModel = model;
+                this.isShowModelTestPopup = true;
+            },
+            OnSelectTestFileChange() {
+                if(this.projectType != 'abnormal') {
+                    this.modelImgList = [];
+                    let bokehVersion = '1.3.4';
+                    let link = document.createElement('link')
+                    link.setAttribute('rel', 'stylesheet')
+                    link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
+                    link.setAttribute('type', 'text/css')
+                    document.head.appendChild(link)
+                    // 在header插入js
+                    let script = document.createElement('script')
+                    script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
+                    script.async = 'async'
+                    document.head.appendChild(script)
+                    // cdn的js載入完畢再请求bokeh參數
+                    let _this = this;
+                    script.onload = () => {
+                        let link1 = document.createElement('link')
+                        link1.setAttribute('rel', 'stylesheet')
+                        link1.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.css')
+                        link1.setAttribute('type', 'text/css')
+                        document.head.appendChild(link1)
+                        let script1 = document.createElement('script')
+                        script1.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.js')
+                        script1.async = 'async'
+                        document.head.appendChild(script1)
+                        script1.onload = () => {
+                            let form = {
+                                modelIndex: this.selectModel.modelIndex,
+                                fileID: this.selectTestFileID,
+                                token: window.localStorage.getItem('token')
+                            }
+                            console.warn('form', form)
+                            post(analytic_doModelTest_url, form).then((resp) => {
+                                if(resp.data.status == 'success') {
+                                    _this.textPreview = resp.data.data.text;
+                                    let figObject = resp.data.data.fig;
+                                    let imgKeyList = Object.keys(figObject);
+                                    imgKeyList.forEach((key) => {
+                                        _this.modelImgList.push(figObject[key].div);
+                                        let bokehRunScript = document.createElement('SCRIPT');
+                                        bokehRunScript.setAttribute('type', 'text/javascript');
+                                        let t = document.createTextNode(figObject[key].script);
+                                        bokehRunScript.appendChild(t);
+                                        document.body.appendChild(bokehRunScript);
+                                    })
+                                    this.isShowTestImg = true;
+                                }
+                            })
+                        }
+                    }
+                }
             },
             onModelPredictClick(model) {
-                this.$router.push({name: 'modelPredict', params: {projectID: this.projectID, modelIndex: model.modelIndex}})
+                this.selectModel = model;
+                this.isShowModelPredictPopup = true;
+                // this.$router.push({name: 'modelPredict', params: {projectID: this.projectID, modelIndex: model.modelIndex}})
             },
             onModelManagementClick(model) {
+                let file = this.fileList.find(function(item) {
+                    return model.fileID === item.fileID;
+                });
                 window.localStorage.setItem('model', JSON.stringify(model));
+                window.localStorage.setItem('file', JSON.stringify(file));
                 this.$router.push({name: 'modelManagement', params: {projectID: this.projectID, modelIndex: model.modelIndex}})
             },
             onFileDownloadClick(file) {
@@ -607,6 +810,39 @@
                 this.isShowModelPreviewPopup = false;
                 this.selectModel = {};
             },
+            onModelTestClose() {
+                this.selectTestFileID = '';
+                this.isShowTestImg = false;
+                this.isShowModelTestPopup = false;
+            },
+            onModelPredictConfirm() {
+                this.$refs['predictForm'].validate((valid) => {
+                    if(valid) {
+                        let form = {
+                            fileID: this.predictForm.selectPredictFileID,
+                            modelIndex: this.selectModel.modelIndex,
+                            preprocess: (this.predictForm.isPreprocess ? 1 : 0),
+                            preprocessFileName: this.predictForm.preprocessFileName,
+                            predictFileName: this.predictForm.predictFileName,
+                            token: window.localStorage.getItem('token'),
+                            projectID: this.projectID,
+                            userID: JSON.parse(window.localStorage.getItem('user')).userID
+                        }
+                        post(analytic_doModelPredict_url, form).then((resp) => {
+                            console.warn('predict', resp)
+                        })
+                    }
+                });
+            },
+            onModelPredictClose() {
+                this.isShowModelPredictPopup = false;
+                this.predictForm = {
+                    selectPredictFileID: '',
+                    preprocessFileName: '',
+                    predictFileName: '',
+                    isPreprocess: true
+                }
+            },
             onSelectChartChange() {
                 this.featureList = [];
                 this.selectColumn = [];
@@ -627,7 +863,7 @@
                 this.isShowFilePreviewBlock = false;
                 this.isSelectFectureError = false;
                 let bokehVersion = '1.3.4';
-                this.fileImgList = [];
+                this.filePreviewImg = '';
                 for(let i = 0; i < this.featureList.length; i++) {
                     if(this.selectColumn[i] === null || this.selectColumn[i] === undefined) {
                         this.isSelectFectureError = true;
@@ -666,8 +902,8 @@
                             'token': window.localStorage.getItem('token')
                         }
                         post(visualize_doVisualize_url,form, {emulateJSON:true}).then((response) => {
-                            let temp = response.data.data.div;
-                            _this.fileImgList.push(temp)
+                            _this.filePreviewImg = response.data.data.div;
+                            // _this.fileImgList.push(temp)
                             // 插入绘制script代码
                             let bokehRunScript = document.createElement('SCRIPT')
                             bokehRunScript.setAttribute('type', 'text/javascript')
@@ -720,18 +956,18 @@
         }
     }
 
-    .ModelPreview {
+    .modelPreview {
         .textBlock {
-
-        }
-        .formBlock {
-
+            .textPreview {
+                margin-top: 10px;
+                white-space: pre-wrap;
+            }
         }
         .imgBlock{
-            .title {
-                text-align: center;
-                font-size: 18px;
-            }
+            margin-top: 10px;
+        }
+        .title {
+            font-size: 18px;
         }
     }
 
