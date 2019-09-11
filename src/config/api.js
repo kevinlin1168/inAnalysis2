@@ -45,6 +45,7 @@ export const analytic_doModelTrain_url = analyticUrl + '/doModelTrain';
 export const analytic_getModelPreview_url = analyticUrl + '/getModelPreview';
 export const analytic_doModelTest_url = analyticUrl + '/doModelTest';
 export const analytic_doModelPredict_url = analyticUrl + '/doModelPredict';
+export const analytic_stopModelTraining_url = analyticUrl + '/stopModelTraining';
 
 // model Api
 export const model_addModel_url = modelUrl + '/addModel';

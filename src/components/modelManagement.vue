@@ -50,7 +50,7 @@
                                     <el-col :span="11">
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"> </el-slider>
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"> </el-slider>
-                                        <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+                                        <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
                                         <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select">
                                             <el-option v-for="item in parameter.list" :key="item" :label="item" :value="item"></el-option>
                                         </el-select>
@@ -70,7 +70,7 @@
                                     <el-col :span="11">
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"> </el-slider>
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"> </el-slider>
-                                        <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+                                        <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
                                         <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select">
                                             <el-option v-for="item in parameter.list" :key="item" :label="item" :value="item"></el-option>
                                         </el-select>
@@ -294,37 +294,7 @@
                     amount: "multiple",
                     selection: []
                 }],
-                parameterList: [{
-                    name: "param1Name",
-                    description: "param1 Description",
-                    type: "int",
-                    upperBound: 50,
-                    lowerBound: 0,
-                    default:20
-                }, {
-                    name: "param2 Name",
-                    description: "param2 Description",
-                    type: "float",
-                    upperBound: 50,
-                    lowerBound: 0,
-                    default:23.2
-                }, {
-                    name: "param3Name",
-                    description: "param3 Description",
-                    type: "bool",
-                    default:1
-                }, {
-                    name: "param4Name",
-                    description: "param4 Description",
-                    type: "enum",
-                    list: ["option1","option2","option3"],
-                    default:"option2"
-                }, {
-                    name: "param5Name",
-                    description: "param5 Description",
-                    type: "string",
-                    default:"default string"
-                }]
+                parameterList: []
             }
         },
         methods:{
@@ -435,7 +405,7 @@
                     this.parameterList.forEach((item) => {
                         if(item.default !== "" || item.default !== undefined) {
                             if(item.type == 'bool') {
-                                item.value = (item.default == 1 ? true : false)
+                                item.value = (item.default == '1' ? true : false)
                             } else {
                                 item.value = item.default;
                             }

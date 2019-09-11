@@ -128,7 +128,7 @@
                         <el-button @click="onModelPredictClick(scope.row)" type="text" size="medium" :disabled="scope.row.status !== 'success'">Predict</el-button>
                         <el-button @click="onModelManagementClick(scope.row)" type="text" size="medium" :disabled="scope.row.status === 'train'">Management</el-button>
                         <!-- Delete Button -->
-                        <el-button v-if="scope.row.status === 'train'" @click="onModelStopClick(scope.row.modelIndex)" type="text" size="medium" style="color: yellow">Stop</el-button>
+                        <el-button v-if="scope.row.status === 'train'" @click="onModelStopClick(scope.row.modelIndex)" type="text" size="medium" style="color: #E6A23C">Stop</el-button>
                         <el-button v-if="scope.row.status !== 'train'" @click="onModelDeleteClick(scope.row.modelIndex)" type="text" size="medium" style="color: red">Delete</el-button>
                     </template>
                 </el-table-column>
@@ -339,7 +339,8 @@
             model_deleteModel_url,
             analytic_getModelPreview_url,
             analytic_doModelTest_url,
-            analytic_doModelPredict_url } from '@/config/api.js';
+            analytic_doModelPredict_url,
+            analytic_stopModelTraining_url } from '@/config/api.js';
     import { post } from '@/utils/requests/post.js'
     export default {
         name: "projectManage",
@@ -512,6 +513,21 @@
             onSelectToTrainClick(fileID) {
                 this.modelForm.fileID = fileID;
                 this.isShowSelectToTrainPopup = true;
+            },
+            onModelStopClick(modelIndex) {
+                let form = {
+                    modelIndex: modelIndex,
+                    token: window.localStorage.getItem('token')
+                }
+                post(analytic_stopModelTraining_url, form).then((resp) => {
+                    if(resp.data.status != 'success') {
+                        console.error('stopModelTraining Error', resp.data.data.msg)
+                    }
+                    this.fetchData();
+                }).catch((error) => {
+                    console.error('stopModelTraining Error', error);
+                    this.fetchData();
+                })
             },
             onModelDeleteClick(modelIndex) {
                 this.$confirm('Do you want to confirm the deletion?', 'Hint', {
@@ -829,7 +845,16 @@
                             userID: JSON.parse(window.localStorage.getItem('user')).userID
                         }
                         post(analytic_doModelPredict_url, form).then((resp) => {
-                            console.warn('predict', resp)
+                            if(resp.data.status == 'success') {
+                                if((resp.data.data.isPreprocess == 0) && this.predictForm.isPreprocess) {
+                                    this.$message({
+                                        message: 'Your file do not need to preprocess',
+                                        type: 'warning'
+                                    });
+                                }
+                                this.onModelPredictClose();
+                                this.fetchData();
+                            }
                         })
                     }
                 });
