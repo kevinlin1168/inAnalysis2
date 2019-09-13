@@ -75,6 +75,7 @@
                 isShowProjectDetail: false,
                 isShowAddProjectPopup: false,
                 addProjectPopupWidth: '120px',
+                loading: {},
                 form: {
                     projectType: '',
                     projectName: ''
@@ -128,6 +129,7 @@
             onAddProjectClick() {
                 this.$refs['form'].validate((valid) => {
                     if (valid) {
+                        this.fullScreenLoading();
                         let form = {
                             projectName: this.form.projectName,
                             dataType: this.dataType,
@@ -140,6 +142,7 @@
                                 this.$emit('projectUpdate');
                                 this.isShowAddProjectPopup = false;
                             }
+                            this.loadingClose();
                         })
                     } else {
                         return false
@@ -150,6 +153,16 @@
                 this.form.projectType = '';
                 this.form.projectName = '';
                 this.isShowAddProjectPopup = false;
+            },fullScreenLoading() {
+                this.loading = this.$loading({
+                    lock: true,
+                    text: 'Loading',
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+            },
+            loadingClose() {
+                this.loading.close();
             }
         },
         components: {

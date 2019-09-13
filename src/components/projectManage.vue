@@ -161,11 +161,11 @@
 
         <!-- add model popup-->
         <el-dialog :title='"Add Model"' :visible.sync="isShowAddModelPopup" :before-close="onAddModelCancel">
-            <el-form :model="modelForm">
-                <el-form-item label="Model Name" :label-width="labelWidth">
+            <el-form :model="modelForm" :rules="modelRule" ref="modelForm">
+                <el-form-item label="Model Name" :label-width="labelWidth" prop="modelName">
                     <el-input v-model="modelForm.modelName" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="File" :label-width="labelWidth">
+                <el-form-item label="File" :label-width="labelWidth" prop="fileID">
                     <el-select v-model="modelForm.fileID" placeholder="Please select file">
                         <el-option class="option" v-for="item in fileList" :label="item.fileName" :value="item.fileID" :key="item.fileID"></el-option>
                     </el-select>
@@ -179,8 +179,8 @@
 
         <!-- select to train popup-->
         <el-dialog :title='"Add Model"' :visible.sync="isShowSelectToTrainPopup" :before-close="onAddModelCancel">
-            <el-form :model="modelForm">
-                <el-form-item label="Model Name" :label-width="labelWidth">
+            <el-form :model="modelForm" ref="modelForm" :rules="modelRule">
+                <el-form-item label="Model Name" :label-width="labelWidth" prop="modelName">
                     <el-input v-model="modelForm.modelName" autocomplete="off"></el-input>
                 </el-form-item>
             </el-form>
@@ -399,6 +399,7 @@
                 fileList: [],
                 chartOptionList: [],
                 featureList: [],
+                loading: {},
                 predictRules: {
                     selectPredictFileID: [
                         { required: true, message: 'Please select file', trigger: 'blur' }
@@ -409,12 +410,21 @@
                     predictFileName: [
                         { required: true, message: 'Please input predict file name', trigger: 'blur' }
                     ]
+                },
+                modelRule: {
+                    modelName: [
+                        { required: true, message: 'Please input model name', trigger: 'blur' }
+                    ],
+                    fileID: [
+                        { required: true, message: 'Please select file', trigger: 'blur' }
+                    ]
                 }
             }
         },
         methods:{
             fetchData() {
                 if(this.$route.name == 'project') {
+                    this.fullScreenLoading()
                     this.projectName = JSON.parse(window.localStorage.getItem('project')).projectName;
                     this.projectType = JSON.parse(window.localStorage.getItem('project')).projectType;
                     this.projectID = this.$route.params.projectID;
@@ -442,6 +452,7 @@
                                         }
                                         model['fileName'] = this.fileList.filter(item => item.fileID == model.fileID)[0].fileName
                                     })
+                                    this.loadingClose();
                                 } else {
                                     console.error('getModelListError', resp.data.msg)
                                 }
@@ -484,30 +495,36 @@
                 this.isShowAddModelPopup = false;
             },
             onAddModelConfirm() {
-                //TODO check status
-                let form = {
-                    projectID: this.projectID,
-                    fileID: this.modelForm.fileID,
-                    modelName: this.modelForm.modelName,
-                    token: window.localStorage.getItem('token')
-                }
-                post(model_addModel_url, form).then((resp) => {
-                    if(resp.data.status == "success") {
-                        this.$message({
-                            type: 'success',
-                            message: 'Add Model Succeeded!'
+                this.$refs['modelForm'].validate((valid) => {
+                    if(valid) {
+                        this.fullScreenLoading();
+                        let form = {
+                            projectID: this.projectID,
+                            fileID: this.modelForm.fileID,
+                            userID: JSON.parse(window.localStorage.getItem('user')).userID,
+                            modelName: this.modelForm.modelName,
+                            token: window.localStorage.getItem('token')
+                        }
+                        post(model_addModel_url, form).then((resp) => {
+                            if(resp.data.status == "success") {
+                                this.$message({
+                                    type: 'success',
+                                    message: 'Add Model Succeeded!'
+                                });
+                                this.clearModelForm();
+                                this.isShowSelectToTrainPopup = false;
+                                this.isShowAddModelPopup = false;
+                                this.fetchData();
+                            } else {
+                                console.error(resp.data.msg);
+                            }
+                            this.loadingClose();
+                        }).catch((error) => {
+                            console.error(error);
                         });
-                        this.clearModelForm();
-                        this.isShowSelectToTrainPopup = false;
-                        this.isShowAddModelPopup = false;
-                        this.fetchData();
-                    } else {
-                        console.error(resp.data.msg);
                     }
-
-                }).catch((error) => {
-                    console.error(error);
-                });
+                })
+                
                 
             },
             onSelectToTrainClick(fileID) {
@@ -941,6 +958,17 @@
                         });
                     }
                 }
+            },
+            fullScreenLoading() {
+                this.loading = this.$loading({
+                    lock: true,
+                    text: 'Loading',
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+            },
+            loadingClose() {
+                this.loading.close();
             }
         }
     }

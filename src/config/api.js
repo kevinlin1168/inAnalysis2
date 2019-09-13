@@ -15,7 +15,8 @@ export const system_getDataFile_url = systemUrl + '/getDataFile'
 // user Api
 export const user_signin_url = userUrl + '/signin';
 export const user_signup_url = userUrl + '/signup';
-export const user_generateToken_url = userUrl + '/generateToken'
+export const user_generateToken_url = userUrl + '/generateToken';
+export const user_getUserInfo = userUrl + '/getUserInfo';
 
 // project Api
 export const project_add_url = projectUrl + '/add';

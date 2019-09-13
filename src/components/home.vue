@@ -6,7 +6,7 @@
                     <div class="cardHeader">Project Sum</div>
                     <div class="cardMain">
                         <div class="number">
-                            20
+                            {{projectSum}}
                         </div>
                     </div>
                 </el-card>
@@ -16,7 +16,7 @@
                     <div class="cardHeader">Api Sum</div>
                     <div class="cardMain">
                         <div class="number">
-                            87
+                            {{apiSum}}
                         </div>
                     </div>
                 </el-card>
@@ -28,7 +28,7 @@
                     <div class="cardHeader">Model Sum</div>
                     <div class="cardMain">
                         <div class="number">
-                            21
+                            {{modelSum}}
                         </div>
                     </div>
                 </el-card>
@@ -38,7 +38,7 @@
                     <div class="cardHeader">File Sum</div>
                     <div class="cardMain">
                         <div class="number">
-                            22
+                            {{fileSum}}
                         </div>
                     </div>
                 </el-card>
@@ -47,18 +47,63 @@
     </div>
 </template>
 <script>
+    import { user_getUserInfo } from '@/config/api.js';
+    import { post } from '@/utils/requests/post.js'
     export default {
         name: 'home',
+        created: function() {
+            this.fetchData();
+        },
+        watch: {
+            '$route': 'fetchData'
+        },
         data: function () {
             return {
+                fileSum: 0,
+                modelSum: 0,
+                projectSum: 0,
+                apiSum: 0,
+                loading: {}
             }
         },
         methods:{
+            fetchData() {
+                if (this.$route.name == 'home') {
+                    this.fullScreenLoading();
+                    this.token = window.localStorage.getItem('token');
+                    this.userID = JSON.parse(window.localStorage.getItem('user')).userID
+                    let userForm = {
+                        userID: this.userID,
+                        token: this.token
+                    };
+                    post(user_getUserInfo, userForm).then((response) => {
+                        if(response.data.status == 'success') {
+                            this.projectSum = response.data.data.projectSum;
+                            this.fileSum = response.data.data.fileSum;
+                            this.modelSum = response.data.data.modelSum;
+                        }
+                        this.loadingClose();
+                    }, () => {
+                        console.error('getProjectListError')
+                    });
+                }
+            },
             OnProjectCardClick() {
                 this.$router.push('/project')
             },
             OnApiCardClick() {
                 console.warn('ApiCard Click')
+            },
+            fullScreenLoading() {
+                this.loading = this.$loading({
+                    lock: true,
+                    text: 'Loading',
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+            },
+            loadingClose() {
+                this.loading.close();
             }
         },
         components: {

@@ -48,12 +48,14 @@
                 NLPProjectOptionList: [],
                 CVProjectOptionList: [],
                 userID: '',
-                token: ''
+                token: '',
+                loading: {}
             }
         },
         methods:{
             fetchData() {
                 if (this.$route.name == 'dataProjectManage') {
+                    this.fullScreenLoading()
                     this.token = window.localStorage.getItem('token');
                     this.userID = JSON.parse(window.localStorage.getItem('user')).userID
                     let userForm = {
@@ -77,6 +79,7 @@
                                     break;
                             }
                         })
+                        this.loadingClose();
                     }, () => {
                         console.error('getProjectListError')
                     });
@@ -92,6 +95,17 @@
                         
                     })
                 }
+            },
+            fullScreenLoading() {
+                this.loading = this.$loading({
+                    lock: true,
+                    text: 'Loading',
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+            },
+            loadingClose() {
+                this.loading.close();
             }
         },
         components: {

@@ -133,6 +133,10 @@
                                     <div class="labelTitle">
                                         {{label.name}}
                                     </div>
+                                    <div class="labelIsSingle">
+                                        <img v-if="label.amount === 'single'" src="@/assets/single3.png" height="25" width="25">
+                                        <img v-if="label.amount === 'multiple'" src="@/assets/multiple3.png" height="25" width="25">
+                                    </div>
                                     <div class="labelImg">
                                         <img v-if="label.type === 'int'" src="@/assets/integer.png" height="25" width="25">
                                         <img v-if="label.type === 'float'" src="@/assets/float.png" height="25" width="25">
@@ -167,6 +171,10 @@
                                 <div class="labelNameBlock">
                                     <div class="labelTitle">
                                         {{label.name}}
+                                    </div>
+                                    <div class="labelIsSingle">
+                                        <img v-if="label.amount === 'single'" src="@/assets/single3.png" height="25" width="25">
+                                        <img v-if="label.amount === 'multiple'" src="@/assets/multiple3.png" height="25" width="25">
                                     </div>
                                     <div class="labelImg">
                                         <img v-if="label.type === 'int'" src="@/assets/integer.png" height="25" width="25">
@@ -648,9 +656,15 @@
 
                 .labelNameBlock {
                     .labelTitle {
-                        width: 75%;
+                        width: 25%;
                         align-items: center;
                         display: inline-block;
+                    }
+                    .labelIsSingle {
+                        width: 50%;
+                        align-items: center;
+                        display: inline-block;
+                        text-align: left;
                     }
 
                     .labelImg {
