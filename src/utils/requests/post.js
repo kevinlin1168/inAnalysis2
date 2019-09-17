@@ -9,6 +9,8 @@ export function post(url, form = {}, config = {}) {
                 console.warn(resp)
                 if (resp.data.status == 'success') {
                     resolve(resp);
+                } else {
+                    reject(resp)
                 }
             })
             .catch((error) => {
@@ -43,6 +45,8 @@ export function post(url, form = {}, config = {}) {
             vue.axios.post(url, form, config).then((resp) => {
                 if (resp.status == 200) {
                     resolve(resp);
+                } else {
+                    reject(resp);
                 }
             })
             .catch((error) => {

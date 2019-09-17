@@ -13,7 +13,7 @@
                     </el-alert>
                     <el-input v-model="userID" placeholder="User ID"></el-input>
                     <el-input v-model="userPassward" placeholder="Password" type="password"></el-input>
-                    <el-button class="loginButton" type="info" @click="signup">Sign Up</el-button>
+                    <el-button class="loginButton" type="info" @click="signup" v-if="new Date() < signupTime">Sign Up</el-button>
                     <el-button class="loginButton" type="primary" @click="login">Sign In</el-button>
                 </div>
             </div>
@@ -22,13 +22,15 @@
 </template>
 <script>
     import inAnalysisLogo from '@/assets/InAnalysisLogo.png';
-    import {user_signin_url, project_getProjectByUser_url} from '@/config/api.js';
-    import { post } from '@/utils/requests/post.js'
+    import {user_signin_url} from '@/config/api.js';
+    import {signupTime} from '@/config/env.js';
+    import { post } from '@/utils/requests/post.js';
     export default {
         name: 'login',
         data: function () {
             return {
                 inAnalysisLogo: inAnalysisLogo,
+                signupTime: signupTime,
                 userID: '',
                 userPassward: '',
                 isError: false

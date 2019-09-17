@@ -258,7 +258,7 @@
                         <template v-for="item in fileList">
                             <el-option
                                     v-if="item.fileID !== selectModel.fileID"
-                                    :key="item.fileName"
+                                    :key="item.fileID"
                                     :label="item.fileName"
                                     :value="item.fileID">
                             </el-option>
@@ -299,7 +299,7 @@
                         <template v-for="item in fileList">
                             <el-option
                                     v-if="item.fileID !== selectModel.fileID"
-                                    :key="item.fileName"
+                                    :key="item.fileID"
                                     :label="item.fileName"
                                     :value="item.fileID">
                             </el-option>
@@ -307,7 +307,7 @@
                     </el-select>
                 </el-form-item>
                 <el-form-item label="Preprocess" :label-width="labelWidth">
-                    <el-switch v-model="predictForm.isPreprocess" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+                    <el-switch v-model="predictForm.isPreprocess" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
                 </el-form-item>
                 <el-form-item label="Preprocess File Name" :label-width="labelWidth" v-if="predictForm.isPreprocess" prop="preprocessFileName">
                     <el-input v-model="predictForm.preprocessFileName"></el-input>
@@ -734,6 +734,7 @@
                 this.isShowModelTestPopup = true;
             },
             OnSelectTestFileChange() {
+                this.isShowTestImg = false;
                 if(this.projectType != 'abnormal') {
                     this.modelImgList = [];
                     let bokehVersion = '1.3.4';
@@ -765,7 +766,6 @@
                                 fileID: this.selectTestFileID,
                                 token: window.localStorage.getItem('token')
                             }
-                            console.warn('form', form)
                             post(analytic_doModelTest_url, form).then((resp) => {
                                 if(resp.data.status == 'success') {
                                     _this.textPreview = resp.data.data.text;
@@ -780,8 +780,15 @@
                                         document.body.appendChild(bokehRunScript);
                                     })
                                     this.isShowTestImg = true;
+                                } else {
+                                    this.$message.error('Test file error please select other files');
+                                    this.isShowTestImg = false;
                                 }
-                            })
+                            }).catch((error) => {
+                                console.error('Test Model Error', error);
+                                this.$message.error('Test file error please select other files');
+                                this.isShowTestImg = false;
+                            });
                         }
                     }
                 }

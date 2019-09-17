@@ -48,10 +48,10 @@
                                         {{parameter.name}}
                                     </el-col>
                                     <el-col :span="11">
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"> </el-slider>
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1" @change="test(parameter)"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1" @change="test"> </el-slider>
                                         <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
-                                        <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select">
+                                        <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select" @change="$forceUpdate()">
                                             <el-option v-for="item in parameter.list" :key="item" :label="item" :value="item"></el-option>
                                         </el-select>
                                         <el-input v-model="parameter.value" v-if="parameter.type == 'string'"></el-input>
@@ -68,10 +68,10 @@
                                         {{parameter.name}}
                                     </el-col>
                                     <el-col :span="11">
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"> </el-slider>
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1" @change="test"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1" @change="test"> </el-slider>
                                         <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
-                                        <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select">
+                                        <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select" @change="$forceUpdate()">
                                             <el-option v-for="item in parameter.list" :key="item" :label="item" :value="item"></el-option>
                                         </el-select>
                                         <el-input v-model="parameter.value" v-if="parameter.type == 'string'"></el-input>
@@ -133,9 +133,11 @@
                                     <div class="labelTitle">
                                         {{label.name}}
                                     </div>
-                                    <div class="labelIsSingle">
-                                        <img v-if="label.amount === 'single'" src="@/assets/single3.png" height="25" width="25">
-                                        <img v-if="label.amount === 'multiple'" src="@/assets/multiple3.png" height="25" width="25">
+                                    <div class="labelAmount" v-if="label.amount === 'single'">
+                                        Single
+                                    </div>
+                                    <div class="labelAmount" v-if="label.amount === 'multiple'">
+                                        Multiple
                                     </div>
                                     <div class="labelImg">
                                         <img v-if="label.type === 'int'" src="@/assets/integer.png" height="25" width="25">
@@ -172,9 +174,11 @@
                                     <div class="labelTitle">
                                         {{label.name}}
                                     </div>
-                                    <div class="labelIsSingle">
-                                        <img v-if="label.amount === 'single'" src="@/assets/single3.png" height="25" width="25">
-                                        <img v-if="label.amount === 'multiple'" src="@/assets/multiple3.png" height="25" width="25">
+                                    <div class="labelAmount" v-if="label.amount === 'single'">
+                                        Single
+                                    </div>
+                                    <div class="labelAmount" v-if="label.amount === 'multiple'">
+                                        Multiple
                                     </div>
                                     <div class="labelImg">
                                         <img v-if="label.type === 'int'" src="@/assets/integer.png" height="25" width="25">
@@ -389,6 +393,7 @@
                 
             },
             onLabelChange() {
+                this.$forceUpdate();
                 if(this.selectCorrelationAlgorithm == '') {
                     this.active = 2;
                 } else {
@@ -438,7 +443,7 @@
                 this.algoInputList.forEach((inputItem) => {
                     // check length
                     if(inputItem.amount == "single") {
-                        if(item.selection.length > 1) {
+                        if(inputItem.selection.length > 1) {
                             isError = true;
                             errorMassage += ' Select more than one Label';
                         }
@@ -525,6 +530,9 @@
                     }
                 })
                 return isError;
+            },
+            test(value) {
+                console.warn('value', value)
             }
         },
         components: {
@@ -659,6 +667,12 @@
                         width: 25%;
                         align-items: center;
                         display: inline-block;
+                    }
+                    .labelAmount {
+                        width: 50%;
+                        align-items: center;
+                        display: inline-block;
+                        text-align: left;
                     }
                     .labelIsSingle {
                         width: 50%;
