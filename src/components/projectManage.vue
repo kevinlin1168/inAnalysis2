@@ -735,6 +735,7 @@
             },
             OnSelectTestFileChange() {
                 this.isShowTestImg = false;
+                this.fullScreenLoading();
                 if(this.projectType != 'abnormal') {
                     this.modelImgList = [];
                     let bokehVersion = '1.3.4';
@@ -779,14 +780,17 @@
                                         bokehRunScript.appendChild(t);
                                         document.body.appendChild(bokehRunScript);
                                     })
+                                    this.loadingClose();
                                     this.isShowTestImg = true;
                                 } else {
                                     this.$message.error('Test file error please select other files');
+                                    this.loadingClose();
                                     this.isShowTestImg = false;
                                 }
                             }).catch((error) => {
                                 console.error('Test Model Error', error);
                                 this.$message.error('Test file error please select other files');
+                                this.loadingClose();
                                 this.isShowTestImg = false;
                             });
                         }
