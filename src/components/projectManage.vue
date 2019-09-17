@@ -735,6 +735,7 @@
             },
             OnSelectTestFileChange() {
                 this.isShowTestImg = false;
+                console.warn(this.selectTestFileID)
                 this.fullScreenLoading();
                 if(this.projectType != 'abnormal') {
                     this.modelImgList = [];
@@ -764,6 +765,7 @@
                         script1.onload = () => {
                             let form = {
                                 modelIndex: this.selectModel.modelIndex,
+                                fileID: this.selectTestFileID,
                                 token: window.localStorage.getItem('token')
                             }
                             post(analytic_doModelTest_url, form).then((resp) => {
@@ -864,7 +866,7 @@
                         let form = {
                             fileID: this.predictForm.selectPredictFileID,
                             modelIndex: this.selectModel.modelIndex,
-                            preprocess: (this.predictForm.isPreprocess ? 1 : 0),
+                            preprocess: (this.predictForm.isPreprocess ? '1' : '0'),
                             preprocessFileName: this.predictForm.preprocessFileName,
                             predictFileName: this.predictForm.predictFileName,
                             token: window.localStorage.getItem('token'),
@@ -882,6 +884,9 @@
                                 this.onModelPredictClose();
                                 this.fetchData();
                             }
+                        }).catch((error) => {
+                            console.error('Predict Error', error)
+                            this.$message.error('Predict error please select other files')
                         })
                     }
                 });

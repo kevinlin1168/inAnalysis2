@@ -42,13 +42,13 @@
                 <el-row class="parametersBlock" v-if="selectAlgorithm !== '' && parameterList !== []">
                     <el-col :span="12">
                         <template v-for="(parameter, index) in parameterList" >
-                            <el-row v-if="(index % 2) === 0" class="parameterItem" :key="index">
+                            <el-row v-if="(index % 2) === 0" class="parameterItem" :key="parameter.name">
                                 <div  class="parameter">
                                     <el-col  :span="11" :offset="2" :key="index">
                                         {{parameter.name}}
                                     </el-col>
                                     <el-col :span="11">
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1" @change="test(parameter)"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @change="test"> </el-slider>
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1" @change="test"> </el-slider>
                                         <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
                                         <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select" @change="$forceUpdate()">
@@ -68,8 +68,8 @@
                                         {{parameter.name}}
                                     </el-col>
                                     <el-col :span="11">
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1" @change="test"> </el-slider>
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1" @change="test"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @change="test"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"  @change="test"> </el-slider>
                                         <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
                                         <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select" @change="$forceUpdate()">
                                             <el-option v-for="item in parameter.list" :key="item" :label="item" :value="item"></el-option>
@@ -242,74 +242,16 @@
                 selectCorrelationAlgorithm: '',
                 correlationImg: '',
                 correlationAlgorithmList: [],
-                algorithmList: ['algo1', 'algo2', 'algo3', 'algo4'],
-                columnList: [{
-                    name: 'column1',
-                    type: 'int'
-                }, {
-                    name: 'column2',
-                    type: 'float'
-                }, {
-                    name: 'column3',
-                    type: 'string'
-                }, {
-                    name: 'column4',
-                    type: 'path'
-                }],
-                algoInputList: [{
-                    name: "input1Name",
-                    description: "input1 description",
-                    type: "float",
-                    amount: "multiple",
-                    selection: []
-                }, {
-                    name: "input1Name",
-                    description: "input1 description",
-                    type: "classifiable",
-                    amount: "multiple",
-                    selection: []
-                }, {
-                    name: "input1Name",
-                    description: "input1 description",
-                    type: "string",
-                    amount: "multiple",
-                    selection: []
-                }, {
-                    name: "input1Name",
-                    description: "input1 description",
-                    type: "path",
-                    amount: "multiple",
-                    selection: []
-                }],
-                algoOutputList: [{
-                    name: "output1Name",
-                    description: "output1 description",
-                    type: "float",
-                    amount: "multiple",
-                    selection: []
-                }, {
-                    name: "output2Name",
-                    description: "output2 description",
-                    type: "classifiable",
-                    amount: "multiple",
-                    selection: []
-                }, {
-                    name: "output3Name",
-                    description: "output3 description",
-                    type: "string",
-                    amount: "multiple",
-                    selection: []
-                }, {
-                    name: "output4Name",
-                    description: "output4 description",
-                    type: "path",
-                    amount: "multiple",
-                    selection: []
-                }],
+                algorithmList: [],
+                columnList: [],
+                algoInputList: [],
                 parameterList: []
             }
         },
         methods:{
+            test() {
+                console.warn(this.parameterList);
+            },
             fetchData() {
                 if(this.$route.name == 'modelManagement') {
                     this.projectName = JSON.parse(window.localStorage.getItem('project')).projectName;
@@ -414,22 +356,25 @@
                         this.parameterList = resp.data.data.param;
                         this.algoInputList = resp.data.data.input;
                         this.algoOutputList = resp.data.data.output;
-                    }
-                    this.parameterList.forEach((item) => {
-                        if(item.default !== "" || item.default !== undefined) {
-                            if(item.type == 'bool') {
-                                item.value = (item.default == '1' ? true : false)
-                            } else {
-                                item.value = item.default;
+                        this.parameterList.forEach((item) => {
+                            if(item.default !== "" || item.default !== undefined) {
+                                if(item.type == 'bool') {
+                                    item.value = (item.default == '1' ? true : false)
+                                } else if (item.type == 'float' || item.type == 'int') {
+                                    // item.value = Number(item.default);
+                                } else {
+                                    item.value = item.default;
+                                }
                             }
-                        }
-                    })
-                    this.algoInputList.forEach((item) => {
-                        item['selection'] = [];
-                    })
-                    this.algoOutputList.forEach((item) => {
-                        item['selection'] = [];
-                    })
+                        })
+                        console.warn('test', this.parameterList);
+                        this.algoInputList.forEach((item) => {
+                            item['selection'] = [];
+                        })
+                        this.algoOutputList.forEach((item) => {
+                            item['selection'] = [];
+                        })
+                    }
                 }).catch((error) => {
                     console.error('getAnalyticAlgoParam Error', error)
                 });
@@ -529,9 +474,6 @@
                     }
                 })
                 return isError;
-            },
-            test(value) {
-                console.warn('value', value)
             }
         },
         components: {
