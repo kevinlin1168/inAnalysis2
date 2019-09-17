@@ -764,7 +764,6 @@
                         script1.onload = () => {
                             let form = {
                                 modelIndex: this.selectModel.modelIndex,
-                                fileID: this.selectTestFileID,
                                 token: window.localStorage.getItem('token')
                             }
                             post(analytic_doModelTest_url, form).then((resp) => {

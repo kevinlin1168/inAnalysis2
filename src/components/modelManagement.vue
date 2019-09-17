@@ -489,7 +489,6 @@
                     })
                     let form = {
                         modelIndex: this.modelIndex,
-                        fileID: JSON.parse(window.localStorage.getItem('file')).fileID,
                         token: window.localStorage.getItem('token'),
                         dataType: project.dataType,
                         projectType: project.projectType,
