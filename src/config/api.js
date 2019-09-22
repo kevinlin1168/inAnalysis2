@@ -16,7 +16,10 @@ export const system_getDataFile_url = systemUrl + '/getDataFile'
 export const user_signin_url = userUrl + '/signin';
 export const user_signup_url = userUrl + '/signup';
 export const user_generateToken_url = userUrl + '/generateToken';
-export const user_getUserInfo = userUrl + '/getUserInfo';
+export const user_getUserInfo_url = userUrl + '/getUserInfo';
+export const user_signupVerify_url = userUrl + '/signupVerify';
+export const user_forgetPassword_url = userUrl + '/forgetPassword';
+export const user_forgetPasswordVerify_url = userUrl + '/forgetPasswordVerify';
 
 // project Api
 export const project_add_url = projectUrl + '/add';

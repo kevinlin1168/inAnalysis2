@@ -100,7 +100,7 @@
             },
             onProjectDeleteClick(projectID) {
                 this.$confirm('Do you want to confirm the deletion?', 'Hint', {
-                    confirmButtonText: 'Conform',
+                    confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
                 }).then(() => {
@@ -172,12 +172,13 @@
     }
 </script>
 <style lang="scss" scoped>
+.el-row{
+  border-bottom-style: solid;
+    border-bottom-width: 2px;
+    display: flex;
+}
 .gridTitle {
-    border-bottom-style: solid;
-    border-radius: 0px;
     font-size: 24px;
-    border-width: 2px;
-
     .el-select {
         width: 100%;
     }

@@ -48,8 +48,8 @@
                                         {{parameter.name}}
                                     </el-col>
                                     <el-col :span="11">
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @change="test"> </el-slider>
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1" @change="test"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @input="$forceUpdate()"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1" @input="$forceUpdate()"> </el-slider>
                                         <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
                                         <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select" @change="$forceUpdate()">
                                             <el-option v-for="item in parameter.list" :key="item" :label="item" :value="item"></el-option>
@@ -68,8 +68,8 @@
                                         {{parameter.name}}
                                     </el-col>
                                     <el-col :span="11">
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @change="test"> </el-slider>
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"  @change="test"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @input="$forceUpdate()"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"  @input="$forceUpdate()"> </el-slider>
                                         <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
                                         <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select" @change="$forceUpdate()">
                                             <el-option v-for="item in parameter.list" :key="item" :label="item" :value="item"></el-option>
@@ -251,6 +251,7 @@
         methods:{
             test() {
                 console.warn(this.parameterList);
+                //console.warn(this.parameterList[0].value)
             },
             fetchData() {
                 if(this.$route.name == 'modelManagement') {
@@ -361,7 +362,7 @@
                                 if(item.type == 'bool') {
                                     item.value = (item.default == '1' ? true : false)
                                 } else if (item.type == 'float' || item.type == 'int') {
-                                    // item.value = Number(item.default);
+                                    item.value = Number(item.default);
                                 } else {
                                     item.value = item.default;
                                 }

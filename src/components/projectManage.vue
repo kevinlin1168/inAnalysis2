@@ -12,7 +12,7 @@
         <el-col :span="3" class="gridSubTitle"> Total Files</el-col>
         <el-col :span="2" class="gridSubTitle"> {{fileList.length}}</el-col>
         <el-col :span="2" class="gridSubTitle">
-            <el-tooltip content="Add model" placement="bottom" effect="light">
+            <el-tooltip content="Add file" placement="bottom" effect="light">
                 <i class="el-icon-circle-plus" @click="onAddFileClick"></i>
             </el-tooltip>
         </el-col>
@@ -110,12 +110,21 @@
                     label="Status"
                     min-width="10%">
                     <template slot-scope="scope">
-                        <el-tag
-                        style="width: 80px; text-align: center;"
-                        size = 'medium'
-                        :type="modelTagTransform(scope.row.status)"
-                        disable-transitions>{{scope.row.status}}
-                        </el-tag>
+                        <el-tooltip v-if="scope.row.status == 'fail'" class="item" effect="dark" :content="scope.row.failReason" placement="bottom">
+                            <el-tag
+                            style="width: 80px; text-align: center;"
+                            size = 'medium'
+                            :type="modelTagTransform(scope.row.status)"
+                            disable-transitions>{{scope.row.status}}
+                            </el-tag>
+                        </el-tooltip>
+                            <el-tag
+                            v-if="scope.row.status != 'fail'"
+                            style="width: 80px; text-align: center;"
+                            size = 'medium'
+                            :type="modelTagTransform(scope.row.status)"
+                            disable-transitions>{{scope.row.status}}
+                            </el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column
@@ -548,7 +557,7 @@
             },
             onModelDeleteClick(modelIndex) {
                 this.$confirm('Do you want to confirm the deletion?', 'Hint', {
-                    confirmButtonText: 'Conform',
+                    confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
                 }).then(() => {
@@ -576,7 +585,7 @@
             },
             onFileDeleteClick(fileID) {
                 this.$confirm('Do you want to confirm the deletion?', 'Hint', {
-                    confirmButtonText: 'Conform',
+                    confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
                 }).then(() => {
@@ -866,13 +875,14 @@
                         let form = {
                             fileID: this.predictForm.selectPredictFileID,
                             modelIndex: this.selectModel.modelIndex,
-                            preprocess: (this.predictForm.isPreprocess ? '1' : '0'),
+                            preprocess: (this.predictForm.isPreprocess ? 1 : 0),
                             preprocessFileName: this.predictForm.preprocessFileName,
                             predictFileName: this.predictForm.predictFileName,
                             token: window.localStorage.getItem('token'),
                             projectID: this.projectID,
                             userID: JSON.parse(window.localStorage.getItem('user')).userID
                         }
+                        console.warn(form)
                         post(analytic_doModelPredict_url, form).then((resp) => {
                             if(resp.data.status == 'success') {
                                 if((resp.data.data.isPreprocess == 0) && this.predictForm.isPreprocess) {

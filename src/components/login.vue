@@ -12,17 +12,31 @@
                         :closable="false">
                     </el-alert>
                     <el-input v-model="userID" placeholder="User ID"></el-input>
+                    <el-link style="color: white; text-align: right;" @click="isShowPopup = true">Forgot password?</el-link>
                     <el-input v-model="userPassward" placeholder="Password" type="password"></el-input>
                     <el-button class="loginButton" type="info" @click="signup" v-if="new Date() < signupTime">Sign Up</el-button>
                     <el-button class="loginButton" type="primary" @click="login">Sign In</el-button>
                 </div>
             </div>
         </el-col>
+
+        <!-- forgot password popup-->
+        <el-dialog :title='"Forgot password"' :visible.sync="isShowPopup" :before-close="onForgetPasswordCancel">
+            <el-form :model="form" :rules="formRule" ref="form">
+                <el-form-item label="Account" prop="account">
+                    <el-input v-model="form.account" autocomplete="off"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="onForgetPasswordCancel">Cancel</el-button>
+                <el-button type="primary" @click="onForgetPasswordConfirm">Confirm</el-button>
+            </div>
+        </el-dialog>
     </el-row>
 </template>
 <script>
     import inAnalysisLogo from '@/assets/InAnalysisLogo.png';
-    import {user_signin_url} from '@/config/api.js';
+    import {user_signin_url, user_forgetPassword_url} from '@/config/api.js';
     import {signupTime} from '@/config/env.js';
     import { post } from '@/utils/requests/post.js';
     export default {
@@ -33,7 +47,16 @@
                 signupTime: signupTime,
                 userID: '',
                 userPassward: '',
-                isError: false
+                isError: false,
+                isShowPopup: false,
+                form: {
+                    account: ''
+                },
+                formRule: {
+                    account: [
+                        { required: true, message: 'Please input account', trigger: 'blur' }
+                    ]
+                }
             }
         },
         methods:{
@@ -43,7 +66,6 @@
                     password: this.userPassward
                 }
                 post(user_signin_url, userForm).then((resp) => {
-                    console.warn('resp', resp)
                     if(resp.data.status == 'success') {
                         window.localStorage.setItem('isLogin', true)
                         window.localStorage.setItem('user', JSON.stringify({userID: resp.data.data.userID, userName: resp.data.data.userName}))
@@ -55,11 +77,36 @@
                         this.isError = true;
                     }
                 }).catch((error) => {
+                    this.$message.error('Your account or password error')
                     console.warn('error', error);
                 })
             },
             signup() {
                 this.$router.push('signup');
+            },
+            onForgetPasswordCancel() {
+                this.isShowPopup = false;
+                this.form = {
+                    account: ''
+                }
+            },
+            onForgetPasswordConfirm() {
+                let form = {
+                    account: this.form.account
+                }
+                post(user_forgetPassword_url, form).then((resp) => {
+                    if(resp.data.status == 'success') {
+                        this.$message({
+                            message: 'Please go to your email to verify your attempt in 10 minutes',
+                            showClose: true,
+                            duration: 0
+                        })
+                        this.$router.push('/');
+                        this.isShowPopup = false;
+                    }
+                }).catch((error) => {
+                    console.error('Forgot password error', error);
+                })
             }
         },
         components: {

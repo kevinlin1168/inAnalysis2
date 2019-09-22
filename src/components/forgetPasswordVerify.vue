@@ -4,25 +4,19 @@
             <div class="grid-content dark">
                 <div class="signupForm">
                     <el-image :src="inAnalysisLogo"></el-image>
-                    <p> Sign up </p>
-                    <el-form ref="form" :model="signupForm" label-width="140px" :rules="rules">
+                    <p> Forgot Password </p>
+                    <el-form ref="form" :model="form" label-width="140px" :rules="rules">
                         <el-form-item label="Account" prop="userAccount">
-                            <el-input v-model="signupForm.userAccount" placeholder="User Accunt"></el-input>
+                            <el-input v-model="form.userAccount" disabled></el-input>
                         </el-form-item>
                         <el-form-item label="Password" prop="userPassword">
-                            <el-input v-model="signupForm.userPassword" placeholder="Password" type="password"></el-input>
+                            <el-input v-model="form.userPassword" placeholder="Password" type="password"></el-input>
                         </el-form-item>
                         <el-form-item label="Check Password" prop="userPasswordCheck">
-                            <el-input v-model="signupForm.userPasswordCheck" placeholder="Check Password" type="password"></el-input>
-                        </el-form-item>
-                        <el-form-item label="Email" prop="userEmail">
-                            <el-input v-model="signupForm.userEmail" placeholder="Email" ></el-input>
-                        </el-form-item>
-                        <el-form-item label="Name" prop="userName">
-                            <el-input v-model="signupForm.userName" placeholder="Name" ></el-input>
+                            <el-input v-model="form.userPasswordCheck" placeholder="Check Password" type="password"></el-input>
                         </el-form-item>
                     </el-form>
-                    <el-button class="signupButton" type="primary" @click="signup">Sign up</el-button>
+                    <el-button class="signupButton" type="primary" @click="confirm">Confirm</el-button>
                 </div>
             </div>
         </el-col>
@@ -30,13 +24,19 @@
 </template>
 <script>
     import inAnalysisLogo from '@/assets/InAnalysisLogo.png';
-    import {user_signup_url} from '@/config/api.js';
+    import {user_forgetPasswordVerify_url} from '@/config/api.js';
     import { post } from '@/utils/requests/post.js'
     export default {
         name: 'signup',
+        created: function() {
+            this.token = this.$route.params.token;
+            let userString = decodeURIComponent(escape(window.atob(this.token.split('.')[1])));
+            let user = JSON.parse(userString);
+            this.form.userAccount = user.account;
+        },
         data: function () {
             var validatePass = (rule, value, callback) => {
-                if (value !== this.signupForm.userPassword) {
+                if (value !== this.form.userPassword) {
                     callback(new Error('Password is different'));
                 } else {
                     callback();
@@ -44,54 +44,48 @@
             };
             return {
                 inAnalysisLogo: inAnalysisLogo,
-                signupForm: {
+                token: '',
+                form: {
                     userAccount: '',
                     userPassword: '',
-                    userPasswordCheck: '',
-                    userEmail: '',
-                    userName: ''
+                    userPasswordCheck: ''
                 },
                 rules: {
-                    userAccount: [
-                        { required: true, message: 'Please input account', trigger: 'blur' }
-                    ],
                     userPassword: [
                         { required: true, message: 'Please input password', trigger: 'blur' }
                     ],
                     userPasswordCheck: [
                         { required: true, message: 'Please input password again', trigger: 'blur' },
                         { validator: validatePass, trigger: 'blur' }
-                    ],
-                    userEmail: [
-                        { required: true, message: 'Please input email', trigger: 'blur' }
-                    ],
-                    userName: [
-                        { required: true, message: 'Please input name', trigger: 'blur' }
                     ]
                 }
             }
         },
         methods:{
-            signup() {
+            confirm() {
+                console.warn(this.form)
                 let userForm = {
-                    account: this.signupForm.userAccount,
-                    name: this.signupForm.userName,
-                    password: this.signupForm.userPassword,
-                    email: this.signupForm.userEmail,
+                    token: this.token,
+                    password: this.form.userPassword
                 }
                 this.$refs['form'].validate((valid) => {
                     if (valid) {
-                        post(user_signup_url, userForm).then((response) => {
+                        post(user_forgetPasswordVerify_url, userForm).then((response) => {
                             if(response.data.status == 'success') {
                                 this.$message({
-                                    message: 'Please go to your email to verify your account in 10 minutes',
+                                    message: 'Your password has change',
                                     showClose: true,
                                     duration: 0
                                 })
                                 this.$router.push('/');
-                            } else {
-                                this.isError = true
                             }
+                        }).catch(() => {
+                            this.$message({
+                                message:'Verify error',
+                                type: 'error',
+                                showClose: true,
+                                duration: 0})
+                            this.$router.push("/");
                         });
                     } else {
                         console.log('error submit!!');

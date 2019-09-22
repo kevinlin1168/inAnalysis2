@@ -3,6 +3,8 @@ import Router from 'vue-router'
 
 import login from '@/components/login';
 import signup from '@/components/signup';
+import signupVerify from '@/components/signupVerify';
+import passwordVerify from '@/components/forgetPasswordVerify';
 import manage from '@/components/manage';
 import dataProjectManage from '@/components/dataProjectManage';
 import projectManage from '@/components/projectManage'
@@ -24,6 +26,18 @@ const router = new Router({
     },{
         path: '/signup',
         component: signup,
+        meta: {
+            isLogin: false
+        }
+    },{
+        path: '/signup/:token',
+        component: signupVerify,
+        meta: {
+            isLogin: false
+        }
+    },{
+        path: '/password/:token',
+        component: passwordVerify,
         meta: {
             isLogin: false
         }

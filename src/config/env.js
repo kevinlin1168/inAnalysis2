@@ -1,5 +1,5 @@
 let baseUrl = '/api';
-let signupTime = new Date(2019, 8, 1)
+let signupTime = new Date(2019, 11, 1)
 
 export {
 	baseUrl,
