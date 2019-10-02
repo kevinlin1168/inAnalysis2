@@ -218,15 +218,15 @@
                                 token: window.localStorage.getItem('token')
                             }
                             this.normalizeOptionList = [{
-                                friendlyname: 'Not processed',
+                                friendlyname: 'Not to process',
                                 algoname: ''
                             }];
                             this.outlierOptionList = [{
-                                friendlyname: 'Not processed',
+                                friendlyname: 'Not to process',
                                 algoname: ''
                             }];
                             this.characterProcessingOptionList = [{
-                                friendlyname: 'Not processed',
+                                friendlyname: 'Not to process',
                                 algoname: ''
                             }];
                             let _this = this;
