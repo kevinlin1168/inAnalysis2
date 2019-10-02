@@ -99,7 +99,7 @@
                 this.$router.push({name: 'project', params: {projectID: project.projectID}})
             },
             onProjectDeleteClick(projectID) {
-                this.$confirm('Are you sure you want to delete this project?', 'Hint', {
+                this.$confirm('Are you sure you want to delete this project?', 'Really?', {
                     confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
@@ -112,12 +112,12 @@
                         if (response.data.status == 'success') {
                             this.$emit('projectUpdate');
                         } else {
-                            this.$message.error('Delete error please try again');
+                            this.$message.error('Error when deleting. Please try again');
                         }
                     })
                     this.$message({
                         type: 'success',
-                        message: 'Delete Succeeded!'
+                        message: 'Deleted successfully!'
                     });
                 }).catch(() => {
                     this.$message({
