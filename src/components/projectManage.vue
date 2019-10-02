@@ -556,7 +556,7 @@
                 })
             },
             onModelDeleteClick(modelIndex) {
-                this.$confirm('Do you want to confirm the deletion?', 'Hint', {
+                this.$confirm('Are you sure you want to delete this model?', 'Hint', {
                     confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
@@ -584,7 +584,7 @@
                 });
             },
             onFileDeleteClick(fileID) {
-                this.$confirm('Do you want to confirm the deletion?', 'Hint', {
+                this.$confirm('Are you sure you want to delete this file?', 'Hint', {
                     confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     type: 'warning'

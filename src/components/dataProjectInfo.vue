@@ -99,7 +99,7 @@
                 this.$router.push({name: 'project', params: {projectID: project.projectID}})
             },
             onProjectDeleteClick(projectID) {
-                this.$confirm('Do you want to confirm the deletion?', 'Hint', {
+                this.$confirm('Are you sure you want to delete this project?', 'Hint', {
                     confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
