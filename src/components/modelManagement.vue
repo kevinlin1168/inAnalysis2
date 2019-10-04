@@ -92,9 +92,11 @@
                                 <div class="itemTitle">
                                             {{ selection.name }}
                                 </div>
+                                <div class="classImg">
+                                    <img v-if="selection.classifiable == 1" src="@/assets/classifiable.png" height="25" width="25">
+                                </div>
                                 <div class="itemImg">
-                                    <img v-if="selection.type === 'int'" src="@/assets/integer.png" height="25" width="25">
-                                    <img v-if="selection.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                    <img v-if="selection.type === 'float' || selection.type === 'int'" src="@/assets/float.png" height="25" width="25">
                                     <img v-if="selection.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
                                     <img v-if="selection.type === 'path'" src="@/assets/image.png" height="25" width="25">
                                 </div>
@@ -139,9 +141,11 @@
                                     <div class="labelAmount" v-if="label.amount === 'multiple'">
                                         Multiple
                                     </div>
+                                    <div class="classImg">
+                                        <img v-if="label.classifiable == 1" src="@/assets/classifiable.png" height="25" width="25">
+                                    </div>
                                     <div class="labelImg">
-                                        <img v-if="label.type === 'int'" src="@/assets/integer.png" height="25" width="25">
-                                        <img v-if="label.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                        <img v-if="label.type === 'float' || label.type === 'int'" src="@/assets/float.png" height="25" width="25">
                                         <img v-if="label.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
                                         <img v-if="label.type === 'path'" src="@/assets/image.png" height="25" width="25">
                                     </div>
@@ -155,9 +159,11 @@
                                         <div class="itemTitle">
                                             {{ selection.name }}
                                         </div>
+                                        <div class="classImg">
+                                            <img v-if="selection.classifiable == 1" src="@/assets/classifiable.png" height="25" width="25">
+                                        </div>
                                         <div class="itemImg">
-                                            <img v-if="selection.type === 'int'" src="@/assets/integer.png" height="25" width="25">
-                                            <img v-if="selection.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                            <img v-if="selection.type === 'float' || selection.type === 'int'" src="@/assets/float.png" height="25" width="25">
                                             <img v-if="selection.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
                                             <img v-if="selection.type === 'path'" src="@/assets/image.png" height="25" width="25">
                                         </div>
@@ -180,9 +186,11 @@
                                     <div class="labelAmount" v-if="label.amount === 'multiple'">
                                         Multiple
                                     </div>
+                                    <div class="classImg">
+                                        <img v-if="label.classifiable == 1" src="@/assets/classifiable.png" height="25" width="25">
+                                    </div>
                                     <div class="labelImg">
-                                        <img v-if="label.type === 'int'" src="@/assets/integer.png" height="25" width="25">
-                                        <img v-if="label.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                        <img v-if="label.type === 'float' || label.type === 'int'" src="@/assets/float.png" height="25" width="25">
                                         <img v-if="label.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
                                         <img v-if="label.type === 'path'" src="@/assets/image.png" height="25" width="25">
                                     </div>
@@ -195,9 +203,11 @@
                                         <div class="itemTitle">
                                             {{ selection.name }}
                                         </div>
+                                        <div class="classImg">
+                                            <img v-if="selection.classifiable == 1" src="@/assets/classifiable.png" height="25" width="25">
+                                        </div>
                                         <div class="itemImg">
-                                            <img v-if="selection.type === 'int'" src="@/assets/integer.png" height="25" width="25">
-                                            <img v-if="selection.type === 'float'" src="@/assets/float.png" height="25" width="25">
+                                            <img v-if="selection.type === 'float' || selection.type === 'int'" src="@/assets/float.png" height="25" width="25">
                                             <img v-if="selection.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
                                             <img v-if="selection.type === 'path'" src="@/assets/image.png" height="25" width="25">
                                         </div>
@@ -557,9 +567,16 @@
                 .list-group-item {
 
                     .itemTitle {
-                        width: 75%;
+                        width: 50%;
                         align-items: center;
                         display: inline-block;
+                    }
+
+                    .classImg {
+                        width: 25%;
+                        align-items: center;
+                        display: inline-block;
+                        text-align: center;
                     }
 
                     .itemImg {
@@ -611,13 +628,13 @@
                         display: inline-block;
                     }
                     .labelAmount {
-                        width: 50%;
+                        width: 25%;
                         align-items: center;
                         display: inline-block;
                         text-align: left;
                     }
                     .labelIsSingle {
-                        width: 50%;
+                        width: 25%;
                         align-items: center;
                         display: inline-block;
                         text-align: left;
@@ -629,15 +646,36 @@
                         display: inline-block;
                         text-align: center;
                     }
+
+                    .classImg {
+                        width: 25%;
+                        align-items: center;
+                        display: inline-block;
+                        text-align: center;
+                    }
+
+                    .itemImg {
+                        width: 25%;
+                        align-items: center;
+                        display: inline-block;
+                        text-align: center;
+                    }
                 }
                 
 
                 .list-group-item {
 
                     .itemTitle {
-                        width: 75%;
+                        width: 50%;
                         align-items: center;
                         display: inline-block;
+                    }
+
+                    .classImg {
+                        width: 25%;
+                        align-items: center;
+                        display: inline-block;
+                        text-align: center;
                     }
 
                     .itemImg {

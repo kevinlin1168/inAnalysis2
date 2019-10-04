@@ -286,6 +286,10 @@
                     </el-select>
                 </el-form-item>
             </el-form>
+            <div class="textBlock" v-if="isShowTestImg">
+                <div class="title"> Text Preview</div>
+                <div class="textPreview">{{textPreview}}</div>
+            </div>
             <div class="imgBlock" v-if="isShowTestImg">
                 <div class="title">Chart Preview</div>
                 <el-carousel trigger="click" height="400px" width= "625px" :autoplay="false">
@@ -854,15 +858,12 @@
                                         }
                                     })
                                     this.loadingClose();
-                                    this.isShowTestImg = true;
                                 } else {
                                     this.loadingClose();
-                                    this.isShowTestImg = false;
                                 }
                             }).catch((error) => {
                                 console.error('getModelParameter Error', error);
                                 this.loadingClose();
-                                this.isShowTestImg = false;
                             });
                         }
                         
@@ -933,6 +934,7 @@
                 this.selectModel = {};
             },
             onModelTestClose() {
+                this.selectTestLabel = '';
                 this.selectTestFileID = '';
                 this.isShowTestImg = false;
                 this.isShowModelTestPopup = false;
@@ -1093,6 +1095,12 @@
     }
 
     .filePreview {
+        .textBlock {
+            .textPreview {
+                margin-top: 10px;
+                white-space: pre-wrap;
+            }
+        }
         .imgBlock{
             width: 625px;
             .title {
