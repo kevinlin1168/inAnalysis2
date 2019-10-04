@@ -115,7 +115,7 @@
                                 </el-select>
                             </el-col>
                         </el-row>
-                        <el-row>
+                        <el-row >
                             <el-col :span="24">
                                 <div class="correlationImg" v-html="correlationImg">
                                 </div>
@@ -447,7 +447,7 @@
                     post(analytic_doModelTrain_url, form).then((resp) => {
                         if(resp.data.status == "success") {
                             this.$message({
-                                message: 'manage model success',
+                                message: 'manage model successfully',
                                 type: 'success'
                             });
                             this.$router.push({name: 'project', params: {projectID: this.projectID}});

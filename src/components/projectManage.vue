@@ -521,7 +521,7 @@
                             if(resp.data.status == "success") {
                                 this.$message({
                                     type: 'success',
-                                    message: 'Add Model Succeeded!'
+                                    message: 'Add Model successfully!'
                                 });
                                 this.clearModelForm();
                                 this.isShowSelectToTrainPopup = false;
@@ -559,7 +559,7 @@
                 })
             },
             onModelDeleteClick(modelIndex) {
-                this.$confirm('Do you want to confirm the deletion?', 'Hint', {
+                this.$confirm('Are you sure you want to delete this model?', 'Really?', {
                     confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
@@ -572,7 +572,7 @@
                         if(resp.data.status == 'success') {
                             this.$message({
                                 type: 'success',
-                                message: 'Delete Succeeded!'
+                                message: 'Delete successfully!'
                             });
                             this.fetchData();
                         }
@@ -587,7 +587,7 @@
                 });
             },
             onFileDeleteClick(fileID) {
-                this.$confirm('Do you want to confirm the deletion?', 'Hint', {
+                this.$confirm('Are you sure you want to delete this file?', 'Really?', {
                     confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     type: 'warning'
@@ -600,7 +600,7 @@
                         if(resp.data.status == "success") {
                             this.$message({
                                 type: 'success',
-                                message: 'Delete Succeeded!'
+                                message: 'Delete successfully!'
                             });
                             this.fetchData();
                         }
@@ -639,7 +639,7 @@
             handleExceed() {
                 this.$message({
                     type: 'error',
-                    message: 'Only one file can be uploaded at a time'
+                    message: 'You can only upload one file at a time'
                 });
             },
             uploadFileChange(file, fileList) {
@@ -827,7 +827,6 @@
                         modelIndex: this.selectModel.modelIndex,
                         token: window.localStorage.getItem('token')
                     };
-                    console.warn(form)
                     post(analytic_getModelParameter_url, form).then((resp) => {
                         if(resp.data.status == 'success') {
                             let form = {
@@ -848,16 +847,22 @@
                                     response.data.data.cols.forEach((col) => {
                                         fileColumn.push(col.name)
                                     })
-                                    console.warn(inputColumn)
-                                    console.warn(fileColumn)
                                     fileColumn.forEach((label) => {
                                         if(!inputColumn.includes(label)) {
                                             this.testLabelList.push(label)
                                         }
                                     })
+                                    this.loadingClose();
+                                    this.isShowTestImg = true;
+                                } else {
+                                    this.loadingClose();
+                                    this.isShowTestImg = false;
                                 }
-                            })
-                            this.loadingClose();
+                            }).catch((error) => {
+                                console.error('getModelParameter Error', error);
+                                this.loadingClose();
+                                this.isShowTestImg = false;
+                            });
                         }
                         
                     }).catch((error) => {
@@ -949,7 +954,7 @@
                             if(resp.data.status == 'success') {
                                 if((resp.data.data.isPreprocess == 0) && this.predictForm.isPreprocess) {
                                     this.$message({
-                                        message: 'Your file do not need to preprocess',
+                                        message: 'Your file does not need to be preprocessed',
                                         type: 'warning'
                                     });
                                 }
@@ -958,7 +963,7 @@
                             }
                         }).catch((error) => {
                             console.error('Predict Error', error)
-                            this.$message.error('Predict error please select other files')
+                            this.$message.error('Error when predicting. Please select other files or try again.')
                         })
                     }
                 });

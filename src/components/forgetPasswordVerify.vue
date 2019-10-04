@@ -73,7 +73,7 @@
                         post(user_forgetPasswordVerify_url, userForm).then((response) => {
                             if(response.data.status == 'success') {
                                 this.$message({
-                                    message: 'Your password has change',
+                                    message: 'Your password has changed',
                                     showClose: true,
                                     duration: 0
                                 })

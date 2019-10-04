@@ -218,15 +218,15 @@
                                 token: window.localStorage.getItem('token')
                             }
                             this.normalizeOptionList = [{
-                                friendlyname: 'Not processed',
+                                friendlyname: 'Not to process',
                                 algoname: ''
                             }];
                             this.outlierOptionList = [{
-                                friendlyname: 'Not processed',
+                                friendlyname: 'Not to process',
                                 algoname: ''
                             }];
                             this.characterProcessingOptionList = [{
-                                friendlyname: 'Not processed',
+                                friendlyname: 'Not to process',
                                 algoname: ''
                             }];
                             let _this = this;
@@ -421,7 +421,7 @@
                             token: window.localStorage.getItem('token')
                         }
                         if(isAlert) {
-                            this.$confirm('You will modify classifiable column ' + alertColumnName + ' will you confirm the process', 'Tips', {
+                            this.$confirm('You are trying to modify a classifiable column ' + alertColumnName + '. Continue?', 'Really?', {
                                 confirmButtonText: 'Confirm',
                                 cancelButtonText: 'Cancel',
                                 type: 'warning'
@@ -430,7 +430,7 @@
                                     if(resp.data.status == 'success') {
                                         this.$message({
                                             type: 'success',
-                                            message: 'Preprocess success'
+                                            message: 'Preprocess successfully'
                                         });
                                         this.$router.push({name: 'project', params: {projectID: this.projectID}})
                                     }
@@ -446,7 +446,7 @@
                                 if(resp.data.status == 'success') {
                                     this.$message({
                                         type: 'success',
-                                        message: 'Preprocess success'
+                                        message: 'Preprocess successfully'
                                     });
                                     this.$router.push({name: 'project', params: {projectID: this.projectID}})
                                 }

@@ -14,8 +14,9 @@
                     <el-input v-model="userID" placeholder="User ID"></el-input>
                     <el-link style="color: white; text-align: right;" @click="isShowPopup = true">Forgot password?</el-link>
                     <el-input v-model="userPassward" placeholder="Password" type="password"></el-input>
-                    <el-button class="loginButton" type="info" @click="signup" v-if="new Date() < signupTime">Sign Up</el-button>
                     <el-button class="loginButton" type="primary" @click="login">Sign In</el-button>
+                    <el-button class="loginButton" type="info" @click="signup" v-if="new Date() < signupTime">Sign Up</el-button>
+                    
                 </div>
             </div>
         </el-col>
@@ -77,7 +78,7 @@
                         this.isError = true;
                     }
                 }).catch((error) => {
-                    this.$message.error('Your account or password error')
+                    this.$message.error('Incorrect username or password')
                     console.warn('error', error);
                 })
             },
@@ -97,7 +98,7 @@
                 post(user_forgetPassword_url, form).then((resp) => {
                     if(resp.data.status == 'success') {
                         this.$message({
-                            message: 'Please go to your email to verify your attempt in 10 minutes',
+                            message: 'Please go to your email to verify your identity in 10 minutes',
                             showClose: true,
                             duration: 0
                         })
