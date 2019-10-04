@@ -827,6 +827,7 @@
                         modelIndex: this.selectModel.modelIndex,
                         token: window.localStorage.getItem('token')
                     };
+                    console.warn(form)
                     post(analytic_getModelParameter_url, form).then((resp) => {
                         if(resp.data.status == 'success') {
                             let form = {
