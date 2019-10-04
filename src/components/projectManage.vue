@@ -58,8 +58,8 @@
                         <el-button @click="onPreProcessingClick(scope.row)" type="text" size="medium">Pre-processing</el-button>
                         <el-button @click="onSelectToTrainClick(scope.row.fileID)" type="text" size="medium">Select to train</el-button>
                         <!-- Delete Button -->
-                        <el-button v-if="scope.row.status === 'Inuse'" type="text" size="medium" disabled>Delete</el-button>
-                        <el-button v-if="scope.row.status !== 'Inuse'" @click="onFileDeleteClick(scope.row.fileID)" type="text" size="medium" style="color: red">Delete</el-button>
+                        <el-button v-if="scope.row.fileStatus === 0" @click="onFileDeleteClick(scope.row.fileID)" type="text" size="medium" style="color: red">Delete</el-button>
+                        <el-button v-if="scope.row.fileStatus !== 0" @click="onFileDeleteClick(scope.row.fileID)" type="text" size="medium" style="color: red" disabled>Delete</el-button> 
                     </template>
                 </el-table-column>
             </el-table>
@@ -273,17 +273,17 @@
                             </el-option>
                         </template>
                     </el-select>
-                    <!-- TODO -->
-                    <!-- <el-select v-if="projectType == 'abnormal'" v-model="selectTestFileID" @change="OnSelectTestFileChange" placeholder="Please select file">
-                        <template v-for="item in fileList">
+                </el-form-item>
+                <el-form-item label="Label" :label-width="labelWidth" v-if="projectType == 'abnormal'">
+                    <el-select  v-model="selectTestLabel" @change="OnSelectTestLabelChange" placeholder="Please select a label">
+                        <template v-for="label in testLabelList">
                             <el-option
-                                    v-if="item.fileID !== selectModel.fileID"
-                                    :key="item.fileName"
-                                    :label="item.fileName"
-                                    :value="item.fileID">
+                                    :key="label"
+                                    :label="label"
+                                    :value="label">
                             </el-option>
                         </template>
-                    </el-select> -->
+                    </el-select>
                 </el-form-item>
             </el-form>
             <div class="imgBlock" v-if="isShowTestImg">
@@ -349,7 +349,8 @@
             analytic_getModelPreview_url,
             analytic_doModelTest_url,
             analytic_doModelPredict_url,
-            analytic_stopModelTraining_url } from '@/config/api.js';
+            analytic_stopModelTraining_url,
+            analytic_getModelParameter_url } from '@/config/api.js';
     import { post } from '@/utils/requests/post.js'
     export default {
         name: "projectManage",
@@ -383,6 +384,7 @@
                 labelWidth: '160px',
                 selectFile: {},
                 selectTestFileID: '',
+                selectTestLabel: '', //for abnormal
                 selectModel: {},
                 selectChart: '',
                 selectColumn: [],
@@ -406,6 +408,7 @@
                     isPreprocess: true
                 },
                 fileList: [],
+                testLabelList: [], //for abnormal
                 chartOptionList: [],
                 featureList: [],
                 loading: {},
@@ -742,70 +745,129 @@
                 this.selectModel = model;
                 this.isShowModelTestPopup = true;
             },
-            OnSelectTestFileChange() {
+            doModelTest(modelIndex, fileID, token, label='') {
                 this.isShowTestImg = false;
-                console.warn(this.selectTestFileID)
                 this.fullScreenLoading();
-                if(this.projectType != 'abnormal') {
-                    this.modelImgList = [];
-                    let bokehVersion = '1.3.4';
-                    let link = document.createElement('link')
-                    link.setAttribute('rel', 'stylesheet')
-                    link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
-                    link.setAttribute('type', 'text/css')
-                    document.head.appendChild(link)
-                    // 在header插入js
-                    let script = document.createElement('script')
-                    script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
-                    script.async = 'async'
-                    document.head.appendChild(script)
-                    // cdn的js載入完畢再请求bokeh參數
-                    let _this = this;
-                    script.onload = () => {
-                        let link1 = document.createElement('link')
-                        link1.setAttribute('rel', 'stylesheet')
-                        link1.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.css')
-                        link1.setAttribute('type', 'text/css')
-                        document.head.appendChild(link1)
-                        let script1 = document.createElement('script')
-                        script1.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.js')
-                        script1.async = 'async'
-                        document.head.appendChild(script1)
-                        script1.onload = () => {
-                            let form = {
-                                modelIndex: this.selectModel.modelIndex,
-                                fileID: this.selectTestFileID,
-                                token: window.localStorage.getItem('token')
+                this.modelImgList = [];
+                let bokehVersion = '1.3.4';
+                let link = document.createElement('link')
+                link.setAttribute('rel', 'stylesheet')
+                link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
+                link.setAttribute('type', 'text/css')
+                document.head.appendChild(link)
+                // 在header插入js
+                let script = document.createElement('script')
+                script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
+                script.async = 'async'
+                document.head.appendChild(script)
+                // cdn的js載入完畢再请求bokeh參數
+                let _this = this;
+                script.onload = () => {
+                    let link1 = document.createElement('link')
+                    link1.setAttribute('rel', 'stylesheet')
+                    link1.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.css')
+                    link1.setAttribute('type', 'text/css')
+                    document.head.appendChild(link1)
+                    let script1 = document.createElement('script')
+                    script1.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.js')
+                    script1.async = 'async'
+                    document.head.appendChild(script1)
+                    let form = {}
+                    script1.onload = () => {
+                        if (label != '') {
+                            form = {
+                                modelIndex: modelIndex,
+                                fileID: fileID,
+                                token: token,
+                                label: label
                             }
-                            post(analytic_doModelTest_url, form).then((resp) => {
-                                if(resp.data.status == 'success') {
-                                    _this.textPreview = resp.data.data.text;
-                                    let figObject = resp.data.data.fig;
-                                    let imgKeyList = Object.keys(figObject);
-                                    imgKeyList.forEach((key) => {
-                                        _this.modelImgList.push(figObject[key].div);
-                                        let bokehRunScript = document.createElement('SCRIPT');
-                                        bokehRunScript.setAttribute('type', 'text/javascript');
-                                        let t = document.createTextNode(figObject[key].script);
-                                        bokehRunScript.appendChild(t);
-                                        document.body.appendChild(bokehRunScript);
-                                    })
-                                    this.loadingClose();
-                                    this.isShowTestImg = true;
-                                } else {
-                                    this.$message.error('Test file error please select other files');
-                                    this.loadingClose();
-                                    this.isShowTestImg = false;
-                                }
-                            }).catch((error) => {
-                                console.error('Test Model Error', error);
+                        } else {
+                            form = {
+                                modelIndex: modelIndex,
+                                fileID: fileID,
+                                token: token,
+                            }
+                        }
+                        console.warn(form)
+                        post(analytic_doModelTest_url, form).then((resp) => {
+                            if(resp.data.status == 'success') {
+                                _this.textPreview = resp.data.data.text;
+                                let figObject = resp.data.data.fig;
+                                let imgKeyList = Object.keys(figObject);
+                                imgKeyList.forEach((key) => {
+                                    _this.modelImgList.push(figObject[key].div);
+                                    let bokehRunScript = document.createElement('SCRIPT');
+                                    bokehRunScript.setAttribute('type', 'text/javascript');
+                                    let t = document.createTextNode(figObject[key].script);
+                                    bokehRunScript.appendChild(t);
+                                    document.body.appendChild(bokehRunScript);
+                                })
+                                this.loadingClose();
+                                this.isShowTestImg = true;
+                            } else {
                                 this.$message.error('Test file error please select other files');
                                 this.loadingClose();
                                 this.isShowTestImg = false;
-                            });
-                        }
+                            }
+                        }).catch((error) => {
+                            console.error('Test Model Error', error);
+                            this.$message.error('Test file error please select other files');
+                            this.loadingClose();
+                            this.isShowTestImg = false;
+                        });
                     }
                 }
+            },
+            OnSelectTestFileChange() {
+                
+                if(this.projectType != 'abnormal') {
+                    this.doModelTest(this.selectModel.modelIndex, this.selectTestFileID, window.localStorage.getItem('token'))
+                } else {
+                    let form = {
+                        modelIndex: this.selectModel.modelIndex,
+                        token: window.localStorage.getItem('token')
+                    };
+                    console.warn(form)
+                    post(analytic_getModelParameter_url, form).then((resp) => {
+                        if(resp.data.status == 'success') {
+                            let form = {
+                                fileID: this.selectTestFileID,
+                                token: window.localStorage.getItem('token')
+                            }
+                            post(file_getColumn_url, form).then((response) => {
+                                if(response.data.status == "success") {
+                                    this.testLabelList = [];
+                                    let fileColumn = [];
+                                    let inputColumn = [];
+                                    let inputObj = JSON.parse(resp.data.data.input);
+                                    for(let input in inputObj) {
+                                        for(let index in inputObj[input]) {
+                                            inputColumn.push(inputObj[input][index])
+                                        }
+                                    }
+                                    response.data.data.cols.forEach((col) => {
+                                        fileColumn.push(col.name)
+                                    })
+                                    console.warn(inputColumn)
+                                    console.warn(fileColumn)
+                                    fileColumn.forEach((label) => {
+                                        if(!inputColumn.includes(label)) {
+                                            this.testLabelList.push(label)
+                                        }
+                                    })
+                                }
+                            })
+                            this.loadingClose();
+                        }
+                        
+                    }).catch((error) => {
+                        console.error('Get Model Parameter Error:', error)
+                        this.loadingClose();
+                    })
+                }
+            },
+            OnSelectTestLabelChange() {
+                this.doModelTest(this.selectModel.modelIndex, this.selectTestFileID, window.localStorage.getItem('token'), this.selectTestLabel)
             },
             onModelPredictClick(model) {
                 this.selectModel = model;
