@@ -44,9 +44,11 @@
                         <template v-for="(parameter, index) in parameterList" >
                             <el-row v-if="(index % 2) === 0" class="parameterItem" :key="parameter.name">
                                 <div  class="parameter">
-                                    <el-col  :span="11" :offset="2" :key="index">
-                                        {{parameter.name}}
-                                    </el-col>
+                                    <el-tooltip :content="parameter.description" placement="top">
+                                        <el-col  :span="11" :offset="2" :key="index">
+                                            {{parameter.name}}
+                                        </el-col>
+                                    </el-tooltip>
                                     <el-col :span="11">
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @input="$forceUpdate()"> </el-slider>
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1" @input="$forceUpdate()"> </el-slider>
@@ -64,9 +66,11 @@
                         <template v-for="(parameter, index) in parameterList" >
                             <el-row v-if="(index % 2) !== 0" class="parameterItem" :key="index">
                                 <div  class="parameter">
-                                    <el-col  :span="11" :offset="2" :key="index">
-                                        {{parameter.name}}
-                                    </el-col>
+                                    <el-tooltip :content="parameter.description" placement="top">
+                                        <el-col  :span="11" :offset="2" :key="index">
+                                            {{parameter.name}}
+                                        </el-col>
+                                    </el-tooltip>
                                     <el-col :span="11">
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @input="$forceUpdate()"> </el-slider>
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"  @input="$forceUpdate()"> </el-slider>

@@ -218,12 +218,12 @@
                     <el-select  v-model="selectColumn[index]" 
                                 placeholder="Please select feature"
                                 @change="onSelectColumnChange()" >
-                        <template v-for="option in columnList">
+                        <template v-for="column in columnList">
                             <el-option
-                                v-if="option.type == featureList[index].type || (option.type == 'int' && featureList[index].type == 'float')"
-                                :key="option.name"
-                                :label="option.name"
-                                :value="option.name">
+                                v-if="column.type == featureList[index].type || (column.type == 'int' && featureList[index].type == 'float') || (featureList[index].type == 'classifiable' && column.classifiable == 1)"
+                                :key="column.name"
+                                :label="column.name"
+                                :value="column.name">
                             </el-option>
                         </template>
                     </el-select>
