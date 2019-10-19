@@ -248,7 +248,7 @@
             <div class="imgBlock">
                 <div class="title">Chart Preview</div>
                 <el-carousel trigger="click" height="400px" width= "625px" :autoplay="false">
-                    <el-carousel-item v-for="item in modelImgList" :key="item">
+                    <el-carousel-item v-for="item in pmodelImgList" :key="item">
                         <div v-html="item">
                         </div>
                     </el-carousel-item>
@@ -395,6 +395,7 @@
                 filePreviewImg: '',
                 fileImgList: [],
                 modelImgList: [],
+                pmodelImgList:[],
                 textPreview: '',
                 columnList: [],
                 modelList: [],
@@ -697,7 +698,7 @@
             },
             onModelPreviewClick(model) {
                 this.selectModel = model;
-                this.modelImgList = [];
+                this.pmodelImgList = [];
                 let bokehVersion = '1.3.4';
                 let link = document.createElement('link')
                 link.setAttribute('rel', 'stylesheet')
@@ -732,7 +733,7 @@
                                 let figObject = resp.data.data.fig;
                                 let imgKeyList = Object.keys(figObject);
                                 imgKeyList.forEach((key) => {
-                                    _this.modelImgList.push(figObject[key].div);
+                                    _this.pmodelImgList.push(figObject[key].div);
                                     let bokehRunScript = document.createElement('SCRIPT');
                                     bokehRunScript.setAttribute('type', 'text/javascript');
                                     let t = document.createTextNode(figObject[key].script);
@@ -823,7 +824,7 @@
                 }
             },
             OnSelectTestFileChange() {
-                
+
                 if(this.projectType != 'abnormal') {
                     this.doModelTest(this.selectModel.modelIndex, this.selectTestFileID, window.localStorage.getItem('token'))
                 } else {
