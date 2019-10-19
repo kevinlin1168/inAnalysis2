@@ -241,9 +241,25 @@
 
         <!-- preview model popup-->
         <el-dialog class="modelPreview" :title='selectModel.modelName + " Preview"' :visible.sync="isShowModelPreviewPopup" :before-close="onModelPreviewClose" :show-close='false' width="665px">
-            <div class="textBlock">
+            <div class="textBlock" v-if="textPreview !== '' && tablePreview !== ''">
                 <div class="title"> Text Preview</div>
                 <div class="textPreview">{{textPreview}}</div>
+                <div v-for="table in tablePreview" :key="table.tableTitle">
+                    <div class="subTitle">{{table.tableTitle}}</div>
+                    <el-table
+                        :data="table.tableData"
+                        style="width: 100%">
+                        <template v-for="data in table.tableData">
+                            <el-table-column
+                                :prop="key"
+                                :label="key"
+                                width="120"
+                                v-for="(value, key) in data" :key="value">
+                            </el-table-column>
+                        </template>
+                        
+                    </el-table>
+                </div>
             </div>
             <div class="imgBlock">
                 <div class="title">Chart Preview</div>
@@ -286,9 +302,25 @@
                     </el-select>
                 </el-form-item>
             </el-form>
-            <div class="textBlock" v-if="isShowTestImg">
+            <div class="textBlock" v-if="isShowTestImg && (textPreview !== '' || tablePreview !== '')">
                 <div class="title"> Text Preview</div>
                 <div class="textPreview">{{textPreview}}</div>
+                <div v-for="table in tablePreview" :key="table.tableTitle">
+                    <div class="subTitle">{{table.tableTitle}}</div>
+                    <el-table
+                        :data="table.tableData"
+                        style="width: 100%">
+                        <template v-for="data in table.tableData">
+                            <el-table-column
+                                :prop="key"
+                                :label="key"
+                                width="120"
+                                v-for="(value, key) in data" :key="value">
+                            </el-table-column>
+                        </template>
+                        
+                    </el-table>
+                </div>
             </div>
             <div class="imgBlock" v-if="isShowTestImg">
                 <div class="title">Chart Preview</div>
@@ -397,6 +429,7 @@
                 modelImgList: [],
                 pmodelImgList:[],
                 textPreview: '',
+                tablePreview: [],
                 columnList: [],
                 modelList: [],
                 modelForm: {
@@ -730,6 +763,21 @@
                         post(analytic_getModelPreview_url, form).then((resp) => {
                             if(resp.data.status == 'success') {
                                 _this.textPreview = resp.data.data.text;
+                                Object.keys(resp.data.data.form).forEach((key) => {
+                                    let object = {
+                                        tableTitle: key,
+                                        tableData: []
+                                    }
+                                    resp.data.data.form[key].value.forEach((value) => {
+                                        let valueObject = {};
+                                        resp.data.data.form[key].title.forEach((title, index) => {
+                                            valueObject[title] = value[index];
+                                        })
+                                        object.tableData.push(valueObject);
+                                    })
+                                    _this.tablePreview.push(object);
+                                })
+                                console.warn(_this.tablePreview)
                                 let figObject = resp.data.data.fig;
                                 let imgKeyList = Object.keys(figObject);
                                 imgKeyList.forEach((key) => {
@@ -797,6 +845,21 @@
                         post(analytic_doModelTest_url, form).then((resp) => {
                             if(resp.data.status == 'success') {
                                 _this.textPreview = resp.data.data.text;
+                                Object.keys(resp.data.data.form).forEach((key) => {
+                                    let object = {
+                                        tableTitle: key,
+                                        tableData: []
+                                    }
+                                    resp.data.data.form[key].value.forEach((value) => {
+                                        let valueObject = {};
+                                        resp.data.data.form[key].title.forEach((title, index) => {
+                                            valueObject[title] = value[index];
+                                        })
+                                        object.tableData.push(valueObject);
+                                    })
+                                    _this.tablePreview.push(object);
+                                })
+                                console.warn(_this.tablePreview)
                                 let figObject = resp.data.data.fig;
                                 let imgKeyList = Object.keys(figObject);
                                 imgKeyList.forEach((key) => {
@@ -933,11 +996,13 @@
             onModelPreviewClose() {
                 this.isShowModelPreviewPopup = false;
                 this.selectModel = {};
+                this.tablePreview = [];
             },
             onModelTestClose() {
                 this.selectTestLabel = '';
                 this.selectTestFileID = '';
                 this.isShowTestImg = false;
+                this.tablePreview = [];
                 this.isShowModelTestPopup = false;
             },
             onModelPredictConfirm() {
@@ -1097,6 +1162,12 @@
 
     .filePreview {
         .textBlock {
+            .title {
+                font-size: 18px;
+            }
+            .subTitle {
+                font-size: 14px;
+            }
             .textPreview {
                 margin-top: 10px;
                 white-space: pre-wrap;
@@ -1105,7 +1176,7 @@
         .imgBlock{
             width: 625px;
             .title {
-                text-align: center;
+                // text-align: center;
                 font-size: 18px;
             }
         }
