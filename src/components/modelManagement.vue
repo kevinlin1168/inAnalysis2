@@ -100,7 +100,7 @@
                                     <img v-if="selection.classifiable == 1" src="@/assets/classifiable.png" height="25" width="25">
                                 </div>
                                 <div class="itemImg">
-                                    <img v-if="label.type == 'classifiable'" src="@/assets/classifiable.png" height="25" width="25">
+                                    <img v-if="selection.type == 'classifiable'" src="@/assets/classifiable.png" height="25" width="25">
                                     <img v-if="selection.type === 'float' || selection.type === 'int'" src="@/assets/float.png" height="25" width="25">
                                     <img v-if="selection.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
                                     <img v-if="selection.type === 'path'" src="@/assets/image.png" height="25" width="25">
