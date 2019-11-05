@@ -108,10 +108,10 @@
                             </div>
                         </draggable>
                     </el-col>
-                    <el-col :span="8" :offset="1">
+                    <el-col :span="8" :offset="1" class="selectBlockWrapper">
                         <el-row class="selectBlock">
-                            <el-col :span="15" :offset="1" style="text-align: center">Select Correlation Algorithm</el-col>
-                            <el-col :span="8">
+                            <el-col :span="15" :offset="1" class="selectBlockTitle" style="text-align: center">Select Correlation Algorithm</el-col>
+                            <el-col :span="8" class="selectBlockMenu">
                                 <el-select v-model="selectCorrelationAlgorithm" placeholder="Please select correlation algorithm" @change="onSelectCorrelationAlgorithmChange">
                                     <el-option
                                             v-for="item in correlationAlgorithmList"
@@ -536,12 +536,22 @@
         .manageBlock {
             margin-top: 5px;
             font-size: 14px;
-
+            .selectBlockWrapper{
+                margin-left: auto;
+                margin-right: auto;
+                width:auto;
+            }
             .selectBlock {
                 margin-top: 10px;
                 display:  flex;
                 align-items: center;
-
+                .selectBlockTitle{
+                    width:200px;
+                    margin-right:20px;
+                }
+                .selectBlockMenu{
+                    width:250px;
+                }
                 .el-select {
                     width: 250px;
                 }
@@ -554,11 +564,12 @@
             .labelBlock {
                 margin-top: 10px;
                 display: flex;
-                align-items: center;
                 
                 .selectFeature {
                     display: block;
                     align-items: center;
+                    width:30%;
+                    min-width:150px;
                 }
                 .selectItem {
                     display: block;

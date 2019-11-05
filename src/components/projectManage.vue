@@ -249,14 +249,12 @@
                     <el-table
                         :data="table.tableData"
                         style="width: 100%">
-                        <template v-for="data in table.tableData">
-                            <el-table-column
-                                :prop="key"
-                                :label="key"
-                                width="120"
-                                v-for="(value, key) in data" :key="value">
-                            </el-table-column>
-                        </template>
+                        <el-table-column
+                            :prop="prop"
+                            :label="label"
+                            width="120"
+                            v-for="{ prop, label } in table.tablecolConfigs" :key="prop">
+                        </el-table-column>
                         
                     </el-table>
                 </div>
@@ -310,14 +308,12 @@
                     <el-table
                         :data="table.tableData"
                         style="width: 100%">
-                        <template v-for="data in table.tableData">
-                            <el-table-column
-                                :prop="key"
-                                :label="key"
-                                width="120"
-                                v-for="(value, key) in data" :key="value">
-                            </el-table-column>
-                        </template>
+                        <el-table-column
+                            :prop="prop"
+                            :label="label"
+                            width="120"
+                            v-for="{ prop, label } in table.tablecolConfigs" :key="prop">
+                        </el-table-column>
                         
                     </el-table>
                 </div>
@@ -766,8 +762,13 @@
                                 Object.keys(resp.data.data.form).forEach((key) => {
                                     let object = {
                                         tableTitle: key,
+                                        tablecolConfigs: [],
                                         tableData: []
                                     }
+                                    resp.data.data.form[key].title.forEach((value) => {
+                                        let colConfig = { prop: value, label: value };
+                                        object.tablecolConfigs.push(colConfig);
+                                    })
                                     resp.data.data.form[key].value.forEach((value) => {
                                         let valueObject = {};
                                         resp.data.data.form[key].title.forEach((title, index) => {
@@ -802,6 +803,7 @@
                 this.isShowTestImg = false;
                 this.fullScreenLoading();
                 this.modelImgList = [];
+                this.tablePreview = [];
                 let bokehVersion = '1.3.4';
                 let link = document.createElement('link')
                 link.setAttribute('rel', 'stylesheet')
@@ -841,17 +843,21 @@
                                 token: token,
                             }
                         }
-                        console.warn(form)
                         post(analytic_doModelTest_url, form).then((resp) => {
                             if(resp.data.status == 'success') {
                                 _this.textPreview = resp.data.data.text;
                                 Object.keys(resp.data.data.form).forEach((key) => {
                                     let object = {
                                         tableTitle: key,
+                                        tablecolConfigs: [],
                                         tableData: []
                                     }
+                                    resp.data.data.form[key].title.forEach((value) => {
+                                        let colConfig = { prop: value, label: value };
+                                        object.tablecolConfigs.push(colConfig);
+                                    })
                                     resp.data.data.form[key].value.forEach((value) => {
-                                        let valueObject = {};
+                                        let valueObject = {};                                        
                                         resp.data.data.form[key].title.forEach((title, index) => {
                                             valueObject[title] = value[index];
                                         })
@@ -859,7 +865,6 @@
                                     })
                                     _this.tablePreview.push(object);
                                 })
-                                console.warn(_this.tablePreview)
                                 let figObject = resp.data.data.fig;
                                 let imgKeyList = Object.keys(figObject);
                                 imgKeyList.forEach((key) => {
