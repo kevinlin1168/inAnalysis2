@@ -196,6 +196,7 @@
                                         <img v-if="label.classifiable == 1" src="@/assets/classifiable.png" height="25" width="25">
                                     </div>
                                     <div class="labelImg">
+                                        <img v-if="label.type === 'classifiable'" src="@/assets/classifiable.png" height="25" width="25">
                                         <img v-if="label.type === 'float' || label.type === 'int'" src="@/assets/float.png" height="25" width="25">
                                         <img v-if="label.type === 'string'" src="@/assets/nlp.png" height="25" width="25">
                                         <img v-if="label.type === 'path'" src="@/assets/image.png" height="25" width="25">
