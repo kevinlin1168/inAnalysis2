@@ -12,8 +12,8 @@
                         :closable="false">
                     </el-alert>
                     <el-input v-model="userID" placeholder="User ID"></el-input>
-                    <el-link style="color: white; text-align: right;" @click="isShowPopup = true">Forgot password?</el-link>
                     <el-input v-model="userPassward" placeholder="Password" type="password"></el-input>
+                    <el-link style="color: white; text-align: right;" @click="isShowPopup = true">Forgot password?</el-link>
                     <el-button class="loginButton" type="primary" @click="login">Sign In</el-button>
                     <el-button class="loginButton" type="info" @click="signup" v-if="new Date() < signupTime">Sign Up</el-button>
                     
@@ -137,12 +137,19 @@
 
         .loginForm {
             padding: 25px;
-
+            
+            .el-link {
+                display: block;
+            }
+            .el-input {
+                margin-bottom: 10px;
+            }
             .loginButton {
                 width: 100%;
                 margin-top: 10px;
                 margin-left: 0px;
             }
+        
 
             .loginAlert {
                 margin: 10px 0;
