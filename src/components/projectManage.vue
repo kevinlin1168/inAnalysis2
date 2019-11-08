@@ -241,14 +241,28 @@
 
         <!-- preview model popup-->
         <el-dialog class="modelPreview" :title='selectModel.modelName + " Preview"' :visible.sync="isShowModelPreviewPopup" :before-close="onModelPreviewClose" :show-close='false' width="665px">
-            <div class="textBlock">
+            <div class="textBlock" v-if="textPreview !== '' && tablePreview !== ''">
                 <div class="title"> Text Preview</div>
                 <div class="textPreview">{{textPreview}}</div>
+                <div v-for="table in tablePreview" :key="table.tableTitle">
+                    <div class="subTitle">{{table.tableTitle}}</div>
+                    <el-table
+                        :data="table.tableData"
+                        style="width: 100%">
+                        <el-table-column
+                            :prop="prop"
+                            :label="label"
+                            width="120"
+                            v-for="{ prop, label } in table.tablecolConfigs" :key="prop">
+                        </el-table-column>
+                        
+                    </el-table>
+                </div>
             </div>
             <div class="imgBlock">
                 <div class="title">Chart Preview</div>
                 <el-carousel trigger="click" height="400px" width= "625px" :autoplay="false">
-                    <el-carousel-item v-for="item in modelImgList" :key="item">
+                    <el-carousel-item v-for="item in pmodelImgList" :key="item">
                         <div v-html="item">
                         </div>
                     </el-carousel-item>
@@ -286,9 +300,23 @@
                     </el-select>
                 </el-form-item>
             </el-form>
-            <div class="textBlock" v-if="isShowTestImg">
+            <div class="textBlock" v-if="isShowTestImg && (textPreview !== '' || tablePreview !== '')">
                 <div class="title"> Text Preview</div>
                 <div class="textPreview">{{textPreview}}</div>
+                <div v-for="table in tablePreview" :key="table.tableTitle">
+                    <div class="subTitle">{{table.tableTitle}}</div>
+                    <el-table
+                        :data="table.tableData"
+                        style="width: 100%">
+                        <el-table-column
+                            :prop="prop"
+                            :label="label"
+                            width="120"
+                            v-for="{ prop, label } in table.tablecolConfigs" :key="prop">
+                        </el-table-column>
+                        
+                    </el-table>
+                </div>
             </div>
             <div class="imgBlock" v-if="isShowTestImg">
                 <div class="title">Chart Preview</div>
@@ -395,7 +423,9 @@
                 filePreviewImg: '',
                 fileImgList: [],
                 modelImgList: [],
+                pmodelImgList:[],
                 textPreview: '',
+                tablePreview: [],
                 columnList: [],
                 modelList: [],
                 modelForm: {
@@ -697,7 +727,7 @@
             },
             onModelPreviewClick(model) {
                 this.selectModel = model;
-                this.modelImgList = [];
+                this.pmodelImgList = [];
                 let bokehVersion = '1.3.4';
                 let link = document.createElement('link')
                 link.setAttribute('rel', 'stylesheet')
@@ -729,10 +759,30 @@
                         post(analytic_getModelPreview_url, form).then((resp) => {
                             if(resp.data.status == 'success') {
                                 _this.textPreview = resp.data.data.text;
+                                Object.keys(resp.data.data.form).forEach((key) => {
+                                    let object = {
+                                        tableTitle: key,
+                                        tablecolConfigs: [],
+                                        tableData: []
+                                    }
+                                    resp.data.data.form[key].title.forEach((value) => {
+                                        let colConfig = { prop: value, label: value };
+                                        object.tablecolConfigs.push(colConfig);
+                                    })
+                                    resp.data.data.form[key].value.forEach((value) => {
+                                        let valueObject = {};
+                                        resp.data.data.form[key].title.forEach((title, index) => {
+                                            valueObject[title] = value[index];
+                                        })
+                                        object.tableData.push(valueObject);
+                                    })
+                                    _this.tablePreview.push(object);
+                                })
+                                console.warn(_this.tablePreview)
                                 let figObject = resp.data.data.fig;
                                 let imgKeyList = Object.keys(figObject);
                                 imgKeyList.forEach((key) => {
-                                    _this.modelImgList.push(figObject[key].div);
+                                    _this.pmodelImgList.push(figObject[key].div);
                                     let bokehRunScript = document.createElement('SCRIPT');
                                     bokehRunScript.setAttribute('type', 'text/javascript');
                                     let t = document.createTextNode(figObject[key].script);
@@ -753,6 +803,7 @@
                 this.isShowTestImg = false;
                 this.fullScreenLoading();
                 this.modelImgList = [];
+                this.tablePreview = [];
                 let bokehVersion = '1.3.4';
                 let link = document.createElement('link')
                 link.setAttribute('rel', 'stylesheet')
@@ -792,10 +843,28 @@
                                 token: token,
                             }
                         }
-                        console.warn(form)
                         post(analytic_doModelTest_url, form).then((resp) => {
                             if(resp.data.status == 'success') {
                                 _this.textPreview = resp.data.data.text;
+                                Object.keys(resp.data.data.form).forEach((key) => {
+                                    let object = {
+                                        tableTitle: key,
+                                        tablecolConfigs: [],
+                                        tableData: []
+                                    }
+                                    resp.data.data.form[key].title.forEach((value) => {
+                                        let colConfig = { prop: value, label: value };
+                                        object.tablecolConfigs.push(colConfig);
+                                    })
+                                    resp.data.data.form[key].value.forEach((value) => {
+                                        let valueObject = {};                                        
+                                        resp.data.data.form[key].title.forEach((title, index) => {
+                                            valueObject[title] = value[index];
+                                        })
+                                        object.tableData.push(valueObject);
+                                    })
+                                    _this.tablePreview.push(object);
+                                })
                                 let figObject = resp.data.data.fig;
                                 let imgKeyList = Object.keys(figObject);
                                 imgKeyList.forEach((key) => {
@@ -823,7 +892,7 @@
                 }
             },
             OnSelectTestFileChange() {
-                
+
                 if(this.projectType != 'abnormal') {
                     this.doModelTest(this.selectModel.modelIndex, this.selectTestFileID, window.localStorage.getItem('token'))
                 } else {
@@ -932,11 +1001,13 @@
             onModelPreviewClose() {
                 this.isShowModelPreviewPopup = false;
                 this.selectModel = {};
+                this.tablePreview = [];
             },
             onModelTestClose() {
                 this.selectTestLabel = '';
                 this.selectTestFileID = '';
                 this.isShowTestImg = false;
+                this.tablePreview = [];
                 this.isShowModelTestPopup = false;
             },
             onModelPredictConfirm() {
@@ -1096,6 +1167,12 @@
 
     .filePreview {
         .textBlock {
+            .title {
+                font-size: 18px;
+            }
+            .subTitle {
+                font-size: 14px;
+            }
             .textPreview {
                 margin-top: 10px;
                 white-space: pre-wrap;
@@ -1104,7 +1181,7 @@
         .imgBlock{
             width: 625px;
             .title {
-                text-align: center;
+                // text-align: center;
                 font-size: 18px;
             }
         }
