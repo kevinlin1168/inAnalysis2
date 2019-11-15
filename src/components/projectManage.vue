@@ -660,11 +660,16 @@
                 form.append("userID", JSON.parse(window.localStorage.getItem('user')).userID);
                 form.append("projectID", this.projectID)
                 form.append("token", window.localStorage.getItem('token'))
+                this.fullScreenLoading();
                 post(file_upload_url, form).then((response) => {
                     if (response.data.status == "success") {
+                        this.loadingClose()
                         this.fetchData();
                     }
-                })
+                }).catch((error) => {
+                    this.loadingClose();
+                    console.error(error);
+                });
 
                 this.$refs.upload.clearFiles();
                 this.isShowUploadBlock = true;
@@ -964,7 +969,9 @@
                     fileName: file.fileName+'.'+file.fileType,
                     token: window.localStorage.getItem('token')
                 }
+                this.fullScreenLoading();
                 post(file_download_url, fileForm, {responseType: 'blob'}).then((resp) => {
+                    this.loadingClose();
                     let blob = new Blob([resp.data], {type:resp.headers['content-type']});
                     let link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);

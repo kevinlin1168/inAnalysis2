@@ -50,7 +50,7 @@
                                         </el-col>
                                     </el-tooltip>
                                     <el-col :span="11">
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @input="$forceUpdate()"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="parameter.step"  @input="$forceUpdate()"> </el-slider>
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1" @input="$forceUpdate()"> </el-slider>
                                         <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
                                         <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select" @change="$forceUpdate()">
@@ -72,7 +72,7 @@
                                         </el-col>
                                     </el-tooltip>
                                     <el-col :span="11">
-                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="0.1"  @input="$forceUpdate()"> </el-slider>
+                                        <el-slider v-model="parameter.value" v-if="parameter.type == 'float'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="parameter.step"  @input="$forceUpdate()"> </el-slider>
                                         <el-slider v-model="parameter.value" v-if="parameter.type == 'int'" show-input :min="parameter.lowerBound" :max="parameter.upperBound" :step="1"  @input="$forceUpdate()"> </el-slider>
                                         <el-switch v-model="parameter.value" v-if="parameter.type == 'bool'" active-color="#13ce66" inactive-color="#ff4949" @change="$forceUpdate()"></el-switch>
                                         <el-select v-model="parameter.value" v-if="parameter.type == 'enum'" placeholder="please select" @change="$forceUpdate()">
@@ -380,6 +380,10 @@
                                     item.value = (item.default == '1' ? true : false)
                                 } else if (item.type == 'float' || item.type == 'int') {
                                     item.value = Number(item.default);
+                                    if(item.type == 'float') {
+                                        // TODO can modify 1000 to config;
+                                        item['step'] = (item.upperBound - item.lowerBound) / 1000;
+                                    }
                                 } else {
                                     item.value = item.default;
                                 }
@@ -436,7 +440,7 @@
                         if(param.type == 'bool') {
                             params[param.name] = param.value ? 1 : 0;
                         } else {
-                            params[param.name] = param.value
+                            params[param.name] = param.value;
                         }  
                     })
                     let input = {};
