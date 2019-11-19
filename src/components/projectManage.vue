@@ -110,7 +110,7 @@
                     label="Status"
                     min-width="10%">
                     <template slot-scope="scope">
-                        <el-tooltip v-if="scope.row.status == 'fail'" class="item" effect="dark" :content="scope.row.failReason" placement="bottom">
+                        <el-tooltip v-if="scope.row.status == 'fail'" class="item" effect="dark" :content="scope.row.failReason" placement="bottom-end">
                             <el-tag
                             style="width: 80px; text-align: center;"
                             size = 'medium'
