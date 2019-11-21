@@ -261,6 +261,7 @@
                 correlationAlgorithmList: [],
                 algorithmList: [],
                 columnList: [],
+                orginalColumnList: [],
                 algoInputList: [],
                 parameterList: []
             }
@@ -305,6 +306,7 @@
                     post(file_getColumn_url,fileForm).then((resp) => {
                         if(resp.data.status == 'success') {
                             this.columnList = resp.data.data.cols;
+                            this.orginalColumnList = this.columnList.slice();
                         } else {
                             console.warn('getColumn Error', resp.data.msg)
                         }
@@ -392,6 +394,7 @@
                         this.algoOutputList.forEach((item) => {
                             item['selection'] = [];
                         })
+                        this.columnList = this.orginalColumnList.slice();
                     }
                 }).catch((error) => {
                     console.error('getAnalyticAlgoParam Error', error)
