@@ -467,7 +467,6 @@
                         input: JSON.stringify(input),
                         output: JSON.stringify(output)
                     }
-                    
                     post(analytic_doModelTrain_url, form).then((resp) => {
                         if(resp.data.status == "success") {
                             this.$message({
@@ -476,7 +475,12 @@
                             });
                             this.$router.push({name: 'project', params: {projectID: this.projectID}});
                         }
-                    })
+                    }).catch((error)=>{
+                        // console.warn(error.response.data.msg);
+                       this.$message.error(error.response.data.msg);
+                    });
+
+                    
                 }
             },
             checkLabelType(item) {
