@@ -10,10 +10,15 @@
 export default {
   name: 'app',
   created: function() {
-    let userString = decodeURIComponent(escape(window.atob(window.localStorage.getItem('token').split('.')[1])))
-    let user = JSON.parse(userString)
-    if((user.exp * 1000) < new Date().getTime())
+    if (window.localStorage.getItem('token') != null) {
+      let userString = decodeURIComponent(escape(window.atob(window.localStorage.getItem('token').split('.')[1])))
+      let user = JSON.parse(userString)
+      if((user.exp * 1000) < new Date().getTime())
+        window.localStorage.setItem('isLogin', false)
+    } else {
       window.localStorage.setItem('isLogin', false)
+    }
+    
   },
   data() {
     return {

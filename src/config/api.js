@@ -7,6 +7,7 @@ let fileUrl = baseUrl + '/file';
 let visualizeUrl = baseUrl + '/visualize';
 let analyticUrl = baseUrl + '/analytic';
 let modelUrl = baseUrl + '/model';
+let courseUrl = baseUrl + '/course';
 
 //service Api
 export const system_getDataProject_url = systemUrl + '/getDataProject'
@@ -57,3 +58,13 @@ export const model_addModel_url = modelUrl + '/addModel';
 export const model_getModelByProjectID_url = modelUrl + '/getModelByProjectID';
 export const model_deleteModel_url = modelUrl + '/deleteModel';
 
+// course Api for TA
+export const course_addCourse_url = courseUrl + '/addCourse';
+export const course_getCourse_url = courseUrl + '/getCourse';
+export const course_deleteCourse_url = courseUrl + '/deleteCourse';
+export const course_uploadStudentFile_url = courseUrl + '/uploadStudentFile';
+export const course_getCourseByID_url = courseUrl + '/getCourseByID';
+export const course_modifyCourse_url = courseUrl + '/modifyCourse';
+export const course_getStudent_url = courseUrl + '/getStudent'; 
+export const course_studentJudge_url = courseUrl + '/studentJudge';
+export const course_sendEmail_url = courseUrl + '/sendEmail';

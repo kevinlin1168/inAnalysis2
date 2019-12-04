@@ -12,6 +12,8 @@ import home from '@/components/home';
 import filePreProcessing from '@/components/filePreProcessing';
 import modelPredict from '@/components/modelPredict';
 import modelManagement from '@/components/modelManagement';
+import courseManagement from '@/components/courseManagement';
+import judgeManagement from '@/components/judgeManagement';
 
 Vue.use(Router);
 
@@ -20,6 +22,13 @@ const router = new Router({
     routes: [{
         path: '/',
         component: login,
+        meta: {
+            isLogin: false
+        }
+    },{
+        path: '/judge/:courseID/:studentIndex',
+        name: 'judgeManagement',
+        component: judgeManagement,
         meta: {
             isLogin: false
         }
@@ -45,49 +54,64 @@ const router = new Router({
         path: '/home',
         component: manage,
         meta: {
-            isLogin: true
+            isLogin: true,
+            role: '1'
         },
         children: [{
             path: '',
             name: 'home',
             component: home,
             meta: {
-                isLogin: true
+                isLogin: true,
+                role: '1'
             }
         },{
             path: '/project',
             name: 'dataProjectManage',
             component: dataProjectManage,
             meta: {
-                isLogin: true
+                isLogin: true,
+                role: '1'
             }
         },{
             path: '/project/:projectID',
             name: 'project',
             component: projectManage,
             meta: {
-                isLogin: true
+                isLogin: true,
+                role: '1'
             }
         }, {
             path: '/project/:projectID/filePreProcessing/:fileID',
             name: 'filePreProcessing',
             component: filePreProcessing,
             meta: {
-                isLogin: true
+                isLogin: true,
+                role: '1'
             }
         },{
             path:'/project/:projectID/modelPredict/:modelIndex',
             name: 'modelPredict',
             component: modelPredict,
             meta: {
-                isLogin: true
+                isLogin: true,
+                role: '1'
             }
         }, {
             path:'/project/:projectID/modelManagement/:modelIndex',
             name: 'modelManagement',
             component: modelManagement,
             meta: {
-                isLogin: true
+                isLogin: true,
+                role: '1'
+            }
+        }, {
+            path:'/course/manage',
+            name: 'courseManagement',
+            component: courseManagement,
+            meta: {
+                isLogin: true,
+                role: '99'
             }
         }]
     }]
@@ -96,17 +120,30 @@ const router = new Router({
 router.beforeEach((to, from, next) => {
 
     let isLogin = (localStorage.getItem("isLogin") === 'true');
+    let userRole;
+    try {
+        userRole = JSON.parse(window.localStorage.getItem('user')).userRole;
+    } catch (error) {
+        userRole = '1'
+    }
+    console.log(userRole)
   
-    if(isLogin){
+    if(isLogin && (Number(userRole) >= Number(to.meta.role))){
         next()
     }else{
-      if(to.meta.isLogin){
-        next({
-          path: '/'
-        })
-      }else{
-        next()
-      }
+        if(to.meta.isLogin){
+            next({
+            path: '/'
+            })
+        }else{
+            if((Number(userRole) >= Number(to.meta.role))) {
+                next({
+                    path: 'home'
+                })
+            } else {
+                next()
+            }
+        }
   
     }
   

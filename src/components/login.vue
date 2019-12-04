@@ -69,7 +69,7 @@
                 post(user_signin_url, userForm).then((resp) => {
                     if(resp.data.status == 'success') {
                         window.localStorage.setItem('isLogin', true)
-                        window.localStorage.setItem('user', JSON.stringify({userID: resp.data.data.userID, userName: resp.data.data.userName}))
+                        window.localStorage.setItem('user', JSON.stringify({userID: resp.data.data.userID, userName: resp.data.data.userName, userRole: resp.data.data.userRole}))
                         // window.localStorage.setItem('userID', resp.data.data.userID)
                         // window.localStorage.setItem('userName', resp.data.data.userName)
                         window.localStorage.setItem('token', resp.data.data.token)
