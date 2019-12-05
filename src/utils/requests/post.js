@@ -38,8 +38,7 @@ export function post(url, form = {}, config = {}) {
                         this.$router.push('/');
                     })
                 } else {
-                    console.warn(error);
-                    reject(error);
+                    reject(error.response);
                 }
             });
         } else {

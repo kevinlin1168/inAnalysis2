@@ -95,8 +95,9 @@
                             let D = datetime.getDate() + ' ';
                             let h = datetime.getHours() + ':';
                             let m = datetime.getMinutes();
+                            this.course['deadlineTemp'] = this.course.deadline;
                             this.course.deadline = Y+M+D+h+m
-                            if((this.course.deadline * 1000) < new Date().getTime()) {
+                            if((this.course.deadlineTemp * 1000) < new Date().getTime()) {
                                 this.isAvailable = false;
                             } else {
                                 this.isAvailable = true;
@@ -107,8 +108,18 @@
                                         object['id'] = subKey;
                                         object['name'] = this.course.score[key][subKey].name;
                                         object['score'] = this.course.score[key][subKey].score;
+                                        if(this.course.score[key][subKey].index) {
+                                            object['index'] = this.course.score[key][subKey].index;
+                                        }
                                         this.course['judgeList'].push(object);
                                     })
+                                })
+                                this.course['judgeList'].sort((a, b) => {
+                                    if (a.index < b.index) {
+                                        return -1;
+                                    } else {
+                                        return 1;
+                                    }
                                 })
                             }
                         }
@@ -119,6 +130,7 @@
             onSubmitJudgeClick() {
                 let submitList = this.course.judgeList.filter(item => item.score != 0);
                 let form = {
+                    deadline: this.course['deadlineTemp'],
                     judgeID: this.course['judgeID'],
                     courseID: this.courseID,
                     submitList: JSON.stringify(submitList)
@@ -132,7 +144,12 @@
                         });
                     }
                 }).catch(error => {
-                    this.$message.error('Submit error please try again');
+                    if(error.data.msg == 'Out of deadline') {
+                        this.$message.error('Out of deadline');
+                        this.$router.go()
+                    } else {
+                        this.$message.error('Submit error please try again');
+                    }
                 })
             }
         },
