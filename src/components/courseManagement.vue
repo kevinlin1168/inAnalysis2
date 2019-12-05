@@ -96,7 +96,7 @@
                     </el-date-picker>
                 </el-form-item>
             </el-form>
-            <div class="textBlock">
+            <div class="textBlock" v-if="isShowTable">
                 <div class="title">Student Preview</div>
                 <el-table
                     :data="courseForm.tableData"
@@ -172,6 +172,7 @@
                 isShowCourseDetail: false,
                 isShowUploadFilePopup: false,
                 isShowUploadBlock: true,
+                isShowTable: false,
                 addCoursePopupWidth: '120px',
                 courseList: [],
                 courseID: '',
@@ -262,7 +263,8 @@
                         datetime.setTime(this.courseForm.deadline * 1000);
                         this.courseForm.deadline = datetime;
                         this.courseForm.tableData = [];
-                        Object.keys(this.courseForm.scoreList).forEach((key) => {
+                        if(this.courseForm.scoreList) {
+                            Object.keys(this.courseForm.scoreList).forEach((key) => {
                             let object = {};
                             let scoreSum = 0;
                             let scoreLength = 0;
@@ -281,7 +283,11 @@
                             //TODO
                             console.log('notScoreList', notScoreList);
                             this.courseForm.tableData.push(object);
-                        });
+                            });
+                            this.isShowTable = true;
+                        } else {
+                            this.isShowTable = false
+                        }
                         this.isShowManageCoursePopup = true;
                         if(this.$refs['form']) {
                             this.$refs['form'].resetFields();
