@@ -322,14 +322,14 @@
                 course.isPopoverVisible = false;
                 post(course_sendEmail_url, form).then((response) => {
                     if (response.data.status == 'success') {
-                        this.isPopoverVisible = false;
+                        course.isPopoverVisible = false;
                     }
                 }).catch(() => {
                     this.$message({
                         type: 'error',
                         message: 'Send email failed. Please try again'
                     });
-                    this.isPopoverVisible = false;
+                    course.isPopoverVisible = false;
                 });
             },
             onManageCourseClose() {
