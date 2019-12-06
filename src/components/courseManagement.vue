@@ -67,7 +67,19 @@
                         label="Actions"
                         min-width="15%">
                     <template slot-scope="scope">
-                        <el-button @click="onCourseSendEmailClick(scope.row.courseID)" type="text" size="medium">Send Email</el-button>
+                        <el-popover
+                            placement="top"
+                            width="160"
+                            trigger="manual"
+                            v-model="scope.row.isPopoverVisible"
+                            >
+                            <p>Are you sure you want to send email？</p>
+                            <div style="text-align: right; margin: 0">
+                                <el-button size="mini" type="text" @click="scope.row.isPopoverVisible = false;">Cancel</el-button>
+                                <el-button type="primary" size="mini" @click="onCourseSendEmailClick(scope.row)">Confirm</el-button>
+                            </div>
+                            <el-button type="text" size="medium" slot="reference" @click="scope.row.isPopoverVisible = true;" style="margin-right: 10px">Send Email</el-button>
+                        </el-popover>
                         <el-button @click="onCourseManageClick(scope.row.courseID)" type="text" size="medium">Management</el-button>
                         <el-button @click="onCourseUploadClick(scope.row.courseID)" type="text" size="medium">Upload</el-button>
                         <el-button @click="onCourseDeleteClick(scope.row.courseID)" type="text" size="medium" style="color: red">Delete</el-button>
@@ -112,11 +124,11 @@
                         width="120"
                         v-for=" value  in courseForm.studentList" :key="value">
                     </el-table-column>
-                    <el-table-column
+                    <!-- <el-table-column
                         prop="average"
                         label="Average"
                         width="120">
-                    </el-table-column>
+                    </el-table-column> -->
                 </el-table>
             </div>
             <div slot="footer" class="dialog-footer">
@@ -216,7 +228,7 @@
                                 let D = datetime.getDate() + ' ';
                                 let h = datetime.getHours() + ':';
                                 let m = datetime.getMinutes();
-                                item.deadline = Y+M+D+h+m
+                                item.deadline = Y+M+D+h+m;
                             })
                         }
                     })
@@ -263,6 +275,10 @@
                         datetime.setTime(this.courseForm.deadline * 1000);
                         this.courseForm.deadline = datetime;
                         this.courseForm.tableData = [];
+                        let average  = {
+                            id: 'Average'
+                        }
+
                         if(this.courseForm.scoreList) {
                             Object.keys(this.courseForm.scoreList).forEach((key) => {
                             let object = {};
@@ -270,6 +286,7 @@
                             let scoreLength = 0;
                             let notScoreList = [];
                             object['id'] = key
+                            
                             Object.keys(this.courseForm.scoreList[key]).forEach((subKey) => {
                                 object[subKey] = this.courseForm.scoreList[key][subKey];
                                 if(this.courseForm.scoreList[key][subKey] == 0) {
@@ -279,11 +296,12 @@
                                     scoreLength =scoreLength + 1;
                                 }
                             })
-                            object['average'] = scoreSum/scoreLength;
+                            average[key] = scoreSum/scoreLength;
                             //TODO
                             console.log('notScoreList', notScoreList);
                             this.courseForm.tableData.push(object);
                             });
+                            this.courseForm.tableData.push(average);
                             this.isShowTable = true;
                         } else {
                             this.isShowTable = false
@@ -295,13 +313,23 @@
                     }
                 })
             },
-            onCourseSendEmailClick(courseID) {
+            onCourseSendEmailClick(course) {
+                console.log('onCourseSendEmailClick')
                 let form = {
-                    courseID: courseID,
+                    courseID: course.courseID,
                     token: window.localStorage.getItem('token')
                 }
+                course.isPopoverVisible = false;
                 post(course_sendEmail_url, form).then((response) => {
-
+                    if (response.data.status == 'success') {
+                        this.isPopoverVisible = false;
+                    }
+                }).catch(() => {
+                    this.$message({
+                        type: 'error',
+                        message: 'Send email failed. Please try again'
+                    });
+                    this.isPopoverVisible = false;
                 });
             },
             onManageCourseClose() {
@@ -339,6 +367,7 @@
                     token: window.localStorage.getItem('token')
                 }
                 post(course_deleteCourse_url, form).then((response) => {
+                    console.log('resp', response)
                     if (response.data.status == 'success') {
                         this.fetchData();
                     }
