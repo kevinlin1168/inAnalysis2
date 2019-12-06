@@ -228,6 +228,9 @@
                                 let D = datetime.getDate() + ' ';
                                 let h = datetime.getHours() + ':';
                                 let m = datetime.getMinutes();
+                                if(Number(m) < 10) {
+                                    m = '0' + m;
+                                }
                                 item.deadline = Y+M+D+h+m;
                             })
                         }

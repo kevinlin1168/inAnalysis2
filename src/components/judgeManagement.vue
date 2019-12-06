@@ -95,6 +95,9 @@
                             let D = datetime.getDate() + ' ';
                             let h = datetime.getHours() + ':';
                             let m = datetime.getMinutes();
+                            if(Number(m) < 10) {
+                                m = '0' + m;
+                            }
                             this.course['deadlineTemp'] = this.course.deadline;
                             this.course.deadline = Y+M+D+h+m
                             if((this.course.deadlineTemp * 1000) < new Date().getTime()) {
