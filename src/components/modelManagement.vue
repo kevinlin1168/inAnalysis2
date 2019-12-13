@@ -477,7 +477,7 @@
                         }
                     }).catch((error)=>{
                         // console.warn(error.response.data.msg);
-                       this.$message.error(error.response.data.msg);
+                       this.$message.error(error.data.msg);
                     });
 
                     
