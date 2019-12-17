@@ -295,16 +295,18 @@
                                 if(this.courseForm.scoreList[key][subKey] == 0) {
                                     notScoreList.push(subKey);
                                 } else {
-                                    scoreSum = scoreSum + this.courseForm.scoreList[key][subKey];
+                                    scoreSum = scoreSum + this.courseForm.scoreList[subKey][key];
                                     scoreLength =scoreLength + 1;
                                 }
                             })
                             average[key] = scoreSum/scoreLength;
                             //TODO
-                            console.log('notScoreList', notScoreList);
+                            console.log('notScoreList',key, notScoreList);
                             this.courseForm.tableData.push(object);
                             });
+                            this.courseForm.tableData.reverse();
                             this.courseForm.tableData.push(average);
+                            this.courseForm.tableData.reverse();
                             this.isShowTable = true;
                         } else {
                             this.isShowTable = false
