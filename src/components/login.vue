@@ -140,6 +140,7 @@
             
             .el-link {
                 display: block;
+                float: right;
             }
             .el-input {
                 margin-bottom: 10px;
