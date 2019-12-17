@@ -889,7 +889,7 @@
                             }
                         }).catch((error) => {
                             console.error('Test Model Error', error);
-                            this.$message.error('Test file error please select other files');
+                            this.$message.error(error.data.msg);
                             this.loadingClose();
                             this.isShowTestImg = false;
                         });

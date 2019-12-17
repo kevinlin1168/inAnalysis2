@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import {deadline} from '@/config/env.js';
 
 import login from '@/components/login';
 import signup from '@/components/signup';
@@ -14,12 +15,19 @@ import modelPredict from '@/components/modelPredict';
 import modelManagement from '@/components/modelManagement';
 import courseManagement from '@/components/courseManagement';
 import judgeManagement from '@/components/judgeManagement';
+import missingDeadline from '@/components/missingDeadlinePage';
 
 Vue.use(Router);
 
 
 const router = new Router({
     routes: [{
+        path: '/missingDeadline',
+        component: missingDeadline,
+        meta: {
+            isLogin: false
+        }
+    },{
         path: '/',
         component: login,
         meta: {
@@ -127,8 +135,11 @@ router.beforeEach((to, from, next) => {
         userRole = '1'
     }
     console.log(userRole)
+    console.log(from.path)
   
-    if(isLogin && (Number(userRole) >= Number(to.meta.role))){
+    if( new Date() > deadline && to.path != '/missingDeadline') {
+        next('/missingDeadline')
+    } else if(isLogin && (Number(userRole) >= Number(to.meta.role))){
         next()
     }else{
         if(to.meta.isLogin){
@@ -137,9 +148,7 @@ router.beforeEach((to, from, next) => {
             })
         }else{
             if((Number(userRole) >= Number(to.meta.role))) {
-                next({
-                    path: 'home'
-                })
+                next('/home')
             } else {
                 next()
             }
