@@ -284,25 +284,25 @@
 
                         if(this.courseForm.scoreList) {
                             Object.keys(this.courseForm.scoreList).forEach((key) => {
-                            let object = {};
-                            let scoreSum = 0;
-                            let scoreLength = 0;
-                            let notScoreList = [];
-                            object['id'] = key
-                            
-                            Object.keys(this.courseForm.scoreList[key]).forEach((subKey) => {
-                                object[subKey] = this.courseForm.scoreList[key][subKey];
-                                if(this.courseForm.scoreList[key][subKey] == 0) {
-                                    notScoreList.push(subKey);
-                                } else {
-                                    scoreSum = scoreSum + this.courseForm.scoreList[subKey][key];
-                                    scoreLength =scoreLength + 1;
-                                }
-                            })
-                            average[key] = scoreSum/scoreLength;
-                            //TODO
-                            console.log('notScoreList',key, notScoreList);
-                            this.courseForm.tableData.push(object);
+                                let object = {};
+                                let scoreSum = 0;
+                                let scoreLength = 0;
+                                let notScoreList = [];
+                                object['id'] = key
+                                
+                                Object.keys(this.courseForm.scoreList[key]).forEach((subKey) => {
+                                    object[subKey] = this.courseForm.scoreList[key][subKey];
+                                    if(this.courseForm.scoreList[subKey][key] == 0) {
+                                        notScoreList.push(subKey);
+                                    } else {
+                                        scoreSum = Number(scoreSum) + Number(this.courseForm.scoreList[subKey][key]);
+                                        scoreLength =scoreLength + 1;
+                                    }
+                                })
+                                average[key] = (scoreSum/scoreLength).toFixed(1);
+                                //TODO
+                                console.log('notScoreList',key, notScoreList);
+                                this.courseForm.tableData.push(object);
                             });
                             this.courseForm.tableData.reverse();
                             this.courseForm.tableData.push(average);
