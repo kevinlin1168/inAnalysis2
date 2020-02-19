@@ -1,4 +1,5 @@
 <template>
+    <a></a>
 </template>
 <script>
     import { user_signupVerify_url } from '@/config/api.js';

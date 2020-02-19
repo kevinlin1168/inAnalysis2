@@ -16,12 +16,19 @@ import modelManagement from '@/components/modelManagement';
 import courseManagement from '@/components/courseManagement';
 import judgeManagement from '@/components/judgeManagement';
 import missingDeadline from '@/components/missingDeadlinePage';
+import flowChartTest from '@/components/flowchart/flowChartTest';
 
 Vue.use(Router);
 
 
 const router = new Router({
     routes: [{
+        path: '/test',
+        component: flowChartTest,
+        meta: {
+            isLogin: false
+        }
+    },{
         path: '/missingDeadline',
         component: missingDeadline,
         meta: {
