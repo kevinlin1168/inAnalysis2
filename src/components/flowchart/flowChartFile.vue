@@ -1,6 +1,7 @@
 <template>
   <div class="flowChartFile" :style="nodeStyle" 
-    v-bind:class="{selected: options.selected === id}">
+    v-bind:class="{selected: options.selected === id}"
+    @mousedown="handleMousedown">
     <div class="node-port node-input">
     </div>
     <div class="node-main">
@@ -76,6 +77,14 @@ export default {
     }
   },
   methods: {
+    handleMousedown(e) {
+      const target = e.target || e.srcElement;
+      console.log(target);
+      if (target.className.indexOf('node-input') < 0 && target.className.indexOf('node-output') < 0) {
+        this.$emit('nodeSelected', e);
+      }
+      e.preventDefault();
+    }
   }
 }
 </script>
