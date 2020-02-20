@@ -2,19 +2,37 @@
   <div class="flowChartFile" :style="nodeStyle" 
     v-bind:class="{selected: options.selected === id}"
     @mousedown="handleMousedown">
-    <div class="node-port node-input">
+    <div class="node-port node-input"
+      @mousedown="inputMouseDown"
+      @mouseup="inputMouseUp">
     </div>
     <div class="node-main">
-      <div v-text="type" class="node-type"></div>
-      <div v-text="label" class="node-label"></div>
+      <button type="button" class="close" onclick="" aria-label="Close">
+        <i class="glyphicon glyphicon-remove"></i>
+      </button>
+      <div class="node-type"> File </div>
+      <div class="node-label">
+        <el-select v-model="selectFile" placeholder="please select a file">
+          <el-option
+            v-for="item in fileList"
+            :key="item.fileID"
+            :label="item.fileName"
+            :value="item.fileID">
+          </el-option>
+        </el-select>
+      </div>
     </div>
-    <div class="node-port node-output" >
+    <div class="node-port node-output" 
+      @mousedown="outputMouseDown">
     </div>
     <div v-show="show.delete" class="node-delete">&times;</div>
   </div>
 </template>
 
 <script>
+import { file_getFileList_url } from '@/config/api.js';
+import { post } from '@/utils/requests/post.js'
+
 export default {
   name: "flowChartFile",
   props: {
@@ -58,11 +76,27 @@ export default {
       }
     }
   },
+  created: function() {
+    let form = {
+        projectID: this.projectID,
+        token: window.localStorage.getItem('token')
+    }
+    post(file_getFileList_url, form).then((resp) => {
+        if(resp.data.status == "success") {
+            this.fileList = resp.data.data.fileList;
+        } else {
+            console.error('getFileListError', resp.data.msg)
+        }
+    });
+  },
   data() {
     return {
       show: {
         delete: false,
-      }
+      },
+      fileList: [],
+      projectID: '619178b6-f4cb-11e9-9169-9c5c8ebbb826',
+      selectFile: {}
     }
   },
   mounted() {
@@ -84,7 +118,18 @@ export default {
         this.$emit('nodeSelected', e);
       }
       e.preventDefault();
-    }
+    },
+    inputMouseDown(e) {
+      e.preventDefault();
+    },
+    inputMouseUp(e) {
+      this.$emit('linkingStop')
+      e.preventDefault();
+    },
+    outputMouseDown(e) {
+      this.$emit('linkingStart')
+      e.preventDefault();
+    },
   }
 }
 </script>
@@ -95,7 +140,7 @@ export default {
   $portSize: 12;
   .flowChartFile {
     margin: 0;
-    width: 80px;
+    width: 240px;
     height: 80px;
     position: absolute;
     box-sizing: border-box;
