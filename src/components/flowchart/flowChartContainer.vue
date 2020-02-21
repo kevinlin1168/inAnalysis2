@@ -9,19 +9,19 @@
         @deleteLink="linkDelete(link.id)">
       </flowChartLink>
     </svg>
-    <flowChartFile v-bind.sync="node" 
+    <flowChartComponent v-bind.sync="node" 
       v-for="(node, index) in scene.nodes" 
       :key="`node${index}`"
       :options="nodeOptions"
       @nodeSelected="nodeSelected(node.id, $event)"
       @linkingStart="linkingStart(node.id)"
       @linkingStop="linkingStop(node.id)">
-    </flowChartFile>
+    </flowChartComponent>
   </div>
 </template>
 
 <script>
-import flowChartFile from './flowChartFile';
+import flowChartComponent from './flowChartComponent';
 import flowChartLink from './flowChartLink';
 import { getMousePosition } from './assets/position';
 export default {
@@ -86,14 +86,14 @@ export default {
                 id: 2,
                 x: -700,
                 y: -69,
-                type: 'Action',
+                type: 'File',
                 label: 'test1',
               },
               {
                 id: 1,
                 x: -700,
                 y: -69,
-                type: 'Action',
+                type: 'File',
                 label: 'test2',
               },
             ],
@@ -171,6 +171,7 @@ export default {
         this.action.linking = false;
         this.action.dragging = null;
         this.action.scrolling = false;
+        this.draggingLink = null;
       },
       nodeSelected(id, e) {
         this.action.dragging = id;
@@ -214,15 +215,20 @@ export default {
       },
       linkingStart(index) {
         this.action.linking = true;
+        let x, y, cy, cx;
+        const fromNode = this.findNodeWithID(index)
+        x = this.scene.centerX + fromNode.x;
+        y = this.scene.centerY + fromNode.y;
+        [cx, cy] = this.getPortPosition('bottom', x, y);
         this.draggingLink = {
           from: index,
-          mx: 0,
-          my: 0,
+          mx: cx,
+          my: cy,
         };
       },
     },
     components: {
-      flowChartFile,
+      flowChartComponent,
       flowChartLink
     }
 }
