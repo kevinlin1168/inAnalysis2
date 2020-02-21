@@ -305,7 +305,7 @@
                 }
             },
             onLabelChange() {
-                this.$emit('onLabelChange', this.algoInputList, this.algoOutputList);
+                // this.$emit('onLabelChange', this.algoInputList, this.algoOutputList);
                 this.$forceUpdate();
                 if(this.selectCorrelationAlgorithm == '') {
                     this.active = 2;
@@ -320,7 +320,7 @@
             },
             onParametersChange() {
                 this.$forceUpdate();
-                this.$emit('onParametersChange', this.parameterList);
+                // this.$emit('onParametersChange', this.parameterList);
             },
         },
         components: {

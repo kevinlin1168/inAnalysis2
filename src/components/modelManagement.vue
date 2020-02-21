@@ -18,9 +18,7 @@
             :modelIndex='modelIndex'
             :algoInputList='algoInputList'
             :algoOutputList='algoOutputList'
-            @onSelectAlgorithmChange="onSelectAlgorithmChange"
-            @onParametersChange="onParametersChange"
-            @onLabelChange="onLabelChange">
+            @onSelectAlgorithmChange="onSelectAlgorithmChange">
             </trainModelComponent>
             <!-- <div class="buttonBlock" v-if="selectAlgorithm !== ''"> -->
             <div class="buttonBlock">
@@ -61,7 +59,6 @@
                 algoInputList: [],
                 parameterList: [],
                 algoOutputList: [],
-                selectParameterList: []
             }
         },
         methods:{
@@ -116,9 +113,6 @@
                 }
                 
             },
-            onParametersChange(parameterList) {
-                this.selectParameterList = parameterList;
-            },
             onSelectCorrelationAlgorithmChange() {
                     let bokehVersion = '1.3.4';
                     let link = document.createElement('link');
@@ -155,10 +149,6 @@
                         });
                     }
                 
-            },
-            onLabelChange(labelInput, labelOutput) {
-                this.labelInput = labelInput;
-                this.labelOutput = labelOutput;
             },
             onSelectAlgorithmChange(algo) {
                 this.selectAlgorithm = algo;
@@ -234,8 +224,7 @@
                 } else {
                     let project = JSON.parse(window.localStorage.getItem('project'));
                     let params = {}
-                    console.log('selectParameterList', this.selectParameterList);
-                    this.selectParameterList.forEach((param) => {
+                    this.parameterList.forEach((param) => {
                         if(param.type == 'bool') {
                             params[param.name] = param.value ? 1 : 0;
                         } else {
