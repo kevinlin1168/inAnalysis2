@@ -93,7 +93,7 @@ export default {
                 id: 1,
                 x: -700,
                 y: -69,
-                type: 'File',
+                type: 'Preprocessing',
                 label: 'test2',
               },
             ],

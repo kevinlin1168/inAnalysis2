@@ -16,7 +16,7 @@
             <flowChartFile :projectID='projectID'></flowChartFile>
         </template>
         <template v-if="type != 'File'">
-            <flowChartFile :projectID='projectID'></flowChartFile>
+            <flowChartCommmon></flowChartCommmon>
         </template>
       </div>
     </div>
@@ -31,6 +31,7 @@
 import { file_getFileList_url } from '@/config/api.js';
 import { post } from '@/utils/requests/post.js';
 import flowChartFile from './flowChartFile';
+import flowChartCommmon from './flowChartCommon';
 
 export default {
   name: "flowChartComponent",
@@ -134,7 +135,8 @@ export default {
     },
   },
   components: {
-    flowChartFile
+    flowChartFile,
+    flowChartCommmon
   }
 }
 </script>
@@ -164,6 +166,8 @@ export default {
         padding: 6px;
       }
       .node-label {
+          //TODO fix
+        margin-top: 5px;
         font-size: 13px;
       }
     }
