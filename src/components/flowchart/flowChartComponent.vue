@@ -13,7 +13,11 @@
       <div class="node-type"> {{type}} </div>
       <div class="node-label">
         <template>
-            <flowChartCommmon :type='type' @deleteNode='onDeleteNodeClick'></flowChartCommmon>
+            <flowChartCommmon :type='type' 
+            @deleteNode='onDeleteNodeClick'
+            @onEditClick='onEditClick'
+            @onSelectFileClick='onSelectFileClick'
+            @onUploadFileClick='onUploadFileClick'></flowChartCommmon>
         </template>
       </div>
     </div>
@@ -27,7 +31,6 @@
 <script>
 import { file_getFileList_url } from '@/config/api.js';
 import { post } from '@/utils/requests/post.js';
-import flowChartFile from './flowChartFile';
 import flowChartCommmon from './flowChartCommon';
 
 export default {
@@ -133,9 +136,17 @@ export default {
       this.$emit('linkingStart')
       e.preventDefault();
     },
+    onEditClick() {
+      this.$emit('onEditClick', this.id);
+    },
+    onSelectFileClick() {
+      this.$emit('onSelectFileClick', this.id);
+    },
+    onUploadFileClick() {
+      this.$emit('onUploadFileClick', this.id);
+    }
   },
   components: {
-    flowChartFile,
     flowChartCommmon
   }
 }

@@ -1,12 +1,12 @@
 <template>
   <div>
     <div v-if="type == 'File'">
-        <el-button icon="el-icon-folder-opened"></el-button>
-        <el-button icon="el-icon-upload"></el-button>
+        <el-button icon="el-icon-folder-opened" @click="onSelectFileClick"></el-button>
+        <el-button icon="el-icon-upload" @click="onUploadFileClick"></el-button>
         <el-button icon="el-icon-delete" @click="deleteNode"></el-button>
     </div>  
     <div v-if="type != 'File'">
-        <el-button icon="el-icon-edit"></el-button>
+        <el-button icon="el-icon-edit" @click="onEditClick"></el-button>
         <el-button icon="el-icon-delete" @click="deleteNode"></el-button>
     </div>
   </div>
@@ -25,6 +25,7 @@ export default {
   },
   data() {
     return {
+      isShowPopup: false
     }
   },
   mounted() {
@@ -34,6 +35,15 @@ export default {
   methods: {
       deleteNode() {
         this.$emit('deleteNode');
+      },
+      onEditClick() {
+        this.$emit('onEditClick');
+      },
+      onUploadFileClick() {
+        this.$emit('onUploadFileClick');
+      },
+      onSelectFileClick() {
+        this.$emit('onSelectFileClick');
       }
   }
 }

@@ -1,10 +1,11 @@
 <template>
-  <el-select v-model="selectFile" placeholder="please select a file">
+  <el-select v-model="selectFile" placeholder="please select a file" @change="onSelectFileChange">
     <el-option
       v-for="item in fileList"
       :key="item.fileID"
       :label="item.fileName"
-      :value="item.fileID">
+      :value="item.fileID"
+    >
     </el-option>
   </el-select>
 </template>
@@ -45,6 +46,9 @@ export default {
   computed: {
   },
   methods: {
+    onSelectFileChange() {
+      this.$emit('onSelectFileChange', this.selectFile);
+    }
   }
 }
 </script>

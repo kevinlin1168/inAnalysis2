@@ -16,10 +16,13 @@
       @nodeSelected="nodeSelected(node.id, $event)"
       @linkingStart="linkingStart(node.id)"
       @linkingStop="linkingStop(node.id)"
-      @onDeleteNodeClick="nodeDelete">
+      @onDeleteNodeClick="nodeDelete"
+      @onEditClick="onEditClick"
+      @onUploadFileClick="onUploadFileClick"
+      @onSelectFileClick="onSelectFileClick">
     </flowChartComponent>
     <div>
-      <el-select v-model="selectNode" placeholder="Please select a node">
+      <el-select v-model="selectNodeType" placeholder="Please select a node">
         <el-option
           v-for="item in nodeTypeList"
           :key="item.value"
@@ -29,13 +32,66 @@
       </el-select>
       <el-button icon="el-icon-plus" @click="onAddNodeClick"></el-button>
     </div>
+
+    <!--default popup-->
+    <el-dialog :title='selectedNode.type' :visible.sync="isShowPopup">
+      <div>
+        <template v-if="selectedNode.type == 'Preprocessing'">
+          <preprocessingComponent></preprocessingComponent>
+        </template>
+        <template v-else-if="selectedNode.type == 'Model'">
+          <trainModelComponent></trainModelComponent>
+        </template>
+      </div>
+      <div slot="footer" class="dialog-footer">
+          <el-button @click="onEditCancelClick">Cancel</el-button>
+          <el-button type="primary" @click="onEditConfirmClick">Confirm</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- add file pop up -->
+    <el-dialog :title='"Upload File"' :visible.sync="isShowUploadFilePopup" width="400px" :before-close="onUploadSelectFileCloce">
+        <el-upload
+                ref = "upload"
+                class = "upload-demo"
+                action="no use"
+                :http-request="uploadSelectionFile"
+                :limit= "1"
+                :on-exceed = "handleExceed"
+                :multiple = "false"
+                :auto-upload= "false"
+                :on-change = 'uploadFileChange'
+                :on-remove = 'uploadFileRemove'
+                :drag = 'isShowUploadBlock'>
+            <i class="el-icon-upload" v-if="isShowUploadBlock"></i>
+            <div class="el-upload__text" v-if="isShowUploadBlock">Drag file to upload or <em>Click to upload</em></div>
+        </el-upload>
+        <div slot="footer" class="dialog-footer" v-if="!isShowUploadBlock">
+            <el-button style="margin-left: 10px;" size="small" type="success" @click="onSubmitClick">Submit</el-button>
+        </div>
+    </el-dialog>
+
+    <!--select file popup-->
+    <el-dialog :title='"Select File"' :visible.sync="isShowSelectFilePopup">
+      <flowChartFile @onSelectFileChange='onSelectFileChange'></flowChartFile>
+      <div slot="footer" class="dialog-footer">
+          <el-button @click="onSelectFileCancelClick">Cancel</el-button>
+          <el-button type="primary" @click="onSelectFileConfirmClick">Confirm</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import flowChartComponent from './flowChartComponent';
 import flowChartLink from './flowChartLink';
+import flowChartFile from './flowChartFile';
+import preprocessingComponent from '../preprocessingComponent';
+import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
+import { file_upload_url } from '@/config/api.js';
+import { post } from '@/utils/requests/post.js'
+
 export default {
     name: "flowChartContainer",
     created: function() {
@@ -100,6 +156,7 @@ export default {
                 y: -69,
                 type: 'File',
                 label: 'test1',
+                attribute: {}
               },
               {
                 id: 1,
@@ -107,6 +164,7 @@ export default {
                 y: -69,
                 type: 'Preprocessing',
                 label: 'test2',
+                attribute: {}
               },
             ],
             links: [
@@ -155,12 +213,23 @@ export default {
           top: 0,
           left: 0
         },
-        selectNode: ''
+        selectedNode: {},
+        selectNodeType: '',
+        isShowPopup: false,
+        isShowUploadFilePopup: false,
+        isShowUploadBlock: true,
+        isShowSelectFilePopup: false,
+        tempSelectedFile: ''
       };
     },
     methods:{
       findNodeWithID(id) {
         return this.scene.nodes.find((item) => {
+            return id === item.id
+        })
+      },
+      findNodeIndexWithID(id) {
+        return this.scene.nodes.findIndex((item) => {
             return id === item.id
         })
       },
@@ -274,15 +343,95 @@ export default {
           id: randomID,
           x: -700,
           y: -69,
-          type: this.selectNode,
+          type: this.selectNodeType,
           label: 'test1',
         }
         this.scene.nodes.push(newNode);
+      },
+      onEditClick(id) {
+        this.selectedNode = this.findNodeWithID(id);
+        this.isShowPopup = true;
+        // console.log(this.findNodeIndexWithID(id));
+        // console.log(this.scene.nodes[this.findNodeIndexWithID(id)])
+      },
+      onEditCancelClick() {
+        this.isShowPopup = false;
+      },
+      onEditConfirmClick() {
+        this.isShowPopup = false;
+      },
+      uploadSelectionFile(params) {
+        let fileObj = params.file;
+        let form = new FormData();
+        form.append("file", fileObj);
+        form.append("type", JSON.parse(window.localStorage.getItem('project')).dataType);
+        form.append("userID", JSON.parse(window.localStorage.getItem('user')).userID);
+        form.append("projectID", this.projectID)
+        form.append("token", window.localStorage.getItem('token'))
+        this.fullScreenLoading();
+        post(file_upload_url, form).then((response) => {
+            if (response.data.status == "success") {
+                this.loadingClose()
+                this.fetchData();
+            }
+        }).catch((error) => {
+            this.loadingClose();
+            console.error(error);
+        });
+
+        this.$refs.upload.clearFiles();
+        this.isShowUploadBlock = true;
+        this.isShowUploadFilePopup = false;
+      },
+      uploadFileRemove() {
+          this.isShowUploadBlock = true;
+      },
+      onSubmitClick() {
+          this.$refs.upload.submit();
+      },
+      handleExceed() {
+        this.$message({
+            type: 'error',
+            message: 'You can only upload one file at a time'
+        });
+      },
+      onUploadFileClick(id) {
+        this.isShowUploadFilePopup = true;
+        this.selectedNode = this.findNodeWithID(id);
+      },
+      uploadFileChange(file, fileList) {
+        if(fileList.length === 1) {
+            this.isShowUploadBlock = false;
+        }
+      },
+      onUploadSelectFileCloce() {
+        this.$refs.upload.clearFiles();
+        this.isShowUploadBlock = true;
+        this.isShowUploadFilePopup = false;
+      },
+      onSelectFileClick(id) {
+        this.selectedNode = this.findNodeWithID(id);
+        this.isShowSelectFilePopup = true;
+      },
+      onSelectFileCancelClick() {
+        this.isShowSelectFilePopup = false;
+      },
+      onSelectFileConfirmClick() {
+        this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['FileID'] = this.tempSelectedFile;
+        this.isShowSelectFilePopup = false;
+        console.log(this.scene.nodes)
+      },
+      onSelectFileChange(selectedFile) {
+        console.log(selectedFile)
+        this.tempSelectedFile = selectedFile;
       }
     },
     components: {
       flowChartComponent,
-      flowChartLink
+      flowChartLink,
+      preprocessingComponent,
+      trainModelComponent,
+      flowChartFile
     }
 }
 </script>
