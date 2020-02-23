@@ -12,11 +12,8 @@
       </button>
       <div class="node-type"> {{type}} </div>
       <div class="node-label">
-        <template v-if="type == 'File'">
-            <flowChartFile :projectID='projectID'></flowChartFile>
-        </template>
-        <template v-if="type != 'File'">
-            <flowChartCommmon></flowChartCommmon>
+        <template>
+            <flowChartCommmon :type='type' @deleteNode='onDeleteNodeClick'></flowChartCommmon>
         </template>
       </div>
     </div>
@@ -114,6 +111,9 @@ export default {
     }
   },
   methods: {
+    onDeleteNodeClick() {
+        this.$emit('onDeleteNodeClick', this.id);
+    },
     handleMousedown(e) {
       const target = e.target || e.srcElement;
       console.log(target);

@@ -37,7 +37,7 @@ export default {
   data() {
     return {
       fileList: [],
-      selectFile: {}
+      selectFile: ''
     }
   },
   mounted() {

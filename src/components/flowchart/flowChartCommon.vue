@@ -1,7 +1,14 @@
 <template>
   <div>
-    <el-button icon="el-icon-edit"></el-button>
-    <el-button icon="el-icon-delete"></el-button>
+    <div v-if="type == 'File'">
+        <el-button icon="el-icon-folder-opened"></el-button>
+        <el-button icon="el-icon-upload"></el-button>
+        <el-button icon="el-icon-delete" @click="deleteNode"></el-button>
+    </div>  
+    <div v-if="type != 'File'">
+        <el-button icon="el-icon-edit"></el-button>
+        <el-button icon="el-icon-delete" @click="deleteNode"></el-button>
+    </div>
   </div>
 </template>
 
@@ -10,6 +17,9 @@
 export default {
   name: "flowChartCommon",
   props: {
+      type: {
+        type: String
+      }
   },
   created: function() {
   },
@@ -22,6 +32,9 @@ export default {
   computed: {
   },
   methods: {
+      deleteNode() {
+        this.$emit('deleteNode');
+      }
   }
 }
 </script>

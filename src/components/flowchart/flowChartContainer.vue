@@ -2,7 +2,7 @@
   <div class="flowChartContainer" 
     @mousemove="handleMove"
     @mouseup="handleUp">
-    <svg width="100%" :height="`${height}px`">
+    <svg width="100%" :height="`${height}vh`">
       <flowChartLink v-bind.sync="link" 
         v-for="(link, index) in lines" 
         :key="`link${index}`"
@@ -15,8 +15,20 @@
       :options="nodeOptions"
       @nodeSelected="nodeSelected(node.id, $event)"
       @linkingStart="linkingStart(node.id)"
-      @linkingStop="linkingStop(node.id)">
+      @linkingStop="linkingStop(node.id)"
+      @onDeleteNodeClick="nodeDelete">
     </flowChartComponent>
+    <div>
+      <el-select v-model="selectNode" placeholder="Please select a node">
+        <el-option
+          v-for="item in nodeTypeList"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value">
+        </el-option>
+      </el-select>
+      <el-button icon="el-icon-plus" @click="onAddNodeClick"></el-button>
+    </div>
   </div>
 </template>
 
@@ -100,11 +112,28 @@ export default {
             links: [
             ]
           }
+        },
+      },
+      nodeTypeList: {
+        type: Array,
+        default() {
+          return [
+            {
+              label: 'File',
+              value: 'File'
+            },{
+              label: 'Preprocessing',
+              value: 'Preprocessing'
+            },{
+              label: 'Model',
+              value: 'Model'
+            }
+          ]
         }
       },     
       height: {
         type: Number,
-        default: 400,
+        default: 95,
       },
     },
     data() {
@@ -126,6 +155,7 @@ export default {
           top: 0,
           left: 0
         },
+        selectNode: ''
       };
     },
     methods:{
@@ -226,6 +256,29 @@ export default {
           my: cy,
         };
       },
+      nodeDelete(id) {
+        this.scene.nodes = this.scene.nodes.filter((node) => {
+          return node.id !== id;
+        })
+        this.scene.links = this.scene.links.filter((link) => {
+          return link.from !== id && link.to !== id
+        })
+        // this.$emit('nodeDelete', id)
+      },
+      onAddNodeClick() {
+        let randomID = Math.floor(Math.random() * 1000);
+        while(this.findNodeWithID(randomID) != undefined) {
+          randomID = Math.floor(Math.random() * 1000);
+        }
+        let newNode = {
+          id: randomID,
+          x: -700,
+          y: -69,
+          type: this.selectNode,
+          label: 'test1',
+        }
+        this.scene.nodes.push(newNode);
+      }
     },
     components: {
       flowChartComponent,
