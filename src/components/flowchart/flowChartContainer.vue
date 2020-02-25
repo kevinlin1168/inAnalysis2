@@ -34,10 +34,18 @@
     </div>
 
     <!--default popup-->
-    <el-dialog :title='selectedNode.type' :visible.sync="isShowPopup">
+    <el-dialog :title='selectedNode.type' :visible.sync="isShowPopup" width="80%">
       <div>
         <template v-if="selectedNode.type == 'Preprocessing'">
-          <preprocessingComponent></preprocessingComponent>
+          <preprocessingComponent
+          :normalizeOptionList='preprocessingConfig.normalizeOptionList'
+          :outlierOptionList='preprocessingConfig.outlierOptionList'
+          :characterProcessingOptionList='preprocessingConfig.characterProcessingOptionList'
+          :fileID='selectedNode.attribute.fileID'
+          :isHasStringType='selectedNode.attribute.isHasStringType'
+          :columnList='selectedNode.attribute.columnList'
+          :selectAllMissingValue='selectedNode.attribute.selectAllMissingValue'>
+          </preprocessingComponent>
         </template>
         <template v-else-if="selectedNode.type == 'Model'">
           <trainModelComponent></trainModelComponent>
@@ -73,7 +81,7 @@
 
     <!--select file popup-->
     <el-dialog :title='"Select File"' :visible.sync="isShowSelectFilePopup">
-      <flowChartFile @onSelectFileChange='onSelectFileChange'></flowChartFile>
+      <flowChartFile :fileList='fileList' @onSelectFileChange='onSelectFileChange'></flowChartFile>
       <div slot="footer" class="dialog-footer">
           <el-button @click="onSelectFileCancelClick">Cancel</el-button>
           <el-button type="primary" @click="onSelectFileConfirmClick">Confirm</el-button>
@@ -89,14 +97,16 @@ import flowChartFile from './flowChartFile';
 import preprocessingComponent from '../preprocessingComponent';
 import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
-import { file_upload_url } from '@/config/api.js';
+import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url } from '@/config/api.js';
 import { post } from '@/utils/requests/post.js'
 
 export default {
     name: "flowChartContainer",
     created: function() {
+      this.fetchData();
     },
     watch: {
+      '$route': 'fetchData'
     },
     computed: {
       nodeOptions() {
@@ -185,6 +195,12 @@ export default {
             },{
               label: 'Model',
               value: 'Model'
+            },{
+              label: 'NewFile',
+              value: 'NewFile'
+            },{
+              label: 'Test',
+              value: 'Test'
             }
           ]
         }
@@ -192,6 +208,10 @@ export default {
       height: {
         type: Number,
         default: 95,
+      },
+      projectID : {
+        type: String,
+        default: '619178b6-f4cb-11e9-9169-9c5c8ebbb826'
       },
     },
     data() {
@@ -214,15 +234,55 @@ export default {
           left: 0
         },
         selectedNode: {},
-        selectNodeType: '',
+        selectNodeType: 'File',
         isShowPopup: false,
         isShowUploadFilePopup: false,
         isShowUploadBlock: true,
         isShowSelectFilePopup: false,
-        tempSelectedFile: ''
+        tempSelectedFile: '',
+        preprocessingConfig: {
+          normalizeOptionList: [],
+          outlierOptionList: [],
+          characterProcessingOptionList: []
+        },
+        fileList: []
       };
     },
     methods:{
+      fetchData() {
+        let form = {
+          token: window.localStorage.getItem('token')
+        }
+        this.preprocessingConfig.normalizeOptionList = [{
+            friendlyname: 'Not to process',
+            algoname: ''
+        }];
+        this.preprocessingConfig.outlierOptionList = [{
+            friendlyname: 'Not to process',
+            algoname: ''
+        }];
+        this.preprocessingConfig.characterProcessingOptionList = [{
+            friendlyname: 'Not to process',
+            algoname: ''
+        }];
+        post(analytic_getPreprocessAlgo_url, form).then((resp) => {
+          if(resp.data.status == 'success') {
+            resp.data.data.normalize.forEach((item) => {
+                this.preprocessingConfig.normalizeOptionList.push(item);
+            });
+            resp.data.data.outlierFiltering.forEach((item) => {
+                this.preprocessingConfig.outlierOptionList.push(item);
+            });
+            resp.data.data.stringCleaning.forEach((item) => {
+                this.preprocessingConfig.characterProcessingOptionList.push(item);
+            });
+            console.log(this.preprocessingConfig)
+            // this.isReady = true;
+          } else {
+              console.error(resp);
+          }
+        }); 
+      },
       findNodeWithID(id) {
         return this.scene.nodes.find((item) => {
             return id === item.id
@@ -290,14 +350,65 @@ export default {
           y: top,
         }));
       },
+      verifyComponent(from, index) {
+        let fromNode = this.findNodeWithID(from);
+        let inputNode = this.findNodeWithID(index);
+        if(fromNode.type == 'File' && fromNode.attribute.fileID == undefined) {
+          this.$message.error('Please select or upload a file first.');
+          return false;
+        }
+
+        return true;
+      },
+      setupComponent(from, index) {
+        let fromNode = this.findNodeWithID(from);
+        let inputNode = this.findNodeWithID(index);
+        if(fromNode.type == 'File' && inputNode.type == 'Preprocessing') {
+          this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
+          let fileColumnForm = {
+            fileID: this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'],
+            token: window.localStorage.getItem('token')
+          }
+          let isHasStringType = false;
+          post(file_getColumn_url, fileColumnForm).then((resp) => {
+            if(resp.data.status == 'success') {
+              let columnList = resp.data.data.cols;
+              for(let column of columnList) {
+                if(column.type == 'string') {
+                  isHasStringType = true;
+                }
+                column.selectMissingValue = false;
+                column.selectOutliersAlgo = '';
+                column.selectNormalizeAlgorithm = '';
+              }
+              this.scene.nodes[this.findNodeIndexWithID(index)].attribute['columnList'] = columnList;
+              this.scene.nodes[this.findNodeIndexWithID(index)].attribute['columnListTemp'] =  columnList.map(a => ({...a}));
+              this.scene.nodes[this.findNodeIndexWithID(index)].attribute['isHasStringType'] = isHasStringType;
+              this.scene.nodes[this.findNodeIndexWithID(index)].attribute['selectAllMissingValue'] = false;
+              console.log(this.scene.nodes[this.findNodeIndexWithID(index)]);
+            }
+          });
+        }
+      },
       linkingStop(index) {
         // add new Link
         if (this.draggingLink && this.draggingLink.from !== index) {
           // check link existence
           const existed = this.scene.links.find((link) => {
             return link.from === this.draggingLink.from && link.to === index;
-          })
-          if (!existed) {
+          });
+          const onlyOneInputCheck = this.scene.links.find((link) => {
+            return link.to === index;
+          });
+          if(onlyOneInputCheck) {
+            this.$message({
+              type: 'error',
+              message: 'You can only input one component.'
+            });
+          }
+          let verify = this.verifyComponent(this.draggingLink.from, index);
+          if (!(existed || onlyOneInputCheck) && verify) {
+            this.setupComponent(this.draggingLink.from, index);
             let maxID = Math.max(0, ...this.scene.links.map((link) => {
               return link.id
             }))
@@ -335,26 +446,44 @@ export default {
         // this.$emit('nodeDelete', id)
       },
       onAddNodeClick() {
-        let randomID = Math.floor(Math.random() * 1000);
-        while(this.findNodeWithID(randomID) != undefined) {
-          randomID = Math.floor(Math.random() * 1000);
-        }
+        let maxID = Math.max(0, ...this.scene.nodes.map((node) => {
+          return node.id
+        }))
+
         let newNode = {
-          id: randomID,
+          id: maxID+1,
           x: -700,
           y: -69,
           type: this.selectNodeType,
           label: 'test1',
+          attribute: {}
         }
         this.scene.nodes.push(newNode);
       },
       onEditClick(id) {
         this.selectedNode = this.findNodeWithID(id);
-        this.isShowPopup = true;
+        if(this.selectedNode.type == 'Preprocessing' && this.selectedNode.attribute.fileID == undefined) {
+          this.$message({
+            type: 'error',
+            message: 'Please link with a file component first.'
+          });
+        } else {
+          this.isShowPopup = true;
+        }
         // console.log(this.findNodeIndexWithID(id));
         // console.log(this.scene.nodes[this.findNodeIndexWithID(id)])
       },
       onEditCancelClick() {
+        let fromNode = this.findNodeWithID(this.selectedNode.id)
+        if(fromNode.type == 'Preprocessing') {
+          let columnListTemp = this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnListTemp'].map(a => Object.assign({}, a));
+          console.log('Object', this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnListTemp']);
+          console.log('Copy', columnListTemp);
+          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnList'] = [];
+          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnList'] = columnListTemp;
+          // this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnList'] = columnListTemp.map(a => ({...a}));
+          console.log(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute);
+        }
         this.isShowPopup = false;
       },
       onEditConfirmClick() {
@@ -391,8 +520,8 @@ export default {
       },
       handleExceed() {
         this.$message({
-            type: 'error',
-            message: 'You can only upload one file at a time'
+          type: 'error',
+          message: 'You can only upload one file at a time'
         });
       },
       onUploadFileClick(id) {
@@ -401,7 +530,7 @@ export default {
       },
       uploadFileChange(file, fileList) {
         if(fileList.length === 1) {
-            this.isShowUploadBlock = false;
+          this.isShowUploadBlock = false;
         }
       },
       onUploadSelectFileCloce() {
@@ -411,13 +540,28 @@ export default {
       },
       onSelectFileClick(id) {
         this.selectedNode = this.findNodeWithID(id);
+        let form = {
+          projectID: this.projectID,
+          token: window.localStorage.getItem('token')
+        }
+        post(file_getFileList_url, form).then((resp) => {
+          if(resp.data.status == "success") {
+              this.fileList = resp.data.data.fileList;
+          } else {
+              console.error('getFileListError', resp.data.msg)
+          }
+        });
         this.isShowSelectFilePopup = true;
       },
       onSelectFileCancelClick() {
         this.isShowSelectFilePopup = false;
       },
       onSelectFileConfirmClick() {
-        this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['FileID'] = this.tempSelectedFile;
+        this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['fileID'] = this.tempSelectedFile;
+        let file = this.fileList.filter((item) => {
+          return item.fileID == this.tempSelectedFile;
+        });
+        this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['fileName'] = file[0].fileName + '.' + file[0].fileType;
         this.isShowSelectFilePopup = false;
         console.log(this.scene.nodes)
       },

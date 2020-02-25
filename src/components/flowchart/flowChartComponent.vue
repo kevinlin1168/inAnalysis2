@@ -10,7 +10,11 @@
       <button type="button" class="close" onclick="" aria-label="Close">
         <i class="glyphicon glyphicon-remove"></i>
       </button>
-      <div class="node-type"> {{type}} </div>
+      <div class="node-type" v-if="type == 'File'"> 
+        <template v-if="attribute.fileName">{{attribute.fileName}}</template> 
+        <template v-else>{{type}}</template>
+      </div>
+      <div class="node-type" v-else> {{type}} </div>
       <div class="node-label">
         <template>
             <flowChartCommmon :type='type' 
@@ -24,22 +28,15 @@
     <div class="node-port node-output" 
       @mousedown="outputMouseDown">
     </div>
-    <div v-show="show.delete" class="node-delete">&times;</div>
   </div>
 </template>
 
 <script>
-import { file_getFileList_url } from '@/config/api.js';
-import { post } from '@/utils/requests/post.js';
 import flowChartCommmon from './flowChartCommon';
 
 export default {
   name: "flowChartComponent",
   props: {
-    projectID : {
-      type: String,
-      default: '619178b6-f4cb-11e9-9169-9c5c8ebbb826'
-    },
     id: {
       type: Number,
       default: 1000,
@@ -69,6 +66,9 @@ export default {
       type: String,
       default: 'input name'
     },
+    attribute: {
+      type: Object
+    },
     options: {
       type: Object,
       default() {
@@ -81,28 +81,22 @@ export default {
     }
   },
   created: function() {
-    let form = {
-        projectID: this.projectID,
-        token: window.localStorage.getItem('token')
-    }
-    post(file_getFileList_url, form).then((resp) => {
-        if(resp.data.status == "success") {
-            this.fileList = resp.data.data.fileList;
-        } else {
-            console.error('getFileListError', resp.data.msg)
-        }
-    });
+    
   },
   data() {
     return {
-      show: {
-        delete: false,
-      },
-      fileList: [],
-      selectFile: {}
     }
   },
   mounted() {
+  },
+  watch: {
+    attribute: {
+      immediate: true,
+      handler(newValue) {
+        console.log(newValue)
+        this.$forceUpdate();
+      }
+    }
   },
   computed: {
     nodeStyle() {

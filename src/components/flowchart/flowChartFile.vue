@@ -17,10 +17,12 @@ import { post } from '@/utils/requests/post.js'
 export default {
   name: "flowChartFile",
   props: {
-    projectID : {
-      type: String,
-      default: '619178b6-f4cb-11e9-9169-9c5c8ebbb826'
-    },
+    fileList: {
+      type: Array,
+      default() {
+        return []
+      }
+    }
   },
   created: function() {
     let form = {
@@ -37,7 +39,6 @@ export default {
   },
   data() {
     return {
-      fileList: [],
       selectFile: ''
     }
   },
