@@ -48,7 +48,14 @@
           </preprocessingComponent>
         </template>
         <template v-else-if="selectedNode.type == 'Model'">
-          <trainModelComponent></trainModelComponent>
+          <trainModelComponent
+          :algorithmList='trainModelConfig.algorithmList'
+          :correlationAlgorithmList='trainModelConfig.correlationAlgorithmList'
+          :parameterList='selectedNode.attribute.parameterList'
+          :columnList='selectedNode.attribute.columnList'
+          :algoInputList='selectedNode.attribute.algoInputList'
+          :algoOutputList='selectedNode.attribute.algoOutputList'
+          @onSelectAlgorithmChange="onSelectAlgorithmChange"></trainModelComponent>
         </template>
       </div>
       <div slot="footer" class="dialog-footer">
@@ -97,7 +104,7 @@ import flowChartFile from './flowChartFile';
 import preprocessingComponent from '../preprocessingComponent';
 import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
-import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url } from '@/config/api.js';
+import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url } from '@/config/api.js';
 import { post } from '@/utils/requests/post.js'
 
 export default {
@@ -208,11 +215,7 @@ export default {
       height: {
         type: Number,
         default: 95,
-      },
-      projectID : {
-        type: String,
-        default: '619178b6-f4cb-11e9-9169-9c5c8ebbb826'
-      },
+      }
     },
     data() {
       return {
@@ -245,43 +248,69 @@ export default {
           outlierOptionList: [],
           characterProcessingOptionList: []
         },
-        fileList: []
+        trainModelConfig: {
+          algorithmList: [],
+          correlationAlgorithmList: []
+        },
+        fileList: [],
+        projectID: ''
       };
     },
     methods:{
       fetchData() {
-        let form = {
-          token: window.localStorage.getItem('token')
-        }
-        this.preprocessingConfig.normalizeOptionList = [{
-            friendlyname: 'Not to process',
-            algoname: ''
-        }];
-        this.preprocessingConfig.outlierOptionList = [{
-            friendlyname: 'Not to process',
-            algoname: ''
-        }];
-        this.preprocessingConfig.characterProcessingOptionList = [{
-            friendlyname: 'Not to process',
-            algoname: ''
-        }];
-        post(analytic_getPreprocessAlgo_url, form).then((resp) => {
-          if(resp.data.status == 'success') {
-            resp.data.data.normalize.forEach((item) => {
-                this.preprocessingConfig.normalizeOptionList.push(item);
-            });
-            resp.data.data.outlierFiltering.forEach((item) => {
-                this.preprocessingConfig.outlierOptionList.push(item);
-            });
-            resp.data.data.stringCleaning.forEach((item) => {
-                this.preprocessingConfig.characterProcessingOptionList.push(item);
-            });
-            console.log(this.preprocessingConfig)
-            // this.isReady = true;
-          } else {
-              console.error(resp);
+        if(this.$route.name == 'RWA') {
+          this.projectID = JSON.parse(window.localStorage.getItem('project')).projectID;
+          let form = {
+            token: window.localStorage.getItem('token')
           }
-        }); 
+          this.preprocessingConfig.normalizeOptionList = [{
+              friendlyname: 'Not to process',
+              algoname: ''
+          }];
+          this.preprocessingConfig.outlierOptionList = [{
+              friendlyname: 'Not to process',
+              algoname: ''
+          }];
+          this.preprocessingConfig.characterProcessingOptionList = [{
+              friendlyname: 'Not to process',
+              algoname: ''
+          }];
+          post(analytic_getPreprocessAlgo_url, form).then((resp) => {
+            if(resp.data.status == 'success') {
+              resp.data.data.normalize.forEach((item) => {
+                  this.preprocessingConfig.normalizeOptionList.push(item);
+              });
+              resp.data.data.outlierFiltering.forEach((item) => {
+                  this.preprocessingConfig.outlierOptionList.push(item);
+              });
+              resp.data.data.stringCleaning.forEach((item) => {
+                  this.preprocessingConfig.characterProcessingOptionList.push(item);
+              });
+              console.log(this.preprocessingConfig)
+              // this.isReady = true;
+            } else {
+                console.error(resp);
+            }
+          });
+          let algoform = {
+            projectID: this.projectID,
+            token: window.localStorage.getItem('token')
+          }
+          post(analytic_getAnalyticsAlgoByProject_url, algoform).then((resp) => {
+              if(resp.data.status == 'success') {
+                  this.trainModelConfig.algorithmList = resp.data.data;
+                  post(analytic_getCorrelationAlgo_url, algoform).then((resp) => {
+                      if(resp.data.status == 'success') {
+                          this.trainModelConfig.correlationAlgorithmList = resp.data.data;
+                      }
+                  }).catch((error) => {
+                      console.error('getCorrelationAlgoError', error);
+                  })
+              }
+          }).catch((error) => {
+              console.error('getAnalyticsAlgoByProjectError', error);
+          })
+        }
       },
       findNodeWithID(id) {
         return this.scene.nodes.find((item) => {
@@ -388,6 +417,33 @@ export default {
               console.log(this.scene.nodes[this.findNodeIndexWithID(index)]);
             }
           });
+        } else if (fromNode.type == 'File' && inputNode.type == 'Model') {
+          this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
+          let fileColumnForm = {
+            fileID: this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'],
+            token: window.localStorage.getItem('token')
+          }
+          post(file_getColumn_url, fileColumnForm).then((resp) => {
+            if(resp.data.status == 'success') {
+              let columnList = resp.data.data.cols;
+              this.scene.nodes[this.findNodeIndexWithID(index)].attribute['columnList'] = columnList;
+              this.scene.nodes[this.findNodeIndexWithID(index)].attribute['columnListTemp'] =  columnList.map(a => ({...a}));
+              let algoInputList = [];
+              let algoOutputList = [];
+              algoInputList.forEach((item) => {
+                  item['selection'] = [];
+              })
+              algoOutputList.forEach((item) => {
+                  item['selection'] = [];
+              })
+              this.scene.nodes[this.findNodeIndexWithID(index)].attribute['algoInputList'] = algoInputList;
+              this.scene.nodes[this.findNodeIndexWithID(index)].attribute['algoOutputList'] = algoOutputList;
+            } else {
+                console.warn('getColumn Error', resp.data.msg)
+            }
+          }).catch((error) => {
+              console.warn('getColumn Error', error)
+          })
         }
       },
       linkingStop(index) {
@@ -462,10 +518,16 @@ export default {
       },
       onEditClick(id) {
         this.selectedNode = this.findNodeWithID(id);
-        if(this.selectedNode.type == 'Preprocessing' && this.selectedNode.attribute.fileID == undefined) {
+        if((this.selectedNode.type == 'Preprocessing' || this.selectedNode.type == 'Model') && this.selectedNode.attribute.fileID == undefined) {
+          let message = '';
+          if(this.selectedNode.type == 'Preprocessing') {
+            message = 'Please link with a file component first.';
+          } else if(this.selectedNode.type == 'Model') {
+            message = 'Please link with a file or preprocessing component first.';
+          }
           this.$message({
             type: 'error',
-            message: 'Please link with a file component first.'
+            message: message
           });
         } else {
           this.isShowPopup = true;
@@ -477,10 +539,7 @@ export default {
         let fromNode = this.findNodeWithID(this.selectedNode.id)
         if(fromNode.type == 'Preprocessing') {
           let columnListTemp = this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnListTemp'].map(a => Object.assign({}, a));
-          console.log('Object', this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnListTemp']);
-          console.log('Copy', columnListTemp);
-          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnList'] = [];
-          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnList'] = columnListTemp;
+          this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'columnList',columnListTemp)
           // this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnList'] = columnListTemp.map(a => ({...a}));
           console.log(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute);
         }
@@ -557,18 +616,62 @@ export default {
         this.isShowSelectFilePopup = false;
       },
       onSelectFileConfirmClick() {
-        this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['fileID'] = this.tempSelectedFile;
+        this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileID', this.tempSelectedFile);
         let file = this.fileList.filter((item) => {
           return item.fileID == this.tempSelectedFile;
         });
-        this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['fileName'] = file[0].fileName + '.' + file[0].fileType;
+        this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileName', file[0].fileName + '.' + file[0].fileType);
         this.isShowSelectFilePopup = false;
-        console.log(this.scene.nodes)
+        console.log(this.scene.nodes);
+        //TODO how to deal with flow
       },
       onSelectFileChange(selectedFile) {
         console.log(selectedFile)
         this.tempSelectedFile = selectedFile;
-      }
+      },
+      onSelectAlgorithmChange(algo) {
+        this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['selectAlgorithm'] = algo;
+        this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['active'] = 1
+        let project = JSON.parse(window.localStorage.getItem('project'));
+        let form = {
+            dataType: project.dataType,
+            projectType: project.projectType,
+            algoName: algo,
+            token: window.localStorage.getItem('token')
+        }
+        post(analytic_getAnalyticAlgoParam_url, form).then((resp) => {
+            if(resp.data.status == 'success') {
+              this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'parameterList', resp.data.data.param);
+              this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'algoInputList', resp.data.data.input);
+              this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'algoOutputList', resp.data.data.output);
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['parameterList'].forEach((item) => {
+                  if(item.default !== "" || item.default !== undefined) {
+                      if(item.type == 'bool') {
+                          item.value = (item.default == '1' ? true : false)
+                      } else if (item.type == 'float' || item.type == 'int') {
+                          item.value = Number(item.default);
+                          if(item.type == 'float') {
+                              // TODO can modify 1000 to config;
+                              item['step'] = (item.upperBound - item.lowerBound) / 1000;
+                          }
+                      } else {
+                          item.value = item.default;
+                      }
+                  }
+              })
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['algoInputList'].forEach((item) => {
+                  item['selection'] = [];
+              })
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['algoOutputList'].forEach((item) => {
+                  item['selection'] = [];
+              })
+              this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'columnList', this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnListTemp'].slice());
+              console.log(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)])
+            }
+        }).catch((error) => {
+            console.error('getAnalyticAlgoParam Error', error)
+        });
+    }
     },
     components: {
       flowChartComponent,

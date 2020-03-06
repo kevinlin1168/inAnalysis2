@@ -23,12 +23,6 @@ Vue.use(Router);
 
 const router = new Router({
     routes: [{
-        path: '/test',
-        component: flowChartTest,
-        meta: {
-            isLogin: false
-        }
-    },{
         path: '/missingDeadline',
         component: missingDeadline,
         meta: {
@@ -84,6 +78,14 @@ const router = new Router({
             path: '/project',
             name: 'dataProjectManage',
             component: dataProjectManage,
+            meta: {
+                isLogin: true,
+                role: '1'
+            }
+        },{
+            path: '/project/RPA/:projectID',
+            name: 'RPA',
+            component: flowChartTest,
             meta: {
                 isLogin: true,
                 role: '1'
