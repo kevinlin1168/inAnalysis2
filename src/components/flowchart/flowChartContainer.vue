@@ -21,16 +21,23 @@
       @onUploadFileClick="onUploadFileClick"
       @onSelectFileClick="onSelectFileClick">
     </flowChartComponent>
-    <div>
-      <el-select v-model="selectNodeType" placeholder="Please select a node">
-        <el-option
-          v-for="item in nodeTypeList"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value">
-        </el-option>
-      </el-select>
-      <el-button icon="el-icon-plus" @click="onAddNodeClick"></el-button>
+    <div class="el-controller">
+      <div class="el-select-block">
+        <el-select v-model="selectNodeType" placeholder="Please select a node">
+          <el-option
+            v-for="item in nodeTypeList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value">
+          </el-option>
+        </el-select>
+        <el-button icon="el-icon-plus" @click="onAddNodeClick"></el-button>
+        </div>
+        <div class="el-button-block">
+          <el-button icon="el-icon-import">Import</el-button>
+          <el-button icon="el-icon-export">Export</el-button>
+          <el-button icon="el-icon-run">Run</el-button>
+      </div>
     </div>
 
     <!--default popup-->
@@ -691,6 +698,12 @@ export default {
       overflow: hidden;
       svg {
         cursor: grab;
+      }
+      .el-controller{
+        display: flex;
+        .el-button-block{
+          margin-left: auto;
+        }
       }
     }
 </style>
