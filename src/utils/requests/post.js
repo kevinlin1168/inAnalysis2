@@ -1,10 +1,10 @@
 import Vue from "vue"
-import {user_generateToken_url, file_download_url} from "@/config/api.js"
+import {user_generateToken_url, file_download_url, RPA_exportRPA_url} from "@/config/api.js"
 let vue = new Vue()
 
 export function post(url, form = {}, config = {}) {
     return new Promise((resolve, reject) => {
-        if(url != file_download_url) {
+        if(url != file_download_url && url != RPA_exportRPA_url) {
             vue.axios.post(url, form, config).then((resp) => {
                 console.warn(resp)
                 if (resp.data.status == 'success') {
@@ -44,6 +44,7 @@ export function post(url, form = {}, config = {}) {
         } else {
             vue.axios.post(url, form, config).then((resp) => {
                 if (resp.status == 200) {
+                    console.log(resp);
                     resolve(resp);
                 } else {
                     reject(resp);

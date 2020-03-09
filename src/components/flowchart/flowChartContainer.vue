@@ -32,11 +32,13 @@
           </el-option>
         </el-select>
         <el-button icon="el-icon-plus" @click="onAddNodeClick"></el-button>
-        </div>
-        <div class="el-button-block">
-          <el-button icon="el-icon-import">Import</el-button>
-          <el-button icon="el-icon-export">Export</el-button>
-          <el-button icon="el-icon-run">Run</el-button>
+      </div>
+      <div class="el-button-block">
+        <el-button>Import</el-button>
+        <el-button @click="onContainerExport">Export</el-button>
+        <el-button @click="onContainerLoad">Reset</el-button>
+        <el-button @click="onContainerSave">Save</el-button>
+        <el-button>Run</el-button>
       </div>
     </div>
 
@@ -45,6 +47,7 @@
       <div>
         <template v-if="selectedNode.type == 'Preprocessing'">
           <preprocessingComponent
+          :reset='isShowPopup'
           :normalizeOptionList='preprocessingConfig.normalizeOptionList'
           :outlierOptionList='preprocessingConfig.outlierOptionList'
           :characterProcessingOptionList='preprocessingConfig.characterProcessingOptionList'
@@ -111,7 +114,7 @@ import flowChartFile from './flowChartFile';
 import preprocessingComponent from '../preprocessingComponent';
 import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
-import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url } from '@/config/api.js';
+import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, RPA_saveRPA_url, RPA_loadRPA_url, RPA_exportRPA_url } from '@/config/api.js';
 import { post } from '@/utils/requests/post.js'
 
 export default {
@@ -260,12 +263,14 @@ export default {
           correlationAlgorithmList: []
         },
         fileList: [],
-        projectID: ''
+        projectID: '',
+        addTimes: 0
       };
     },
     methods:{
       fetchData() {
-        if(this.$route.name == 'RWA') {
+        if(this.$route.name == 'RPA') {
+          this.onContainerLoad();
           this.projectID = JSON.parse(window.localStorage.getItem('project')).projectID;
           let form = {
             token: window.localStorage.getItem('token')
@@ -512,11 +517,11 @@ export default {
         let maxID = Math.max(0, ...this.scene.nodes.map((node) => {
           return node.id
         }))
-
+        this.addTimes++;
         let newNode = {
           id: maxID+1,
-          x: -700,
-          y: -69,
+          x: -700 + 20 * this.addTimes,
+          y: -69 + 10 * this.addTimes,
           type: this.selectNodeType,
           label: 'test1',
           attribute: {}
@@ -678,7 +683,55 @@ export default {
         }).catch((error) => {
             console.error('getAnalyticAlgoParam Error', error)
         });
-    }
+      },
+      onContainerSave() {
+        return new Promise((resolve, reject) => {
+          let form = {
+            userID: JSON.parse(window.localStorage.getItem('user')).userID,
+            projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
+            token: window.localStorage.getItem('token'),
+            RPAJson: JSON.stringify(this.scene)
+          }
+          console.log(form)
+          post(RPA_saveRPA_url, form).then((resp) => {
+            resolve();
+            console.log(resp);
+          }).catch((error) => {
+            reject(error);
+            console.error('onContainerSaveError', error);
+          })
+        });
+      },
+      onContainerLoad() {
+        let form = {
+          userID: JSON.parse(window.localStorage.getItem('user')).userID,
+          projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
+          token: window.localStorage.getItem('token'),
+        }
+        post(RPA_loadRPA_url, form).then((resp) => {
+          let response = JSON.parse(resp.data.data);
+          this.scene = response;
+        }).catch((error) => {
+          console.error('onContainerloadError', error);
+        })
+      },
+      onContainerExport() {
+        let form = {
+          userID: JSON.parse(window.localStorage.getItem('user')).userID,
+          projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
+          token: window.localStorage.getItem('token'),
+        }
+        post(RPA_exportRPA_url, form).then((resp) => {
+          let blob = new Blob([JSON.stringify(resp.data)], {type:resp.headers['content-type']});
+          console.log('blob', blob);
+          let link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          link.download = 'export.json';
+          link.click();
+        }).catch((error) => {
+          console.error('onContainerExportError', error);
+        })
+      }
     },
     components: {
       flowChartComponent,

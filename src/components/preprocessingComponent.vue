@@ -135,6 +135,17 @@
                 this.selectAllNormalizeAlgorithmChange();
                 this.selectAllOutliersAlgoChange();
                 this.selectAllCharterProcessingChange();
+            },
+            reset: function(newVal, oldVal) {
+                if(newVal == true) {
+                    console.log('reset');
+                    // this.selectAllNormalizeAlgorithm = '';
+                    // this.selectAllOutliersAlgo = '';
+                    // this.selectAllCharterProcessing = '';
+                    this.selectAllNormalizeAlgorithmChange();
+                    this.selectAllOutliersAlgoChange();
+                    this.selectAllCharterProcessingChange();
+                }
             }
         },
         props: {
@@ -157,7 +168,19 @@
                 type: Array
             },
             selectAllMissingValue: {
-                type:Boolean
+                type:Boolean,
+                default: false
+            },
+            selectAllNormalizeAlgorithm: {
+                type:String,
+                default: ''
+            },
+            selectAllOutliersAlgo: {
+                type: String,
+                default : ''
+            },
+            reset: {
+                type: Boolean
             }
         },
         data: function () {
@@ -166,8 +189,6 @@
                 isShowColumnPreviewPopup: false,
                 isHasImg: true,
                 formOffset: 0,
-                selectAllNormalizeAlgorithm: '',
-                selectAllOutliersAlgo: '',
                 selectAllCharterProcessing: [''],
                 storeSelectAllCharterProcessing: [],
                 leftImg: '',

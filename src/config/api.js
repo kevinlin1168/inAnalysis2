@@ -8,6 +8,7 @@ let visualizeUrl = baseUrl + '/visualize';
 let analyticUrl = baseUrl + '/analytic';
 let modelUrl = baseUrl + '/model';
 let courseUrl = baseUrl + '/course';
+let RPAUrl = baseUrl + '/RPA';
 
 //service Api
 export const system_getDataProject_url = systemUrl + '/getDataProject'
@@ -57,6 +58,11 @@ export const analytic_getModelParameter_url = analyticUrl + '/getModelParameter'
 export const model_addModel_url = modelUrl + '/addModel';
 export const model_getModelByProjectID_url = modelUrl + '/getModelByProjectID';
 export const model_deleteModel_url = modelUrl + '/deleteModel';
+
+// RPA Api
+export const RPA_saveRPA_url = RPAUrl + '/saveRPA';
+export const RPA_loadRPA_url = RPAUrl + '/loadRPA';
+export const RPA_exportRPA_url = RPAUrl + '/exportRPA';
 
 // course Api for TA
 export const course_addCourse_url = courseUrl + '/addCourse';

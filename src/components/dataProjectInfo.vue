@@ -96,7 +96,7 @@
                 this.isShowProjectDetail = !this.isShowProjectDetail;
             },
             onRWAManagementClick(project) {
-                console.log(project);
+                console.log('onRWAManagementClick',project);
                 window.localStorage.setItem('project', JSON.stringify(project));
                 this.$router.push({name: 'RPA', params: {projectID: project.projectID}})
             },
