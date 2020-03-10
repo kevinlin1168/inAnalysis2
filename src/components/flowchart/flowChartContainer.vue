@@ -14,8 +14,8 @@
       :key="`node${index}`"
       :options="nodeOptions"
       @nodeSelected="nodeSelected(node.id, $event)"
-      @linkingStart="linkingStart(node.id)"
-      @linkingStop="linkingStop(node.id)"
+      @linkingStart="linkingStart(node.id, $event)"
+      @linkingStop="linkingStop(node.id, $event)"
       @onDeleteNodeClick="nodeDelete"
       @onEditClick="onEditClick"
       @onUploadFileClick="onUploadFileClick"
@@ -143,10 +143,10 @@ export default {
           let x, y, cy, cx, ex, ey;
           x = this.scene.centerX + fromNode.x;
           y = this.scene.centerY + fromNode.y;
-          [cx, cy] = this.getPortPosition('bottom', x, y);
+          [cx, cy] = this.getPortPosition(link.fromType, x, y);
           x = this.scene.centerX + toNode.x;
           y = this.scene.centerY + toNode.y;
-          [ex, ey] = this.getPortPosition('top', x, y);
+          [ex, ey] = this.getPortPosition(link.toType, x, y);
           return { 
             start: [cx, cy], 
             end: [ex, ey],
@@ -158,7 +158,7 @@ export default {
           const fromNode = this.findNodeWithID(this.draggingLink.from)
           x = this.scene.centerX + fromNode.x;
           y = this.scene.centerY + fromNode.y;
-          [cx, cy] = this.getPortPosition('bottom', x, y);
+          [cx, cy] = this.getPortPosition(this.draggingLink.fromType, x, y);
           // push temp dragging link, mouse cursor postion = link end postion 
           lines.push({ 
             start: [cx, cy], 
@@ -177,22 +177,6 @@ export default {
             centerY: 140,
             scale: 1,
             nodes: [
-              {
-                id: 2,
-                x: -700,
-                y: -69,
-                type: 'File',
-                label: 'test1',
-                attribute: {}
-              },
-              {
-                id: 1,
-                x: -700,
-                y: -69,
-                type: 'Preprocessing',
-                label: 'test2',
-                attribute: {}
-              },
             ],
             links: [
             ]
@@ -338,6 +322,12 @@ export default {
         if (type === 'top') {
           return [x + 120, y];
         }
+        else if (type === 'top-left') {
+          return [x + 60, y];
+        }
+        else if (type === 'top-right') {
+          return [x + 180, y];
+        }
         else if (type === 'bottom') {
           return [x + 120, y + 80];
         }
@@ -458,7 +448,7 @@ export default {
           })
         }
       },
-      linkingStop(index) {
+      linkingStop(index, type) {
         // add new Link
         if (this.draggingLink && this.draggingLink.from !== index) {
           // check link existence
@@ -468,14 +458,16 @@ export default {
           const onlyOneInputCheck = this.scene.links.find((link) => {
             return link.to === index;
           });
-          if(onlyOneInputCheck) {
+          //TODO must save which port had link
+          let onlyOneInputFlag = onlyOneInputCheck && this.scene.nodes[this.findNodeIndexWithID(index)].type != 'Test';
+          if(onlyOneInputFlag) {
             this.$message({
               type: 'error',
               message: 'You can only input one component.'
             });
           }
           let verify = this.verifyComponent(this.draggingLink.from, index);
-          if (!(existed || onlyOneInputCheck) && verify) {
+          if (!(existed || onlyOneInputFlag) && verify) {
             this.setupComponent(this.draggingLink.from, index);
             let maxID = Math.max(0, ...this.scene.links.map((link) => {
               return link.id
@@ -483,7 +475,9 @@ export default {
             const newLink = {
               id: maxID + 1,
               from: this.draggingLink.from,
+              fromType: this.draggingLink.fromType,
               to: index,
+              toType: type
             };
             this.scene.links.push(newLink)
             this.$emit('linkAdded', newLink)
@@ -491,20 +485,29 @@ export default {
         }
         this.draggingLink = null
       },
-      linkingStart(index) {
+      linkingStart(index, type) {
         this.action.linking = true;
         let x, y, cy, cx;
         const fromNode = this.findNodeWithID(index)
         x = this.scene.centerX + fromNode.x;
         y = this.scene.centerY + fromNode.y;
-        [cx, cy] = this.getPortPosition('bottom', x, y);
+        [cx, cy] = this.getPortPosition(type, x, y);
         this.draggingLink = {
           from: index,
+          fromType: type,
           mx: cx,
           my: cy,
         };
       },
       nodeDelete(id) {
+        //delete link attribute
+        const deletedLinks = this.scene.links.filter((item) => {
+          return item.from === id 
+        });
+        deletedLinks.forEach((link) => {
+          this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)].attribute, 'fileID',"")
+        });
+
         this.scene.nodes = this.scene.nodes.filter((node) => {
           return node.id !== id;
         })
@@ -512,6 +515,18 @@ export default {
           return link.from !== id && link.to !== id
         })
         // this.$emit('nodeDelete', id)
+      },
+      linkDelete(id) {
+        const deletedLink = this.scene.links.find((item) => {
+          return item.id === id;
+        });
+        if (deletedLink) {
+          this.scene.links = this.scene.links.filter((item) => {
+              return item.id !== id;
+          }); 
+          this.$set(this.scene.nodes[this.findNodeIndexWithID(deletedLink.to)].attribute, 'fileID',"")
+          // this.$emit('linkBreak', deletedLink);
+        }
       },
       onAddNodeClick() {
         let maxID = Math.max(0, ...this.scene.nodes.map((node) => {
@@ -530,7 +545,7 @@ export default {
       },
       onEditClick(id) {
         this.selectedNode = this.findNodeWithID(id);
-        if((this.selectedNode.type == 'Preprocessing' || this.selectedNode.type == 'Model') && this.selectedNode.attribute.fileID == undefined) {
+        if((this.selectedNode.type == 'Preprocessing' || this.selectedNode.type == 'Model') && (this.selectedNode.attribute.fileID == undefined || this.selectedNode.attribute.fileID == "")) {
           let message = '';
           if(this.selectedNode.type == 'Preprocessing') {
             message = 'Please link with a file component first.';
@@ -633,12 +648,17 @@ export default {
           return item.fileID == this.tempSelectedFile;
         });
         this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileName', file[0].fileName + '.' + file[0].fileType);
+        let links = this.scene.links.filter((link) => {
+          return link.from === this.selectedNode.id
+        })
+        links.forEach((link) => {
+          this.setupComponent(link.from, link.to);
+        })
         this.isShowSelectFilePopup = false;
         console.log(this.scene.nodes);
         //TODO how to deal with flow
       },
       onSelectFileChange(selectedFile) {
-        console.log(selectedFile)
         this.tempSelectedFile = selectedFile;
       },
       onSelectAlgorithmChange(algo) {

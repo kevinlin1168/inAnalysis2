@@ -2,9 +2,17 @@
   <div class="flowChartComponent" :style="nodeStyle" 
     v-bind:class="{selected: options.selected === id}"
     @mousedown="handleMousedown">
-    <div class="node-port node-input"
+    <div class="node-port node-input" v-if="type != 'Test'"
       @mousedown="inputMouseDown"
-      @mouseup="inputMouseUp">
+      @mouseup="inputMouseUp($event, 'top')">
+    </div>
+    <div class="node-left node-input" v-if="type == 'Test'"
+      @mousedown="inputMouseDown"
+      @mouseup="inputMouseUp($event, 'top-left')">
+    </div>
+    <div class="node-right node-input" v-if="type == 'Test'"
+      @mousedown="inputMouseDown"
+      @mouseup="inputMouseUp($event, 'top-right')">
     </div>
     <div class="node-main">
       <button type="button" class="close" onclick="" aria-label="Close">
@@ -26,7 +34,7 @@
       </div>
     </div>
     <div class="node-port node-output" 
-      @mousedown="outputMouseDown">
+      @mousedown="outputMouseDown($event, 'bottom')">
     </div>
   </div>
 </template>
@@ -121,12 +129,12 @@ export default {
     inputMouseDown(e) {
       e.preventDefault();
     },
-    inputMouseUp(e) {
-      this.$emit('linkingStop')
+    inputMouseUp(e, type) {
+      this.$emit('linkingStop', type);
       e.preventDefault();
     },
-    outputMouseDown(e) {
-      this.$emit('linkingStart')
+    outputMouseDown(e, type) {
+      this.$emit('linkingStart', type);
       e.preventDefault();
     },
     onEditClick() {
@@ -195,22 +203,32 @@ export default {
     .node-output {
       bottom: #{-2+$portSize/-2}px;
     }
-    .node-delete {
+    .node-left {
       position: absolute;
-      right: -6px;
-      top: -6px;
-      font-size: 12px;
-      width: 12px;
-      height: 12px;
-      color: $themeColor;
-      cursor: pointer;
-      background: white;
-      border: 1px solid $themeColor;
+      width: #{$portSize}px;
+      height: #{$portSize}px;
+      left: 25%;
+      transform: translate(-50%);
+      border: 1px solid #ccc;
       border-radius: 100px;
-      text-align: center;
-      &:hover{
+      background: white;
+      &:hover {
         background: $themeColor;
-        color: white;
+        border: 1px solid $themeColor;
+      }
+    }
+    .node-right {
+      position: absolute;
+      width: #{$portSize}px;
+      height: #{$portSize}px;
+      left: 75%;
+      transform: translate(-50%);
+      border: 1px solid #ccc;
+      border-radius: 100px;
+      background: white;
+      &:hover {
+        background: $themeColor;
+        border: 1px solid $themeColor;
       }
     }
   }
