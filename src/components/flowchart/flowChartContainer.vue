@@ -116,6 +116,7 @@ import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
 import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, RPA_saveRPA_url, RPA_loadRPA_url, RPA_exportRPA_url } from '@/config/api.js';
 import { post } from '@/utils/requests/post.js'
+import { nodeType } from './model/nodeType';
 
 export default {
     name: "flowChartContainer",
@@ -186,24 +187,7 @@ export default {
       nodeTypeList: {
         type: Array,
         default() {
-          return [
-            {
-              label: 'File',
-              value: 'File'
-            },{
-              label: 'Preprocessing',
-              value: 'Preprocessing'
-            },{
-              label: 'Model',
-              value: 'Model'
-            },{
-              label: 'NewFile',
-              value: 'NewFile'
-            },{
-              label: 'Test',
-              value: 'Test'
-            }
-          ]
+          return nodeType
         }
       },     
       height: {
