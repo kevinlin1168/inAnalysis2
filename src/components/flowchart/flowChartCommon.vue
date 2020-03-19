@@ -1,8 +1,8 @@
 <template>
   <div>
     <div v-if="type == 'File'">
-        <el-button icon="el-icon-folder-opened" @click="onSelectFileClick"></el-button>
-        <el-button icon="el-icon-upload" @click="onUploadFileClick"></el-button>
+        <!-- <el-button icon="el-icon-folder-opened" @click="onSelectFileClick"></el-button> -->
+        <el-button v-if='!fileName' icon="el-icon-upload" @click="onUploadFileClick"></el-button>
         <el-button icon="el-icon-delete" @click="deleteNode"></el-button>
     </div>  
     <div v-if="type != 'File'">
@@ -18,6 +18,9 @@ export default {
   name: "flowChartCommon",
   props: {
       type: {
+        type: String
+      },
+      fileName: {
         type: String
       }
   },

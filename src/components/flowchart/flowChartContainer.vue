@@ -34,7 +34,18 @@
         <el-button icon="el-icon-plus" @click="onAddNodeClick"></el-button>
       </div>
       <div class="el-button-block">
-        <el-button>Import</el-button>
+        <el-upload
+                ref = "importRPA"
+                action="no use"
+                class="upload"
+                :http-request="importRPAFile"
+                :limit= "1"
+                :on-exceed = "handleExceed"
+                :multiple = "false"
+                :auto-upload= "true"
+                :show-file-list="false">
+          <el-button>Import</el-button>
+        </el-upload>
         <el-button @click="onContainerExport">Export</el-button>
         <el-button @click="onContainerLoad">Reset</el-button>
         <el-button @click="onContainerSave">Save</el-button>
@@ -54,7 +65,8 @@
           :fileID='selectedNode.attribute.fileID'
           :isHasStringType='selectedNode.attribute.isHasStringType'
           :columnList='selectedNode.attribute.columnList'
-          :selectAllMissingValue='selectedNode.attribute.selectAllMissingValue'>
+          :selectAllMissingValue='selectedNode.attribute.selectAllMissingValue'
+          :isShowPreview='false'>
           </preprocessingComponent>
         </template>
         <template v-else-if="selectedNode.type == 'Model'">
@@ -65,6 +77,7 @@
           :columnList='selectedNode.attribute.columnList'
           :algoInputList='selectedNode.attribute.algoInputList'
           :algoOutputList='selectedNode.attribute.algoOutputList'
+          :reset='isShowPopup'
           @onSelectAlgorithmChange="onSelectAlgorithmChange"></trainModelComponent>
         </template>
       </div>
@@ -114,7 +127,7 @@ import flowChartFile from './flowChartFile';
 import preprocessingComponent from '../preprocessingComponent';
 import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
-import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, RPA_saveRPA_url, RPA_loadRPA_url, RPA_exportRPA_url } from '@/config/api.js';
+import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, RPA_saveRPA_url, RPA_loadRPA_url, RPA_exportRPA_url, file_delete_url, RPA_importRPA_url, analytic_doPreprocess_url } from '@/config/api.js';
 import { post } from '@/utils/requests/post.js'
 import { nodeType } from './model/nodeType';
 
@@ -123,8 +136,32 @@ export default {
     created: function() {
       this.fetchData();
     },
+    destroyed: function() {
+      console.log('destroyed')
+      // this.clearNewNode();
+    },
     watch: {
       '$route': 'fetchData'
+    },
+    mounted() {
+      if(this.$route.name == 'RPA') {
+        window.onbeforeunload = function (e) {
+          // this.clearNewNode();
+          setTimeout(function(){setTimeout(function(){}, 50)},50);
+          console.log(e)
+          e = e || window.event;
+        
+          // 兼容IE8和Firefox 4之前的版本
+          if (e) {
+            e.returnValue = '';
+          }
+        
+          // Chrome, Safari, Firefox 4+, Opera 12+ , IE 9+
+          
+          return '';
+        }
+        // window.addEventListener('unload', e => this.clearNewNode(e))
+      }
     },
     computed: {
       nodeOptions() {
@@ -232,10 +269,45 @@ export default {
         },
         fileList: [],
         projectID: '',
-        addTimes: 0
+        addTimes: 0,
+        loading: {}
       };
     },
     methods:{
+      clearNewNode(e) {
+        console.log('FUCK')
+        let newNodeList = this.scene.nodes.filter((node) => {
+          return node.tag != 'Saved';
+        });
+        console.log(newNodeList)
+        newNodeList.forEach((node) => {
+          if(node.type == 'File' || node.type == 'Preprocessing') {
+            let form = {}
+            if(node.type == 'File') {
+              console.log('fileID', node.attribute.fileID)
+              if(node.attribute.fileID) {
+                form['fileID'] = node.attribute.fileID;
+              }
+              
+            } else if (node.type == 'Preprocessing') {
+              if(node.attribute.newFileID) {
+                form['fileID'] = node.attribute.newFileID;
+              }
+            }
+            if(form['fileID'] != '' && form['fileID'] != undefined) {
+              form['token'] = window.localStorage.getItem('token')
+              post(file_delete_url, form).then((resp) => {
+                if(resp.data.status == "success") {
+                    this.$message({
+                        type: 'success',
+                        message: 'Delete successfully!'
+                    });
+                }
+              })
+            } 
+          }
+        })
+      },
       fetchData() {
         if(this.$route.name == 'RPA') {
           this.onContainerLoad();
@@ -378,7 +450,7 @@ export default {
       setupComponent(from, index) {
         let fromNode = this.findNodeWithID(from);
         let inputNode = this.findNodeWithID(index);
-        if(fromNode.type == 'File' && inputNode.type == 'Preprocessing') {
+        if((fromNode.type == 'File' || fromNode.type == 'Preprocessing') && inputNode.type == 'Preprocessing') {
           this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
           let fileColumnForm = {
             fileID: this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'],
@@ -403,7 +475,7 @@ export default {
               console.log(this.scene.nodes[this.findNodeIndexWithID(index)]);
             }
           });
-        } else if (fromNode.type == 'File' && inputNode.type == 'Model') {
+        } else if ((fromNode.type == 'File' || fromNode.type == 'Preprocessing') && inputNode.type == 'Model') {
           this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
           let fileColumnForm = {
             fileID: this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'],
@@ -484,14 +556,56 @@ export default {
         };
       },
       nodeDelete(id) {
+        //get delete node attribute
+        let deleteNode = this.findNodeWithID(id);
+        if(deleteNode.type == 'File' && (deleteNode.attribute.fileID != '' && deleteNode.attribute.fileID != undefined)) {
+          let form = {
+            fileID: deleteNode.attribute.fileID,
+            token: window.localStorage.getItem('token')
+          }
+          post(file_delete_url, form).then((resp) => {
+              if(resp.data.status == "success") {
+                  this.$message({
+                      type: 'success',
+                      message: 'Delete successfully!'
+                  });
+              }
+          })
+        }
         //delete link attribute
-        const deletedLinks = this.scene.links.filter((item) => {
+        let deletedLinks = this.scene.links.filter((item) => {
           return item.from === id 
         });
-        deletedLinks.forEach((link) => {
-          this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)].attribute, 'fileID',"")
+        //clear file id
+        while(deletedLinks.length != 0) {
+          let tempList = [];
+          deletedLinks.forEach((link) => {
+            this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)].attribute, 'fileID',"")
+            let temp = this.scene.links.filter((item) => {
+              return item.from === link.to
+            });
+            tempList = tempList.concat(temp);
+          });
+          deletedLinks = tempList;
+        }
+        //delete link
+        deletedLinks = this.scene.links.filter((item) => {
+          return item.from === id 
         });
+        while(deletedLinks.length != 0) {
+          let tempList = [];
+          deletedLinks.forEach((link) => {
+            let temp = this.scene.links.filter((item) => {
+              return item.from === link.to
+            });
+            tempList = tempList.concat(temp);
 
+            this.scene.links = this.scene.links.filter((item) => {
+              return item.from !== link.to
+            });
+          });
+          deletedLinks = tempList;
+        }
         this.scene.nodes = this.scene.nodes.filter((node) => {
           return node.id !== id;
         })
@@ -522,7 +636,7 @@ export default {
           x: -700 + 20 * this.addTimes,
           y: -69 + 10 * this.addTimes,
           type: this.selectNodeType,
-          label: 'test1',
+          tag: 'New',
           attribute: {}
         }
         this.scene.nodes.push(newNode);
@@ -547,16 +661,105 @@ export default {
         // console.log(this.scene.nodes[this.findNodeIndexWithID(id)])
       },
       onEditCancelClick() {
-        let fromNode = this.findNodeWithID(this.selectedNode.id)
-        if(fromNode.type == 'Preprocessing') {
+        let node = this.findNodeWithID(this.selectedNode.id)
+        if(node.type == 'Preprocessing') {
           let columnListTemp = this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnListTemp'].map(a => Object.assign({}, a));
           this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'columnList',columnListTemp)
           // this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnList'] = columnListTemp.map(a => ({...a}));
           console.log(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute);
+        } else if (node.type == 'Model') {
+          let columnListTemp = this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['columnListTemp'].map(a => Object.assign({}, a));
+          this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'columnList',columnListTemp)
+          let algoInputList = [];
+          let algoOutputList = [];
+          algoInputList.forEach((item) => {
+              item['selection'] = [];
+          })
+          algoOutputList.forEach((item) => {
+              item['selection'] = [];
+          })
+          this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'selectAlgorithm', '');
+          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['algoInputList'] = algoInputList;
+          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['algoOutputList'] = algoOutputList;
         }
         this.isShowPopup = false;
       },
+      doFilePreprocessing(fileID, columnList) {
+        let action = [];
+        let isAlert = false;
+        let alertColumnName = '';
+        columnList.forEach((item) => {
+            if(item.classifiable == "1" && ((item.selectMissingValue) || !(item.selectOutliersAlgo == '' || item.selectOutliersAlgo == undefined) || !(item.selectNormalizeAlgorithm == '' || item.selectNormalizeAlgorithm == undefined) || !(item.selectCharterProcessing == undefined || item.selectCharterProcessing == ''))) {
+                isAlert = true;
+                alertColumnName = alertColumnName.concat(item.name, ' ');
+            }
+            let actionItem = {
+                'col': item.name,
+                "missingFiltering": (item.selectMissingValue) ? '1' : '0' ,
+                "outlierFiltering": (item.selectOutliersAlgo == '' || item.selectOutliersAlgo == undefined) ? '0': item.selectOutliersAlgo,
+                "normalize": (item.selectNormalizeAlgorithm == '' || item.selectNormalizeAlgorithm == undefined) ? '0': item.selectNormalizeAlgorithm,
+                "stringCleaning": (item.selectCharterProcessing == undefined || item.selectCharterProcessing == '') ? Array('0'): item.selectCharterProcessing
+            }
+            action.push(actionItem);
+        })
+        let processForm = {
+            fileID: fileID,
+            action: JSON.stringify(action),
+            userID: JSON.parse(window.localStorage.getItem('user')).userID,
+            projectID: this.projectID,
+            token: window.localStorage.getItem('token')
+        }
+        if(isAlert) {
+            this.$confirm('You are trying to modify a classifiable column ' + alertColumnName + '. Continue?', 'Really?', {
+                confirmButtonText: 'Confirm',
+                cancelButtonText: 'Cancel',
+                type: 'warning'
+            }).then(() => {
+                post(analytic_doPreprocess_url, processForm).then((resp) => {
+                    if(resp.data.status == 'success') {
+                      this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'newFileID',resp.data.data.fileUid)
+                      this.$message({
+                          type: 'success',
+                          message: 'Preprocess successfully'
+                      });
+                    }
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: 'Preprocess cancel'
+                });          
+            });
+        } else {
+            post(analytic_doPreprocess_url, processForm).then((resp) => {
+                if(resp.data.status == 'success') {
+                  this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'newFileID',resp.data.data.fileUid)
+                  this.$message({
+                      type: 'success',
+                      message: 'Preprocess successfully'
+                  });
+                }
+            })
+        }
+      },
       onEditConfirmClick() {
+        // let node = this.findNodeWithID(this.selectedNode.id)
+        // if(node.type == 'Preprocessing') {
+        //   if(node.attribute.newFileID) {
+        //     let form = {
+        //       fileID: node.attribute.newFileID,
+        //       token: window.localStorage.getItem('token')
+        //     }
+        //     post(file_delete_url, form).then((resp) => {
+        //         if(resp.data.status == "success") {
+        //           this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
+        //         }
+        //     })
+        //   } else {
+        //     this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
+        //   }
+        // }
+        // node.tag = 'New';
         this.isShowPopup = false;
       },
       uploadSelectionFile(params) {
@@ -570,17 +773,40 @@ export default {
         this.fullScreenLoading();
         post(file_upload_url, form).then((response) => {
             if (response.data.status == "success") {
-                this.loadingClose()
-                this.fetchData();
+                this.loadingClose();
+                this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileID', response.data.data.fileUid);
+                this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileName', fileObj.name);
             }
         }).catch((error) => {
             this.loadingClose();
+            this.$message.error('Upload file error please try again.');
             console.error(error);
         });
 
         this.$refs.upload.clearFiles();
         this.isShowUploadBlock = true;
         this.isShowUploadFilePopup = false;
+      },
+      importRPAFile(params) {
+        let fileObj = params.file;
+        let form = new FormData();
+        form.append("file", fileObj);
+        form.append("userID", JSON.parse(window.localStorage.getItem('user')).userID);
+        form.append("projectID", this.projectID)
+        form.append("token", window.localStorage.getItem('token'))
+        this.fullScreenLoading();
+        post(RPA_importRPA_url, form).then((response) => {
+            if (response.data.status == "success") {
+                this.loadingClose();
+                this.onContainerLoad();
+            }
+        }).catch((error) => {
+            this.loadingClose();
+            this.$message.error('Import RPA error please try again.');
+            console.error(error);
+        });
+
+        this.$refs.importRPA.clearFiles();
       },
       uploadFileRemove() {
           this.isShowUploadBlock = true;
@@ -646,7 +872,8 @@ export default {
         this.tempSelectedFile = selectedFile;
       },
       onSelectAlgorithmChange(algo) {
-        this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['selectAlgorithm'] = algo;
+        this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'selectAlgorithm', algo);
+        // this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['selectAlgorithm'] = algo;
         this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['active'] = 1
         let project = JSON.parse(window.localStorage.getItem('project'));
         let form = {
@@ -690,6 +917,10 @@ export default {
       },
       onContainerSave() {
         return new Promise((resolve, reject) => {
+          let nodeTemp =  this.scene.nodes.map(a => ({...a}));
+          this.scene.nodes.forEach((node) => {
+            node.tag = 'Saved';
+          })
           let form = {
             userID: JSON.parse(window.localStorage.getItem('user')).userID,
             projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
@@ -702,19 +933,33 @@ export default {
             console.log(resp);
           }).catch((error) => {
             reject(error);
+            this.scene.nodes = nodeTemp.map(a => ({...a}));
             console.error('onContainerSaveError', error);
           })
         });
       },
       onContainerLoad() {
+        // this.clearNewNode();
         let form = {
           userID: JSON.parse(window.localStorage.getItem('user')).userID,
           projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
           token: window.localStorage.getItem('token'),
         }
         post(RPA_loadRPA_url, form).then((resp) => {
-          let response = JSON.parse(resp.data.data);
-          this.scene = response;
+          if(resp.data.data == "") {
+            this.scene = {
+              centerX: 1024,
+              centerY: 140,
+              scale: 1,
+              nodes: [
+              ],
+              links: [
+              ]
+            }
+          } else {
+            let response = JSON.parse(resp.data.data);
+            this.scene = response;
+          }
         }).catch((error) => {
           console.error('onContainerloadError', error);
         })
@@ -726,15 +971,32 @@ export default {
           token: window.localStorage.getItem('token'),
         }
         post(RPA_exportRPA_url, form).then((resp) => {
-          let blob = new Blob([JSON.stringify(resp.data)], {type:resp.headers['content-type']});
-          console.log('blob', blob);
-          let link = document.createElement('a');
-          link.href = window.URL.createObjectURL(blob);
-          link.download = 'export.json';
-          link.click();
+          if (resp.data.status == 'error' && resp.data.msg == 'No version') {
+            this.$message({
+              type: 'error',
+              message: 'Please save a RPA version first'
+            });
+          } else {
+            let blob = new Blob([JSON.stringify(resp.data)], {type:resp.headers['content-type']});
+            let link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = 'export.json';
+            link.click();
+          }
         }).catch((error) => {
           console.error('onContainerExportError', error);
         })
+      },
+      fullScreenLoading() {
+        this.loading = this.$loading({
+            lock: true,
+            text: 'Loading',
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+        });
+      },
+      loadingClose() {
+          this.loading.close();
       }
     },
     components: {
@@ -760,6 +1022,12 @@ export default {
         display: flex;
         .el-button-block{
           margin-left: auto;
+        }
+        .el-button {
+          margin-left: 10px;
+        }
+        .upload{
+          display: inline-block;
         }
       }
     }

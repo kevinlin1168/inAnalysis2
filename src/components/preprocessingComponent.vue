@@ -99,7 +99,7 @@
                     </el-select>
                     <div v-if="item.type !== 'string'" style="text-align: center"> --- </div>
                 </el-col>
-                <el-col :span="1" @click.native="onColumnPreviewClick(item)">
+                <el-col v-if="isShowPreview" :span="1" @click.native="onColumnPreviewClick(item)">
                     <i class="fas fa-eye"></i>
                 </el-col>
             </el-row>
@@ -132,19 +132,19 @@
         watch: {
             '$route': 'clearData',
             columnList: function() {
-                this.selectAllNormalizeAlgorithmChange();
-                this.selectAllOutliersAlgoChange();
-                this.selectAllCharterProcessingChange();
+                // this.selectAllNormalizeAlgorithmChange();
+                // this.selectAllOutliersAlgoChange();
+                // this.selectAllCharterProcessingChange();
             },
             reset: function(newVal, oldVal) {
                 if(newVal == true) {
                     console.log('reset');
-                    // this.selectAllNormalizeAlgorithm = '';
-                    // this.selectAllOutliersAlgo = '';
-                    // this.selectAllCharterProcessing = '';
-                    this.selectAllNormalizeAlgorithmChange();
-                    this.selectAllOutliersAlgoChange();
-                    this.selectAllCharterProcessingChange();
+                    this.selectAllNormalizeAlgorithm = '';
+                    this.selectAllOutliersAlgo = '';
+                    this.selectAllCharterProcessing = '';
+                    // this.selectAllNormalizeAlgorithmChange();
+                    // this.selectAllOutliersAlgoChange();
+                    // this.selectAllCharterProcessingChange();
                 }
             }
         },
@@ -181,6 +181,10 @@
             },
             reset: {
                 type: Boolean
+            },
+            isShowPreview: {
+                type: Boolean,
+                default: true
             }
         },
         data: function () {

@@ -63,6 +63,7 @@ export const model_deleteModel_url = modelUrl + '/deleteModel';
 export const RPA_saveRPA_url = RPAUrl + '/saveRPA';
 export const RPA_loadRPA_url = RPAUrl + '/loadRPA';
 export const RPA_exportRPA_url = RPAUrl + '/exportRPA';
+export const RPA_importRPA_url = RPAUrl + '/importRPA';
 
 // course Api for TA
 export const course_addCourse_url = courseUrl + '/addCourse';

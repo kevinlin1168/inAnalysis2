@@ -227,7 +227,12 @@
         created: function() {
         },
         watch: {
-            '$route': 'clearData'
+            '$route': 'clearData',
+            reset: function(newVal, oldVal) {
+                if(newVal == true) {
+                    this.clearData();
+                }
+            }
         },
         props: {
             algorithmList: {
@@ -250,6 +255,9 @@
             },
             algoOutputList: {
                 type: Array
+            },
+            reset: {
+                type: Boolean
             }
         },
         data: function () {

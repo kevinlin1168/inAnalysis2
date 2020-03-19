@@ -26,6 +26,7 @@
       <div class="node-label">
         <template>
             <flowChartCommmon :type='type' 
+            :fileName= 'attribute.fileName'
             @deleteNode='onDeleteNodeClick'
             @onEditClick='onEditClick'
             @onSelectFileClick='onSelectFileClick'
