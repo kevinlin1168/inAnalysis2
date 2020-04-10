@@ -58,12 +58,14 @@ export const analytic_getModelParameter_url = analyticUrl + '/getModelParameter'
 export const model_addModel_url = modelUrl + '/addModel';
 export const model_getModelByProjectID_url = modelUrl + '/getModelByProjectID';
 export const model_deleteModel_url = modelUrl + '/deleteModel';
+export const model_deleteModelByUID_url = modelUrl + 'deleteModelUID';
 
 // RPA Api
 export const RPA_saveRPA_url = RPAUrl + '/saveRPA';
 export const RPA_loadRPA_url = RPAUrl + '/loadRPA';
 export const RPA_exportRPA_url = RPAUrl + '/exportRPA';
 export const RPA_importRPA_url = RPAUrl + '/importRPA';
+export const RPA_runRPA_url = RPAUrl + '/runRPA';
 
 // course Api for TA
 export const course_addCourse_url = courseUrl + '/addCourse';

@@ -13,6 +13,7 @@
       v-for="(node, index) in scene.nodes" 
       :key="`node${index}`"
       :options="nodeOptions"
+      :isDisabled="scene.status == 'processing'"
       @nodeSelected="nodeSelected(node.id, $event)"
       @linkingStart="linkingStart(node.id, $event)"
       @linkingStop="linkingStop(node.id, $event)"
@@ -23,7 +24,7 @@
     </flowChartComponent>
     <div class="el-controller">
       <div class="el-select-block">
-        <el-select v-model="selectNodeType" placeholder="Please select a node">
+        <el-select v-model="selectNodeType" placeholder="Please select a node" :disabled="scene.status == 'processing'">
           <el-option
             v-for="item in nodeTypeList"
             :key="item.value"
@@ -31,7 +32,7 @@
             :value="item.value">
           </el-option>
         </el-select>
-        <el-button icon="el-icon-plus" @click="onAddNodeClick"></el-button>
+        <el-button icon="el-icon-plus" @click="onAddNodeClick" :disabled="scene.status == 'processing'"></el-button>
       </div>
       <div class="el-button-block">
         <el-upload
@@ -44,12 +45,12 @@
                 :multiple = "false"
                 :auto-upload= "true"
                 :show-file-list="false">
-          <el-button>Import</el-button>
+          <el-button :disabled="scene.status == 'processing'">Import</el-button>
         </el-upload>
-        <el-button @click="onContainerExport">Export</el-button>
-        <el-button @click="onContainerLoad">Reset</el-button>
-        <el-button @click="onContainerSave">Save</el-button>
-        <el-button>Run</el-button>
+        <el-button @click="onContainerExport" :disabled="scene.status == 'processing'">Export</el-button>
+        <el-button @click="onContainerLoad" :disabled="scene.status == 'processing'">Reset</el-button>
+        <el-button @click="onContainerSave" :disabled="scene.status == 'processing'">Save</el-button>
+        <el-button @click="onRPARun" :disabled="scene.status == 'processing'">Run</el-button>
       </div>
     </div>
 
@@ -127,7 +128,7 @@ import flowChartFile from './flowChartFile';
 import preprocessingComponent from '../preprocessingComponent';
 import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
-import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, RPA_saveRPA_url, RPA_loadRPA_url, RPA_exportRPA_url, file_delete_url, RPA_importRPA_url, analytic_doPreprocess_url } from '@/config/api.js';
+import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, RPA_saveRPA_url, RPA_loadRPA_url, RPA_exportRPA_url, file_delete_url, RPA_importRPA_url, RPA_runRPA_url, model_deleteModelByUID_url } from '@/config/api.js';
 import { post } from '@/utils/requests/post.js'
 import { nodeType } from './model/nodeType';
 
@@ -229,7 +230,7 @@ export default {
       },     
       height: {
         type: Number,
-        default: 95,
+        default: 75,
       }
     },
     data() {
@@ -275,38 +276,37 @@ export default {
     },
     methods:{
       clearNewNode(e) {
-        console.log('FUCK')
-        let newNodeList = this.scene.nodes.filter((node) => {
-          return node.tag != 'Saved';
-        });
-        console.log(newNodeList)
-        newNodeList.forEach((node) => {
-          if(node.type == 'File' || node.type == 'Preprocessing') {
-            let form = {}
-            if(node.type == 'File') {
-              console.log('fileID', node.attribute.fileID)
-              if(node.attribute.fileID) {
-                form['fileID'] = node.attribute.fileID;
-              }
+        // let newNodeList = this.scene.nodes.filter((node) => {
+        //   return node.tag != 'Saved';
+        // });
+        // console.log(newNodeList)
+        // newNodeList.forEach((node) => {
+        //   if(node.type == 'File' || node.type == 'Preprocessing') {
+        //     let form = {}
+        //     if(node.type == 'File') {
+        //       console.log('fileID', node.attribute.fileID)
+        //       if(node.attribute.fileID) {
+        //         form['fileID'] = node.attribute.fileID;
+        //       }
               
-            } else if (node.type == 'Preprocessing') {
-              if(node.attribute.newFileID) {
-                form['fileID'] = node.attribute.newFileID;
-              }
-            }
-            if(form['fileID'] != '' && form['fileID'] != undefined) {
-              form['token'] = window.localStorage.getItem('token')
-              post(file_delete_url, form).then((resp) => {
-                if(resp.data.status == "success") {
-                    this.$message({
-                        type: 'success',
-                        message: 'Delete successfully!'
-                    });
-                }
-              })
-            } 
-          }
-        })
+        //     } else if (node.type == 'Preprocessing') {
+        //       if(node.attribute.newFileID) {
+        //         form['fileID'] = node.attribute.newFileID;
+        //       }
+        //     }
+        //     if(form['fileID'] != '' && form['fileID'] != undefined) {
+        //       form['token'] = window.localStorage.getItem('token')
+        //       post(file_delete_url, form).then((resp) => {
+        //         if(resp.data.status == "success") {
+        //             this.$message({
+        //                 type: 'success',
+        //                 message: 'Delete successfully!'
+        //             });
+        //         }
+        //       })
+        //     } 
+        //   }
+        // })
       },
       fetchData() {
         if(this.$route.name == 'RPA') {
@@ -473,10 +473,14 @@ export default {
               this.scene.nodes[this.findNodeIndexWithID(index)].attribute['isHasStringType'] = isHasStringType;
               this.scene.nodes[this.findNodeIndexWithID(index)].attribute['selectAllMissingValue'] = false;
               console.log(this.scene.nodes[this.findNodeIndexWithID(index)]);
+              console.log('here')
             }
+          }).catch(()=> {
           });
+          return true;
         } else if ((fromNode.type == 'File' || fromNode.type == 'Preprocessing') && inputNode.type == 'Model') {
           this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
+          this.scene.nodes[this.findNodeIndexWithID(index)].attribute['newFileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
           let fileColumnForm = {
             fileID: this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'],
             token: window.localStorage.getItem('token')
@@ -498,11 +502,74 @@ export default {
               this.scene.nodes[this.findNodeIndexWithID(index)].attribute['algoOutputList'] = algoOutputList;
             } else {
                 console.warn('getColumn Error', resp.data.msg)
+                return false;
             }
           }).catch((error) => {
-              console.warn('getColumn Error', error)
+            return false
+            console.warn('getColumn Error', error)
           })
+          return true;
+        } else if((fromNode.type == 'File' || fromNode.type == 'Preprocessing') && (inputNode.type == 'Test' || inputNode.type == 'Predict')) {
+          if(fromNode.type == 'File') {
+            this.scene.nodes[this.findNodeIndexWithID(index)].attribute['newFileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
+          }
+          return true;
+        } else if((fromNode.type == 'Model') && (inputNode.type == 'Test' || inputNode.type == 'Predict')) {
+          return true;
+        } else {
+          this.$message({
+              type: 'error',
+              message: 'Link component error.'
+            });
+          return false
         }
+      },
+      verifyLinks(index, type, fromIndex) {
+        const onlyOneInputCheck = this.scene.links.filter((link) => {
+            return link.to === index;
+          });
+          //TODO must save which port had link
+          let nodeType = this.scene.nodes[this.findNodeIndexWithID(index)].type;
+          let isMultiInput = (nodeType == 'Test' || nodeType == 'Predict');
+          let onlyOneInputFlag = onlyOneInputCheck.length >= 1 ? true : false;
+          console.log('isMultiInput', onlyOneInputFlag)
+          if(isMultiInput) {
+            if(onlyOneInputCheck) {
+              console.log('toType', onlyOneInputCheck)
+              for(let index=0; index < onlyOneInputCheck.length; index++) {
+                if(onlyOneInputCheck[index].toType == type) {
+                  this.$message({
+                    type: 'error',
+                    message: 'You can not link the same port.'
+                  });
+                  return false
+                }
+                if(this.scene.nodes[this.findNodeIndexWithID(fromIndex)].type == this.scene.nodes[this.findNodeIndexWithID(onlyOneInputCheck[index].from)].type) {
+                  this.$message({
+                    type: 'error',
+                    message: 'You can not input the same type of component.'
+                  });
+                  return false
+                }
+              }
+              if(onlyOneInputCheck.length > 1) {
+                this.$message({
+                  type: 'error',
+                  message: 'Your input more than limit.'
+                });
+                return false
+              }
+            }
+          } else {
+            if(onlyOneInputFlag) {
+              this.$message({
+                type: 'error',
+                message: 'You can only input one component.'
+              });
+              return false
+            }
+          }
+          return true
       },
       linkingStop(index, type) {
         // add new Link
@@ -511,32 +578,25 @@ export default {
           const existed = this.scene.links.find((link) => {
             return link.from === this.draggingLink.from && link.to === index;
           });
-          const onlyOneInputCheck = this.scene.links.find((link) => {
-            return link.to === index;
-          });
-          //TODO must save which port had link
-          let onlyOneInputFlag = onlyOneInputCheck && this.scene.nodes[this.findNodeIndexWithID(index)].type != 'Test';
-          if(onlyOneInputFlag) {
-            this.$message({
-              type: 'error',
-              message: 'You can only input one component.'
-            });
-          }
+          let verifyLink = this.verifyLinks(index, type, this.draggingLink.from)
           let verify = this.verifyComponent(this.draggingLink.from, index);
-          if (!(existed || onlyOneInputFlag) && verify) {
-            this.setupComponent(this.draggingLink.from, index);
-            let maxID = Math.max(0, ...this.scene.links.map((link) => {
-              return link.id
-            }))
-            const newLink = {
-              id: maxID + 1,
-              from: this.draggingLink.from,
-              fromType: this.draggingLink.fromType,
-              to: index,
-              toType: type
-            };
-            this.scene.links.push(newLink)
-            this.$emit('linkAdded', newLink)
+          if ((!(existed) && verifyLink && verify)) {
+            let isSuccess = this.setupComponent(this.draggingLink.from, index);
+            console.log('isSuccess', isSuccess)
+            if(isSuccess) {
+              let maxID = Math.max(0, ...this.scene.links.map((link) => {
+                return link.id
+              }))
+              const newLink = {
+                id: maxID + 1,
+                from: this.draggingLink.from,
+                fromType: this.draggingLink.fromType,
+                to: index,
+                toType: type
+              };
+              this.scene.links.push(newLink)
+              this.$emit('linkAdded', newLink)
+            }
           }
         }
         this.draggingLink = null
@@ -564,6 +624,32 @@ export default {
             token: window.localStorage.getItem('token')
           }
           post(file_delete_url, form).then((resp) => {
+              if(resp.data.status == "success") {
+                  this.$message({
+                      type: 'success',
+                      message: 'Delete successfully!'
+                  });
+              }
+          })
+        } else if(deleteNode.type == 'Preprocessing' && (deleteNode.attribute.newFileID != '' && deleteNode.attribute.newFileID != undefined)) {
+          let form = {
+            fileID: deleteNode.attribute.newFileID,
+            token: window.localStorage.getItem('token')
+          }
+          post(file_delete_url, form).then((resp) => {
+              if(resp.data.status == "success") {
+                  this.$message({
+                      type: 'success',
+                      message: 'Delete successfully!'
+                  });
+              }
+          })
+        } else if(deleteNode.type == 'Model' && (deleteNode.attribute.modelID != '' && deleteNode.attribute.modelID != undefined)) {
+          let form = {
+            modelUID: deleteNode.attribute.modelID,
+            token: window.location.getItem('token')
+          }
+          post(model_deleteModelByUID_url, form).then((resp) => {
               if(resp.data.status == "success") {
                   this.$message({
                       type: 'success',
@@ -636,7 +722,6 @@ export default {
           x: -700 + 20 * this.addTimes,
           y: -69 + 10 * this.addTimes,
           type: this.selectNodeType,
-          tag: 'New',
           attribute: {}
         }
         this.scene.nodes.push(newNode);
@@ -702,28 +787,13 @@ export default {
             }
             action.push(actionItem);
         })
-        let processForm = {
-            fileID: fileID,
-            action: JSON.stringify(action),
-            userID: JSON.parse(window.localStorage.getItem('user')).userID,
-            projectID: this.projectID,
-            token: window.localStorage.getItem('token')
-        }
         if(isAlert) {
             this.$confirm('You are trying to modify a classifiable column ' + alertColumnName + '. Continue?', 'Really?', {
                 confirmButtonText: 'Confirm',
                 cancelButtonText: 'Cancel',
                 type: 'warning'
             }).then(() => {
-                post(analytic_doPreprocess_url, processForm).then((resp) => {
-                    if(resp.data.status == 'success') {
-                      this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'newFileID',resp.data.data.fileUid)
-                      this.$message({
-                          type: 'success',
-                          message: 'Preprocess successfully'
-                      });
-                    }
-                })
+                this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'action', JSON.stringify(action));
             }).catch(() => {
                 this.$message({
                     type: 'info',
@@ -731,35 +801,92 @@ export default {
                 });          
             });
         } else {
-            post(analytic_doPreprocess_url, processForm).then((resp) => {
-                if(resp.data.status == 'success') {
-                  this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'newFileID',resp.data.data.fileUid)
-                  this.$message({
-                      type: 'success',
-                      message: 'Preprocess successfully'
-                  });
-                }
-            })
+            this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'action', JSON.stringify(action));
         }
       },
+      doModelTrain(algoInputList, algoOutputList, parameterList, selectAlgorithm) {
+        let isError = false;
+        let errorMassage = '';
+        algoInputList.forEach((inputItem) => {
+            // check length
+            if(inputItem.amount == "single") {
+                if(inputItem.selection.length > 1) {
+                    isError = true;
+                    errorMassage += ' Select more than one Label';
+                }
+            }
+            if(inputItem.selection.length == 0) {
+                isError = true;
+                errorMassage += ' Do not select label';
+            }
+            if(this.checkLabelType(inputItem)) {
+                isError = true;
+                errorMassage += ' Input type error';
+            }
+        })
+
+        algoOutputList.forEach((outputItem) => {
+            if(this.checkLabelType(outputItem)) {
+                isError = true;
+                errorMassage += ' Output type error';
+            }
+        })
+        if(isError == true) {
+            this.$message.error(errorMassage);
+        } else {
+            let params = {}
+            parameterList.forEach((param) => {
+                if(param.type == 'bool') {
+                    params[param.name] = param.value ? 1 : 0;
+                } else {
+                    params[param.name] = param.value;
+                }  
+            })
+            let input = {};
+            algoInputList.forEach((item) => {
+                input[item.name] = [];
+                item.selection.forEach((select) => {
+                    input[item.name].push(select.name)
+                })
+            })
+            let output = {};
+            algoOutputList.forEach((item) => {
+                output[item.name] = item.selection[0].name;
+            })
+            this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'algoName', selectAlgorithm);
+            this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'param', JSON.stringify(params));
+            this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'input', JSON.stringify(input));
+            this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'output', JSON.stringify(output));
+        }
+      },
+      checkLabelType(item) {
+          let isError = false;
+          
+          item.selection.forEach((select) => {
+              if(item.type == 'classifiable') {
+                  if(select.classifiable !== 1) {
+                      isError = true;
+                  }
+              }else if(item.type == 'float') {
+                  if (select.type != 'float' && select.type!= 'int'){
+                      isError = true;
+                  }
+              }else {
+                  // string && path
+                  if (select.type != item.type) {
+                      isError = true;
+                  }
+              }
+          })
+          return isError;
+      },
       onEditConfirmClick() {
-        // let node = this.findNodeWithID(this.selectedNode.id)
-        // if(node.type == 'Preprocessing') {
-        //   if(node.attribute.newFileID) {
-        //     let form = {
-        //       fileID: node.attribute.newFileID,
-        //       token: window.localStorage.getItem('token')
-        //     }
-        //     post(file_delete_url, form).then((resp) => {
-        //         if(resp.data.status == "success") {
-        //           this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
-        //         }
-        //     })
-        //   } else {
-        //     this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
-        //   }
-        // }
-        // node.tag = 'New';
+        let node = this.findNodeWithID(this.selectedNode.id)
+        if(node.type == 'Preprocessing') {
+          this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
+        } else if (node.type == 'Model') {
+          this.doModelTrain(node.attribute.algoInputList, node.attribute.algoOutputList, node.attribute.parameterList, node.attribute.selectAlgorithm);
+        }
         this.isShowPopup = false;
       },
       uploadSelectionFile(params) {
@@ -918,9 +1045,6 @@ export default {
       onContainerSave() {
         return new Promise((resolve, reject) => {
           let nodeTemp =  this.scene.nodes.map(a => ({...a}));
-          this.scene.nodes.forEach((node) => {
-            node.tag = 'Saved';
-          })
           let form = {
             userID: JSON.parse(window.localStorage.getItem('user')).userID,
             projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
@@ -951,6 +1075,7 @@ export default {
               centerX: 1024,
               centerY: 140,
               scale: 1,
+              project: JSON.stringify(window.localStorage.getItem('project')),
               nodes: [
               ],
               links: [
@@ -965,7 +1090,8 @@ export default {
         })
       },
       onContainerExport() {
-        let form = {
+        this.onContainerSave().then(() => {
+          let form = {
           userID: JSON.parse(window.localStorage.getItem('user')).userID,
           projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
           token: window.localStorage.getItem('token'),
@@ -986,6 +1112,7 @@ export default {
         }).catch((error) => {
           console.error('onContainerExportError', error);
         })
+        })
       },
       fullScreenLoading() {
         this.loading = this.$loading({
@@ -997,6 +1124,41 @@ export default {
       },
       loadingClose() {
           this.loading.close();
+      },
+      onRPARun() {
+        let isError = false;
+        let preprocessingNodes = this.scene.nodes.filter((node) => {
+          return node.type == 'Preprocessing';
+        })
+        let modelNodes = this.scene.nodes.filter((node) => {
+          return node.type == 'Model';
+        })
+        preprocessingNodes.forEach((node) => {
+          if(node.attribute.action == '' || node.attribute.action == undefined) {
+            isError = true;
+          }
+        })
+        modelNodes.forEach((node) => {
+          if(node.attribute.algoName == '' || node.attribute.algoName == undefined) {
+            isError = true;
+          }
+        })
+        if(!isError) {
+          this.onContainerSave().then(() => {
+            let form = {
+              userID: JSON.parse(window.localStorage.getItem('user')).userID,
+              projectID: this.projectID,
+              token: window.localStorage.getItem('token')
+            }
+            post(RPA_runRPA_url, form).then((response) => {
+              if (response.data.status == "success") {
+                this.onContainerLoad();
+              }
+            })
+          })
+        } else {
+          this.$message.error('Node do not setup');
+        }
       }
     },
     components: {

@@ -2,12 +2,12 @@
   <div>
     <div v-if="type == 'File'">
         <!-- <el-button icon="el-icon-folder-opened" @click="onSelectFileClick"></el-button> -->
-        <el-button v-if='!fileName' icon="el-icon-upload" @click="onUploadFileClick"></el-button>
-        <el-button icon="el-icon-delete" @click="deleteNode"></el-button>
+        <el-button v-if='!fileName' icon="el-icon-upload" @click="onUploadFileClick" :disabled="isDisabled"></el-button>
+        <el-button icon="el-icon-delete" @click="deleteNode" :disabled="isDisabled"></el-button>
     </div>  
     <div v-if="type != 'File'">
-        <el-button icon="el-icon-edit" @click="onEditClick"></el-button>
-        <el-button icon="el-icon-delete" @click="deleteNode"></el-button>
+        <el-button icon="el-icon-edit" @click="onEditClick" :disabled="isDisabled" v-if="type != 'Predict' && type != 'Test'"></el-button>
+        <el-button icon="el-icon-delete" @click="deleteNode" :disabled="isDisabled"></el-button>
     </div>
   </div>
 </template>
@@ -22,6 +22,9 @@ export default {
       },
       fileName: {
         type: String
+      },
+      isDisabled: {
+        type: Boolean
       }
   },
   created: function() {

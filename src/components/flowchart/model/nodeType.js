@@ -9,10 +9,10 @@ export let nodeType = [
         label: 'Model',
         value: 'Model'
     },{
-        label: 'NewFile',
-        value: 'NewFile'
-    },{
         label: 'Test',
         value: 'Test'
+    },{
+        label: 'Predict',
+        value: 'Predict'
     }
 ]

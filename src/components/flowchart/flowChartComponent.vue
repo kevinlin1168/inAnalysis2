@@ -2,15 +2,15 @@
   <div class="flowChartComponent" :style="nodeStyle" 
     v-bind:class="{selected: options.selected === id}"
     @mousedown="handleMousedown">
-    <div class="node-port node-input" v-if="type != 'Test'"
+    <div class="node-port node-input" v-if="type != 'Test' && type != 'Predict'"
       @mousedown="inputMouseDown"
       @mouseup="inputMouseUp($event, 'top')">
     </div>
-    <div class="node-left node-input" v-if="type == 'Test'"
+    <div class="node-left node-input" v-if="type == 'Test' || type == 'Predict'"
       @mousedown="inputMouseDown"
       @mouseup="inputMouseUp($event, 'top-left')">
     </div>
-    <div class="node-right node-input" v-if="type == 'Test'"
+    <div class="node-right node-input" v-if="type == 'Test' || type == 'Predict'"
       @mousedown="inputMouseDown"
       @mouseup="inputMouseUp($event, 'top-right')">
     </div>
@@ -27,6 +27,7 @@
         <template>
             <flowChartCommmon :type='type' 
             :fileName= 'attribute.fileName'
+            :isDisabled= 'isDisabled'
             @deleteNode='onDeleteNodeClick'
             @onEditClick='onEditClick'
             @onSelectFileClick='onSelectFileClick'
@@ -46,6 +47,10 @@ import flowChartCommmon from './flowChartCommon';
 export default {
   name: "flowChartComponent",
   props: {
+    isDisabled: {
+      type: Boolean,
+      default: false
+    },
     id: {
       type: Number,
       default: 1000,
