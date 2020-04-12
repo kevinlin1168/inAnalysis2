@@ -1,13 +1,54 @@
 <template>
-  <div>
-    
+  <div class="RPAList_block">
     <el-row class="cardContainer">
-        <el-col :span="24">
-            <el-card shadow="hover" class="clickable" @click.native="OnProjectCardClick">
-                <div class="cardHeader">Project Sum</div>
-                <div class="cardMain">
-                <div class="number"></div>
-                </div>
+        <el-col>
+            <el-card shadow="hover" class="clickable RPAList" @click.native="OnProjectCardClick">
+             <div class="card-inner">
+               <div class="card-left-part">
+                 <el-image :src="testingImg" class="rpa-image"></el-image>
+               </div>
+               <div class="card-right-part">
+                 <div class="right-top">
+                   <p class="rpa-name">RPA_NAME</p>
+                   <button>Export</button>
+                 </div>
+                 <div class="right-middle">
+                   <span class="project-type">計畫類別</span>
+                   <span class="data-type">資料類別</span>
+                 </div>
+                 <div class="right-bottom">
+                   <p class="description">
+                      臣亮言：先帝創業未半，而中道崩殂。今天下三分，益州
+                      疲弊，此誠危急存亡之秋也。然侍衛之臣，不懈於內；忠志之
+                      士，忘身於外者，蓋追先帝之殊遇，欲報之於陛下也。
+                   </p>
+                 </div>
+               </div>
+             </div>
+            </el-card>
+            <el-card shadow="hover" class="clickable RPAList" @click.native="OnProjectCardClick">
+             <div class="card-inner">
+               <div class="card-left-part">
+                 <el-image :src="testingImg" class="rpa-image"></el-image>
+               </div>
+               <div class="card-right-part">
+                 <div class="right-top">
+                   <p class="rpa-name">RPA_NAME</p>
+                   <button>Export</button>
+                 </div>
+                 <div class="right-middle">
+                   <span class="project-type">計畫類別</span>
+                   <span class="data-type">資料類別</span>
+                 </div>
+                 <div class="right-bottom">
+                   <p class="description">
+                      臣亮言：先帝創業未半，而中道崩殂。今天下三分，益州
+                      疲弊，此誠危急存亡之秋也。然侍衛之臣，不懈於內；忠志之
+                      士，忘身於外者，蓋追先帝之殊遇，欲報之於陛下也。
+                   </p>
+                 </div>
+               </div>
+             </div>
             </el-card>
         </el-col>
     </el-row>
@@ -16,6 +57,7 @@
 <script>
 import { RPA_getRPA_url, project_getProjectInfo_url } from "@/config/api.js";
 import { post } from "@/utils/requests/post.js";
+import testingImg from "@/assets/test-img.jpg";
 export default {
   name: "RPAList",
   created: function() {
@@ -26,6 +68,7 @@ export default {
   },
   data: function() {
     return {
+        testingImg: testingImg,
         token: ''
     };
   },
@@ -92,9 +135,6 @@ export default {
   }
   .el-card{
       width:360px;
-      +.el-card{
-          margin-left:20px;
-      }
   @media only screen and (max-width:599px){
       +.el-card{
           margin-left: 0px;
@@ -139,5 +179,64 @@ export default {
   }
     }
   }
+}
+.cardContainer {
+  .el-card.RPAList {
+    width: 100%;
+    + .RPAList {
+      margin-top: 20px;
+    }
+  }
+  .card-inner { 
+    display:flex;
+    flex-direction: row;
+
+	.card-left-part { 
+    margin: 20px;
+    width:170px;
+		.rpa-image { 
+      display: block;
+      width:100%;
+		}
+	}
+
+	.card-right-part { 
+    display: flex;
+    width: calc(100% - 170px);
+    flex-direction: column;
+		.right-top { 
+      display: flex;
+      flex-direction: row;
+			.rpa-name { 
+
+			}
+
+			button { 
+        margin-left: auto;
+			}
+		}
+
+		.right-middle { 
+
+      span + span {
+        margin-left: 10px;
+      }
+			.project-type { 
+
+			}
+
+			.data-type { 
+
+			}
+		}
+
+		.right-bottom { 
+
+			.description { 
+
+			}
+		}
+	}
+}
 }
 </style>
