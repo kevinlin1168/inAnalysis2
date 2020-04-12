@@ -17,6 +17,7 @@ import courseManagement from '@/components/courseManagement';
 import judgeManagement from '@/components/judgeManagement';
 import missingDeadline from '@/components/missingDeadlinePage';
 import flowChartTest from '@/components/flowchart/flowChartTest';
+import RPAList from '@/components/RPAList';
 
 Vue.use(Router);
 
@@ -78,6 +79,14 @@ const router = new Router({
             path: '/project',
             name: 'dataProjectManage',
             component: dataProjectManage,
+            meta: {
+                isLogin: true,
+                role: '1'
+            }
+        },{
+            path: '/RPA',
+            name: 'RPAList',
+            component: RPAList,
             meta: {
                 isLogin: true,
                 role: '1'

@@ -13,7 +13,10 @@
           <i class="fas fa-sitemap icon-right"></i> <span>Management</span>
         </el-link>
         <el-link class="button">
-          <i class="fas fa-map-signs icon-right"></i><span> Management</span>
+          <i class="fas fa-map-signs icon-right"></i><span>Api Management</span>
+        </el-link>
+        <el-link class="button" @click="onRPAClick">
+          <i class="fas fa-stream icon-right"></i><span>RPA</span>
         </el-link>
       </div>
       <div class="rightBlock">
@@ -59,6 +62,9 @@ export default {
     },
     onHomeClick() {
       this.$router.push("/home");
+    },
+    onRPAClick() {
+      this.$router.push("/RPA");
     }
   },
   components: {},

@@ -27,6 +27,7 @@ export const user_forgetPasswordVerify_url = userUrl + '/forgetPasswordVerify';
 export const project_add_url = projectUrl + '/add';
 export const project_getProjectByUser_url = projectUrl + '/getProjectByUserID';
 export const project_delete_url = projectUrl + '/delete';
+export const project_getProjectInfo_url = projectUrl + '/getProjectInfo';
 
 // file Api
 export const file_upload_url = fileUrl + '/upload';
@@ -66,6 +67,7 @@ export const RPA_loadRPA_url = RPAUrl + '/loadRPA';
 export const RPA_exportRPA_url = RPAUrl + '/exportRPA';
 export const RPA_importRPA_url = RPAUrl + '/importRPA';
 export const RPA_runRPA_url = RPAUrl + '/runRPA';
+export const RPA_getRPA_url = RPAUrl + '/getRPA';
 
 // course Api for TA
 export const course_addCourse_url = courseUrl + '/addCourse';
