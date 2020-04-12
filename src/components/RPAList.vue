@@ -26,7 +26,8 @@ export default {
   },
   data: function() {
     return {
-        token: ''
+        token: '',
+        RPAList: []
     };
   },
   methods: {
@@ -51,8 +52,9 @@ export default {
                             Object.assign(rpaList[index], resp.data.data.project);
                         }
                     })
-                  console.log(rpaList[index]);
               }
+              this.RPAList = rpaList;
+              console.log(this.RPAList);
             }
             this.loadingClose();
           },

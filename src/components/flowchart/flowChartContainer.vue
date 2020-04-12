@@ -49,7 +49,7 @@
         </el-upload>
         <el-button @click="onContainerExport" :disabled="scene.status == 'processing'">Export</el-button>
         <el-button @click="onContainerLoad" :disabled="scene.status == 'processing'">Reset</el-button>
-        <el-button @click="onContainerSave" :disabled="scene.status == 'processing'">Save</el-button>
+        <el-button @click="onSaveRPAClick" :disabled="scene.status == 'processing'">Save</el-button>
         <el-button @click="onRPARun" :disabled="scene.status == 'processing'">Run</el-button>
       </div>
     </div>
@@ -117,6 +117,22 @@
           <el-button @click="onSelectFileCancelClick">Cancel</el-button>
           <el-button type="primary" @click="onSelectFileConfirmClick">Confirm</el-button>
       </div>
+    </el-dialog>
+
+    <!-- save RPA popup-->
+    <el-dialog :title='"Save RPA"' :visible.sync="isShowSaveRPApopup" :before-close="onSaveRPACancel">
+        <el-form :model="RPAForm" :rules="RPARule" ref="RPAForm">
+            <el-form-item label="RPA Name" :label-width="labelWidth" prop="RPAName">
+                <el-input v-model="RPAForm.RPAName" placeholder="Please input RPA Name" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="RPA Description" :label-width="labelWidth" prop="RPADescription">
+                <el-input v-model="RPAForm.RPADescription" placeholder="Please input RPA description"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="onSaveRPACancel">Cancel</el-button>
+            <el-button type="primary" @click="onSaveRPAConfirm">Confirm</el-button>
+        </div>
     </el-dialog>
   </div>
 </template>
@@ -271,7 +287,21 @@ export default {
         fileList: [],
         projectID: '',
         addTimes: 0,
-        loading: {}
+        loading: {},
+        RPAForm: {
+          RPAName: '',
+          RPADescription: ''
+        },
+        labelWidth: '160px',
+        RPARule: {
+          RPAName: [
+              { required: true, message: 'Please input RPA name', trigger: 'blur' }
+          ],
+          RPADescription: [
+              { required: true, message: 'Please input RPA Description', trigger: 'blur' }
+          ]
+        },
+        isShowSaveRPApopup: false
       };
     },
     methods:{
@@ -1042,13 +1072,38 @@ export default {
             console.error('getAnalyticAlgoParam Error', error)
         });
       },
-      onContainerSave() {
+      onSaveRPACancel() {
+        this.isShowSaveRPApopup = false;
+        this.RPAForm = {
+          RPAName: '',
+          RPADescription: ''
+        }
+      },
+      onSaveRPAClick() {
+        this.isShowSaveRPApopup = true;
+      },
+      onSaveRPAConfirm() {
+        this.$refs['RPAForm'].validate((valid) => {
+          if(valid) {
+            this.onContainerSave(this.RPAForm.RPAName, this.RPAForm.description).then(() => {
+              this.RPAForm = {
+                RPAName: '',
+                RPADescription: ''
+              }
+              this.isShowSaveRPApopup = false;
+            })
+          }
+        })
+      },
+      onContainerSave(name='', description='') {
         return new Promise((resolve, reject) => {
           let nodeTemp =  this.scene.nodes.map(a => ({...a}));
           let form = {
             userID: JSON.parse(window.localStorage.getItem('user')).userID,
             projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
             token: window.localStorage.getItem('token'),
+            name: name,
+            description: description,
             RPAJson: JSON.stringify(this.scene)
           }
           console.log(form)
@@ -1092,26 +1147,26 @@ export default {
       onContainerExport() {
         this.onContainerSave().then(() => {
           let form = {
-          userID: JSON.parse(window.localStorage.getItem('user')).userID,
-          projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
-          token: window.localStorage.getItem('token'),
-        }
-        post(RPA_exportRPA_url, form).then((resp) => {
-          if (resp.data.status == 'error' && resp.data.msg == 'No version') {
-            this.$message({
-              type: 'error',
-              message: 'Please save a RPA version first'
-            });
-          } else {
-            let blob = new Blob([JSON.stringify(resp.data)], {type:resp.headers['content-type']});
-            let link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = 'export.json';
-            link.click();
+            userID: JSON.parse(window.localStorage.getItem('user')).userID,
+            projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
+            token: window.localStorage.getItem('token'),
           }
-        }).catch((error) => {
-          console.error('onContainerExportError', error);
-        })
+          post(RPA_exportRPA_url, form).then((resp) => {
+            if (resp.data.status == 'error' && resp.data.msg == 'No version') {
+              this.$message({
+                type: 'error',
+                message: 'Please save a RPA version first'
+              });
+            } else {
+              let blob = new Blob([JSON.stringify(resp.data)], {type:resp.headers['content-type']});
+              let link = document.createElement('a');
+              link.href = window.URL.createObjectURL(blob);
+              link.download = 'export.json';
+              link.click();
+            }
+          }).catch((error) => {
+            console.error('onContainerExportError', error);
+          })
         })
       },
       fullScreenLoading() {
