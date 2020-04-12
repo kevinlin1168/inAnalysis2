@@ -1,13 +1,29 @@
 <template>
-  <div>
-    
+  <div class="RPAList_block">
     <el-row class="cardContainer">
-        <el-col :span="24">
-            <el-card shadow="hover" class="clickable" @click.native="OnProjectCardClick">
-                <div class="cardHeader">Project Sum</div>
-                <div class="cardMain">
-                <div class="number"></div>
-                </div>
+        <el-col>
+            <el-card shadow="hover" class="clickable RPAList" v-for="item in RPAList" :key="item.RPAID">
+             <div class="card-inner">
+               <div class="card-left-part">
+                 <el-image :src="testingImg" class="rpa-image"></el-image>
+               </div>
+               <div class="card-right-part">
+                 <div class="right-top">
+                   <p class="rpa-name">{{item.RPAName}}</p>
+                   <button>Export</button>
+                 </div>
+                 <div class="right-middle">
+                   <span class="project-type">Project Type: {{item.projectType}}</span>
+                   <span class="data-type">Data Type: {{item.dataType}}</span>
+                   <span class="user-name">By: {{item.userName}}</span>
+                 </div>
+                 <div class="right-bottom">
+                   <p class="description">
+                      {{item.RPADescription}}
+                   </p>
+                 </div>
+               </div>
+             </div>
             </el-card>
         </el-col>
     </el-row>
@@ -16,6 +32,7 @@
 <script>
 import { RPA_getRPA_url, project_getProjectInfo_url } from "@/config/api.js";
 import { post } from "@/utils/requests/post.js";
+import testingImg from "@/assets/test-img.jpg";
 export default {
   name: "RPAList",
   created: function() {
@@ -26,8 +43,9 @@ export default {
   },
   data: function() {
     return {
-        token: '',
-        RPAList: []
+        RPAList: [],
+        testingImg: testingImg,
+        token: ''
     };
   },
   methods: {
@@ -94,9 +112,6 @@ export default {
   }
   .el-card{
       width:360px;
-      +.el-card{
-          margin-left:20px;
-      }
   @media only screen and (max-width:599px){
       +.el-card{
           margin-left: 0px;
@@ -141,5 +156,68 @@ export default {
   }
     }
   }
+}
+.cardContainer {
+  .el-card.RPAList {
+    width: 100%;
+    + .RPAList {
+      margin-top: 20px;
+    }
+  }
+  .card-inner { 
+    display:flex;
+    flex-direction: row;
+
+	.card-left-part { 
+    margin: 20px;
+    width:170px;
+		.rpa-image { 
+      display: block;
+      width:100%;
+		}
+	}
+
+	.card-right-part { 
+    display: flex;
+    width: calc(100% - 170px);
+    flex-direction: column;
+		.right-top { 
+      display: flex;
+      flex-direction: row;
+			.rpa-name { 
+
+			}
+
+			button { 
+        margin-left: auto;
+			}
+		}
+
+		.right-middle { 
+
+      span + span {
+        margin-left: 10px;
+      }
+			.project-type { 
+
+			}
+
+			.data-type { 
+
+			}
+
+            .user-name {
+
+            }
+		}
+
+		.right-bottom { 
+
+			.description { 
+
+			}
+		}
+	}
+}
 }
 </style>
