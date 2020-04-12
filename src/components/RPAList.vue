@@ -207,8 +207,12 @@ export default {
 		.right-top { 
       display: flex;
       flex-direction: row;
+      margin-bottom: 15px;
 			.rpa-name { 
-
+        color: #000000;
+        font-weight: bold;
+        font-size:24px;
+        margin:0;
 			}
 
 			button { 
@@ -217,21 +221,17 @@ export default {
 		}
 
 		.right-middle { 
-
+      margin-bottom:15px;
+      color: #666666;
       span + span {
         margin-left: 10px;
       }
-			.project-type { 
-
-			}
-
-			.data-type { 
-
-			}
+			button {
+        max-height: 40px;
+      }
 		}
 
 		.right-bottom { 
-
 			.description { 
 
 			}
