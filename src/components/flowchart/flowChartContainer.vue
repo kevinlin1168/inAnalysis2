@@ -1085,7 +1085,7 @@ export default {
       onSaveRPAConfirm() {
         this.$refs['RPAForm'].validate((valid) => {
           if(valid) {
-            this.onContainerSave(this.RPAForm.RPAName, this.RPAForm.description).then(() => {
+            this.onContainerSave(this.RPAForm.RPAName, this.RPAForm.RPADescription).then(() => {
               this.RPAForm = {
                 RPAName: '',
                 RPADescription: ''

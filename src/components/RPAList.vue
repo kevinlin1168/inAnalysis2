@@ -10,7 +10,7 @@
                <div class="card-right-part">
                  <div class="right-top">
                    <p class="rpa-name">{{item.RPAName}}</p>
-                   <button>Export</button>
+                   <el-button type="text" @click="onExportRPAClick(item.RPAID)">Export</el-button>
                  </div>
                  <div class="right-middle">
                    <span class="project-type">Project Type: {{item.projectType}}</span>
@@ -32,7 +32,7 @@
 <script>
 import { RPA_getRPA_url, project_getProjectInfo_url } from "@/config/api.js";
 import { post } from "@/utils/requests/post.js";
-import testingImg from "@/assets/test-img.jpg";
+import organization from "@/assets/organization.png";
 export default {
   name: "RPAList",
   created: function() {
@@ -44,7 +44,7 @@ export default {
   data: function() {
     return {
         RPAList: [],
-        testingImg: testingImg,
+        testingImg: organization,
         token: ''
     };
   },
@@ -59,20 +59,19 @@ export default {
         post(RPA_getRPA_url, userForm).then(
           response => {
             if (response.data.status == "success") {
-              let rpaList = response.data.data.rpaList;
-              for(let index in rpaList) {
+              this.RPAList = response.data.data.rpaList;
+              for(let index in this.RPAList) {
                   let projectFrom = {
-                    projectID: rpaList[index]['projectID'],
+                    projectID: this.RPAList[index]['projectID'],
                     token: this.token
                   }
                   post(project_getProjectInfo_url, projectFrom).then(resp => {
-                        if (resp.data.status == "success") {
-                            Object.assign(rpaList[index], resp.data.data.project);
-                        }
-                    })
+                      if (resp.data.status == "success") {
+                        this.$set(this.RPAList[index], 'projectType', resp.data.data.project.projectType);
+                        this.$set(this.RPAList[index], 'dataType', resp.data.data.project.dataType);
+                      }
+                  })
               }
-              this.RPAList = rpaList;
-              console.log(this.RPAList);
             }
             this.loadingClose();
           },
@@ -81,6 +80,9 @@ export default {
           }
         );
       }
+    },
+    onExportRPAClick(RPAID) {
+        
     },
     fullScreenLoading() {
       this.loading = this.$loading({
@@ -184,8 +186,12 @@ export default {
 		.right-top { 
       display: flex;
       flex-direction: row;
+      margin-bottom: 15px;
 			.rpa-name { 
-
+        color: #000000;
+        font-weight: bold;
+        font-size:24px;
+        margin:0;
 			}
 
 			button { 
@@ -194,25 +200,17 @@ export default {
 		}
 
 		.right-middle { 
-
+      margin-bottom:15px;
+      color: #666666;
       span + span {
         margin-left: 10px;
       }
-			.project-type { 
-
-			}
-
-			.data-type { 
-
-			}
-
-            .user-name {
-
-            }
+			button {
+        max-height: 40px;
+      }
 		}
 
 		.right-bottom { 
-
 			.description { 
 
 			}
