@@ -18,11 +18,11 @@
       <button type="button" class="close" onclick="" aria-label="Close">
         <i class="glyphicon glyphicon-remove"></i>
       </button>
-      <div class="node-type" v-if="type == 'File'"> 
+      <div class="node-type" v-if="type == 'File'" :style="nodeColor"> 
         <template v-if="attribute.fileName">{{attribute.fileName}}</template> 
         <template v-else>{{type}}</template>
       </div>
-      <div class="node-type" v-else> {{type}} </div>
+      <div class="node-type" v-else :style="nodeColor"> {{type}} </div>
       <div class="node-label">
         <template>
             <flowChartCommmon :type='type' 
@@ -118,6 +118,33 @@ export default {
         top: this.options.centerY + this.y * this.options.scale + 'px', // remove: this.options.offsetTop + 
         left: this.options.centerX + this.x * this.options.scale + 'px', // remove: this.options.offsetLeft + 
         transform: `scale(${this.options.scale})`,
+      }
+    },
+    nodeColor() {
+      if(this.type == "File") {
+        return {
+          background: "rgb(255, 136, 85)"
+        }
+      } else if(this.type == "Preprocessing") {
+        return {
+          background: "rgb(200, 200, 200)"
+        }
+      } else if(this.type == "Model") {
+        return {
+          background: "rgb(125, 125, 255)"
+        }
+      } else if(this.type == "Test") {
+        return {
+          background: "rgb(255, 211, 6)"
+        }
+      } else if(this.type == "Predict") {
+        return {
+          background: "rgb(92, 173, 173)"
+        }
+      } else {
+        return {
+          background: "rgb(100, 100, 100)"
+        }
       }
     }
   },
