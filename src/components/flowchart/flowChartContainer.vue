@@ -17,10 +17,12 @@
       @nodeSelected="nodeSelected(node.id, $event)"
       @linkingStart="linkingStart(node.id, $event)"
       @linkingStop="linkingStop(node.id, $event)"
+      @onTestClick="onTestClick"
       @onDeleteNodeClick="nodeDelete"
       @onEditClick="onEditClick"
       @onUploadFileClick="onUploadFileClick"
-      @onSelectFileClick="onSelectFileClick">
+      @onSelectFileClick="onSelectFileClick"
+      @onDownloadClick="onDownloadClick">
     </flowChartComponent>
     <div class="el-controller">
       <div class="el-select-block">
@@ -134,6 +136,40 @@
             <el-button type="primary" @click="onSaveRPAConfirm">Confirm</el-button>
         </div>
     </el-dialog>
+
+    <!-- test model popup-->
+    <el-dialog class="filePreview" :title='"Test"' :visible.sync="isShowTestPopup" :show-close='false' width="665px">
+      <div class="textBlock" v-if="isShowTestImg && (textPreview !== '' || tablePreview !== '')">
+          <div class="title"> Text Preview</div>
+          <div class="textPreview">{{textPreview}}</div>
+          <div v-for="table in tablePreview" :key="table.tableTitle">
+              <div class="subTitle">{{table.tableTitle}}</div>
+              <el-table
+                  :data="table.tableData"
+                  style="width: 100%">
+                  <el-table-column
+                      :prop="prop"
+                      :label="label"
+                      width="120"
+                      v-for="{ prop, label } in table.tablecolConfigs" :key="prop">
+                  </el-table-column>
+                  
+              </el-table>
+          </div>
+      </div>
+      <div class="imgBlock" v-if="isShowTestImg">
+          <div class="title">Chart Preview</div>
+          <el-carousel trigger="click" height="400px" width= "625px" :autoplay="false">
+              <el-carousel-item v-for="item in modelImgList" :key="item">
+                  <div v-html="item">
+                  </div>
+              </el-carousel-item>
+          </el-carousel>
+      </div>
+      <div slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="onTestClose">Close</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -144,8 +180,9 @@ import flowChartFile from './flowChartFile';
 import preprocessingComponent from '../preprocessingComponent';
 import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
-import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, RPA_saveRPA_url, RPA_loadRPA_url, RPA_exportRPA_url, file_delete_url, RPA_importRPA_url, RPA_runRPA_url, model_deleteModelByUID_url } from '@/config/api.js';
-import { post } from '@/utils/requests/post.js'
+import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, RPA_saveRPA_url, RPA_loadRPA_url, RPA_exportRPA_url, RPA_importRPA_url, RPA_runRPA_url, model_deleteModelByUID_url, file_download_url } from '@/config/api.js';
+import { post } from '@/utils/requests/post.js';
+import { deleteFile } from '../util/deleteFile';
 import { nodeType } from './model/nodeType';
 
 export default {
@@ -164,7 +201,6 @@ export default {
       if(this.$route.name == 'RPA') {
         window.onbeforeunload = function (e) {
           // this.clearNewNode();
-          setTimeout(function(){setTimeout(function(){}, 50)},50);
           console.log(e)
           e = e || window.event;
         
@@ -301,43 +337,16 @@ export default {
               { required: true, message: 'Please input RPA Description', trigger: 'blur' }
           ]
         },
-        isShowSaveRPApopup: false
+        textPreview: '',
+        modelImgList: [],
+        tablePreview: [],
+        isShowSaveRPApopup: false,
+        isShowTestImg: false,
+        isShowTestPopup: false,
+
       };
     },
     methods:{
-      clearNewNode(e) {
-        // let newNodeList = this.scene.nodes.filter((node) => {
-        //   return node.tag != 'Saved';
-        // });
-        // console.log(newNodeList)
-        // newNodeList.forEach((node) => {
-        //   if(node.type == 'File' || node.type == 'Preprocessing') {
-        //     let form = {}
-        //     if(node.type == 'File') {
-        //       console.log('fileID', node.attribute.fileID)
-        //       if(node.attribute.fileID) {
-        //         form['fileID'] = node.attribute.fileID;
-        //       }
-              
-        //     } else if (node.type == 'Preprocessing') {
-        //       if(node.attribute.newFileID) {
-        //         form['fileID'] = node.attribute.newFileID;
-        //       }
-        //     }
-        //     if(form['fileID'] != '' && form['fileID'] != undefined) {
-        //       form['token'] = window.localStorage.getItem('token')
-        //       post(file_delete_url, form).then((resp) => {
-        //         if(resp.data.status == "success") {
-        //             this.$message({
-        //                 type: 'success',
-        //                 message: 'Delete successfully!'
-        //             });
-        //         }
-        //       })
-        //     } 
-        //   }
-        // })
-      },
       fetchData() {
         if(this.$route.name == 'RPA') {
           this.onContainerLoad();
@@ -535,8 +544,8 @@ export default {
                 return false;
             }
           }).catch((error) => {
-            return false
             console.warn('getColumn Error', error)
+            return false
           })
           return true;
         } else if((fromNode.type == 'File' || fromNode.type == 'Preprocessing') && (inputNode.type == 'Test' || inputNode.type == 'Predict')) {
@@ -562,10 +571,8 @@ export default {
           let nodeType = this.scene.nodes[this.findNodeIndexWithID(index)].type;
           let isMultiInput = (nodeType == 'Test' || nodeType == 'Predict');
           let onlyOneInputFlag = onlyOneInputCheck.length >= 1 ? true : false;
-          console.log('isMultiInput', onlyOneInputFlag)
           if(isMultiInput) {
             if(onlyOneInputCheck) {
-              console.log('toType', onlyOneInputCheck)
               for(let index=0; index < onlyOneInputCheck.length; index++) {
                 if(onlyOneInputCheck[index].toType == type) {
                   this.$message({
@@ -649,35 +656,27 @@ export default {
         //get delete node attribute
         let deleteNode = this.findNodeWithID(id);
         if(deleteNode.type == 'File' && (deleteNode.attribute.fileID != '' && deleteNode.attribute.fileID != undefined)) {
-          let form = {
-            fileID: deleteNode.attribute.fileID,
-            token: window.localStorage.getItem('token')
-          }
-          post(file_delete_url, form).then((resp) => {
-              if(resp.data.status == "success") {
-                  this.$message({
-                      type: 'success',
-                      message: 'Delete successfully!'
-                  });
-              }
+          deleteFile(deleteNode.attribute.fileID).then((resp) => {
+            if(resp.data.status == "success") {
+              this.$message({
+                  type: 'success',
+                  message: 'Delete successfully!'
+              });
+            }
           })
         } else if(deleteNode.type == 'Preprocessing' && (deleteNode.attribute.newFileID != '' && deleteNode.attribute.newFileID != undefined)) {
-          let form = {
-            fileID: deleteNode.attribute.newFileID,
-            token: window.localStorage.getItem('token')
-          }
-          post(file_delete_url, form).then((resp) => {
-              if(resp.data.status == "success") {
-                  this.$message({
-                      type: 'success',
-                      message: 'Delete successfully!'
-                  });
-              }
+          deleteFile(deleteNode.attribute.newFileID).then((resp) => {
+            if(resp.data.status == "success") {
+              this.$message({
+                  type: 'success',
+                  message: 'Delete successfully!'
+              });
+            }
           })
         } else if(deleteNode.type == 'Model' && (deleteNode.attribute.modelID != '' && deleteNode.attribute.modelID != undefined)) {
           let form = {
             modelUID: deleteNode.attribute.modelID,
-            token: window.location.getItem('token')
+            token: window.localStorage.getItem('token')
           }
           post(model_deleteModelByUID_url, form).then((resp) => {
               if(resp.data.status == "success") {
@@ -687,6 +686,15 @@ export default {
                   });
               }
           })
+        } else if(deleteNode.type == 'Predict' && (deleteNode.attribute.predictFileID != '' && deleteNode.attribute.predictFileID != undefined)) {
+          deleteFile(deleteNode.attribute.predictFileID).then((resp) => {
+            if(resp.data.status == "success") {
+              this.$message({
+                  type: 'success',
+                  message: 'Delete successfully!'
+              });
+            }
+          });
         }
         //delete link attribute
         let deletedLinks = this.scene.links.filter((item) => {
@@ -696,7 +704,8 @@ export default {
         while(deletedLinks.length != 0) {
           let tempList = [];
           deletedLinks.forEach((link) => {
-            this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)].attribute, 'fileID',"")
+            // this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)].attribute, 'fileID',"");
+            this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)], 'isComplete', false);
             let temp = this.scene.links.filter((item) => {
               return item.from === link.to
             });
@@ -705,23 +714,23 @@ export default {
           deletedLinks = tempList;
         }
         //delete link
-        deletedLinks = this.scene.links.filter((item) => {
-          return item.from === id 
-        });
-        while(deletedLinks.length != 0) {
-          let tempList = [];
-          deletedLinks.forEach((link) => {
-            let temp = this.scene.links.filter((item) => {
-              return item.from === link.to
-            });
-            tempList = tempList.concat(temp);
+        // deletedLinks = this.scene.links.filter((item) => {
+        //   return item.from === id 
+        // });
+        // while(deletedLinks.length != 0) {
+        //   let tempList = [];
+        //   deletedLinks.forEach((link) => {
+        //     let temp = this.scene.links.filter((item) => {
+        //       return item.from === link.to
+        //     });
+        //     tempList = tempList.concat(temp);
 
-            this.scene.links = this.scene.links.filter((item) => {
-              return item.from !== link.to
-            });
-          });
-          deletedLinks = tempList;
-        }
+        //     this.scene.links = this.scene.links.filter((item) => {
+        //       return item.from !== link.to
+        //     });
+        //   });
+        //   deletedLinks = tempList;
+        // }
         this.scene.nodes = this.scene.nodes.filter((node) => {
           return node.id !== id;
         })
@@ -752,9 +761,101 @@ export default {
           x: -700 + 20 * this.addTimes,
           y: -69 + 10 * this.addTimes,
           type: this.selectNodeType,
+          isComplete: false, 
           attribute: {}
         }
         this.scene.nodes.push(newNode);
+      },
+      onDownloadClick(id) {
+        let node = this.findNodeWithID(id);
+        let fileForm = {
+          fileID: node.attribute.predictFileID,
+          fileName: 'default.csv',
+          token: window.localStorage.getItem('token')
+        }
+        console.log('onDownloadClick', node);
+        this.fullScreenLoading();
+        post(file_download_url, fileForm, {responseType: 'blob'}).then((resp) => {
+          this.loadingClose();
+          let blob = new Blob([resp.data], {type:resp.headers['content-type']});
+          let link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          link.download = fileForm.fileName;
+          link.click();
+          this.loadingClose();
+        }).catch((error) => {
+          this.loadingClose();
+          console.error(error);
+        })
+      },
+      onTestClick(id) {
+        this.selectedNode = this.findNodeWithID(id);
+        this.isShowTestImg = false;
+        this.fullScreenLoading();
+        this.modelImgList = [];
+        this.tablePreview = [];
+        let bokehVersion = '1.3.4';
+        let link = document.createElement('link')
+        link.setAttribute('rel', 'stylesheet')
+        link.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.css')
+        link.setAttribute('type', 'text/css')
+        document.head.appendChild(link)
+        // 在header插入js
+        let script = document.createElement('script')
+        script.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-' + bokehVersion + '.min.js')
+        script.async = 'async'
+        document.head.appendChild(script)
+        // cdn的js載入完畢再请求bokeh參數
+        let _this = this;
+        script.onload = () => {
+            let link1 = document.createElement('link')
+            link1.setAttribute('rel', 'stylesheet')
+            link1.setAttribute('href', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.css')
+            link1.setAttribute('type', 'text/css')
+            document.head.appendChild(link1)
+            let script1 = document.createElement('script')
+            script1.setAttribute('src', 'https://cdn.pydata.org/bokeh/release/bokeh-widgets-' + bokehVersion + '.min.js')
+            script1.async = 'async'
+            document.head.appendChild(script1)
+            script1.onload = () => {
+              _this.textPreview = _this.selectedNode.attribute.testResp.text;
+              Object.keys(_this.selectedNode.attribute.testResp.form).forEach((key) => {
+                  let object = {
+                      tableTitle: key,
+                      tablecolConfigs: [],
+                      tableData: []
+                  }
+                  _this.selectedNode.attribute.testResp.form[key].title.forEach((value) => {
+                      let colConfig = { prop: value, label: value };
+                      object.tablecolConfigs.push(colConfig);
+                  })
+                  _this.selectedNode.attribute.testResp.form[key].value.forEach((value) => {
+                      let valueObject = {};                                        
+                      _this.selectedNode.attribute.testResp.form[key].title.forEach((title, index) => {
+                          valueObject[title] = value[index];
+                      })
+                      object.tableData.push(valueObject);
+                  })
+                  _this.tablePreview.push(object);
+              })
+              let figObject = _this.selectedNode.attribute.testResp.fig;
+              let imgKeyList = Object.keys(figObject);
+              imgKeyList.forEach((key) => {
+                  _this.modelImgList.push(figObject[key].div);
+                  let bokehRunScript = document.createElement('SCRIPT');
+                  bokehRunScript.setAttribute('type', 'text/javascript');
+                  let t = document.createTextNode(figObject[key].script);
+                  bokehRunScript.appendChild(t);
+                  document.body.appendChild(bokehRunScript);
+              })
+              this.loadingClose();
+              this.isShowTestImg = true;
+              this.isShowTestPopup = true;
+          }             
+        }
+      },
+      onTestClose() {
+        this.isShowTestPopup = false;
       },
       onEditClick(id) {
         this.selectedNode = this.findNodeWithID(id);
@@ -912,6 +1013,7 @@ export default {
       },
       onEditConfirmClick() {
         let node = this.findNodeWithID(this.selectedNode.id)
+        this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)], 'isComplete', true);
         if(node.type == 'Preprocessing') {
           this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
         } else if (node.type == 'Model') {
@@ -919,7 +1021,7 @@ export default {
         }
         this.isShowPopup = false;
       },
-      uploadSelectionFile(params) {
+      uploadFile(params) {
         let fileObj = params.file;
         let form = new FormData();
         form.append("file", fileObj);
@@ -931,6 +1033,7 @@ export default {
         post(file_upload_url, form).then((response) => {
             if (response.data.status == "success") {
                 this.loadingClose();
+                this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)], 'isComplete', true);
                 this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileID', response.data.data.fileUid);
                 this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileName', fileObj.name);
             }
@@ -943,6 +1046,17 @@ export default {
         this.$refs.upload.clearFiles();
         this.isShowUploadBlock = true;
         this.isShowUploadFilePopup = false;
+      },
+      uploadSelectionFile(params) {
+        if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.fileID != '' && this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.fileID != undefined) {
+          deleteFile(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.fileID).then((resp) => {
+            if(resp.data.status == "success") {
+              this.uploadFile(params);
+            }
+          })
+        } else {
+          this.uploadFile(params);
+        }
       },
       importRPAFile(params) {
         let fileObj = params.file;
@@ -1182,20 +1296,14 @@ export default {
       },
       onRPARun() {
         let isError = false;
-        let preprocessingNodes = this.scene.nodes.filter((node) => {
-          return node.type == 'Preprocessing';
-        })
-        let modelNodes = this.scene.nodes.filter((node) => {
-          return node.type == 'Model';
-        })
-        preprocessingNodes.forEach((node) => {
-          if(node.attribute.action == '' || node.attribute.action == undefined) {
+        this.scene.nodes.forEach((node) => {
+          if(node.isComplete == false && (node.type != 'Test' && node.type != 'Predict')) {
             isError = true;
           }
-        })
-        modelNodes.forEach((node) => {
-          if(node.attribute.algoName == '' || node.attribute.algoName == undefined) {
-            isError = true;
+          if(node.type == 'Test' || node.type == 'Predict') {
+            // node.attribute.newFileID = '';
+            node.isComplete = false;
+            node.attribute.modelID = '';
           }
         })
         if(!isError) {
@@ -1247,5 +1355,27 @@ export default {
           display: inline-block;
         }
       }
+    }
+
+    .filePreview {
+        .textBlock {
+            .title {
+                font-size: 18px;
+            }
+            .subTitle {
+                font-size: 14px;
+            }
+            .textPreview {
+                margin-top: 10px;
+                white-space: pre-wrap;
+            }
+        }
+        .imgBlock{
+            width: 625px;
+            .title {
+                // text-align: center;
+                font-size: 18px;
+            }
+        }
     }
 </style>

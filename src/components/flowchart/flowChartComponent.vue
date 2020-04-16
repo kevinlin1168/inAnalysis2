@@ -19,19 +19,30 @@
         <i class="glyphicon glyphicon-remove"></i>
       </button>
       <div class="node-type" v-if="type == 'File'" :style="nodeColor"> 
-        <template v-if="attribute.fileName">{{attribute.fileName}}</template> 
-        <template v-else>{{type}}</template>
+        <template v-if="attribute.fileName">
+          {{attribute.fileName}}
+          <i class="el-icon-check" v-if="isComplete"></i> 
+        </template> 
+        <template v-else>{{type}}
+          <i class="el-icon-close" v-if="!isComplete"></i> 
+        </template>
       </div>
-      <div class="node-type" v-else :style="nodeColor"> {{type}} </div>
+      <div class="node-type" v-else :style="nodeColor"> {{type}} 
+        <i class="el-icon-check" v-if="isComplete"></i> 
+        <i class="el-icon-close" v-else></i> 
+      </div>
       <div class="node-label">
         <template>
             <flowChartCommmon :type='type' 
             :fileName= 'attribute.fileName'
             :isDisabled= 'isDisabled'
+            :isComplete= 'isComplete'
             @deleteNode='onDeleteNodeClick'
+            @onDownloadClick='onDownloadClick'
             @onEditClick='onEditClick'
             @onSelectFileClick='onSelectFileClick'
-            @onUploadFileClick='onUploadFileClick'></flowChartCommmon>
+            @onUploadFileClick='onUploadFileClick'
+            @onTestClick='onTestClick'></flowChartCommmon>
         </template>
       </div>
     </div>
@@ -43,6 +54,7 @@
 
 <script>
 import flowChartCommmon from './flowChartCommon';
+import {nodeType} from './model/nodeType';
 
 export default {
   name: "flowChartComponent",
@@ -80,6 +92,9 @@ export default {
       type: String,
       default: 'input name'
     },
+    isComplete: {
+      type: Boolean
+    },
     attribute: {
       type: Object
     },
@@ -99,6 +114,7 @@ export default {
   },
   data() {
     return {
+      nodeTypeList: nodeType
     }
   },
   mounted() {
@@ -121,36 +137,19 @@ export default {
       }
     },
     nodeColor() {
-      if(this.type == "File") {
-        return {
-          background: "rgb(255, 136, 85)"
-        }
-      } else if(this.type == "Preprocessing") {
-        return {
-          background: "rgb(200, 200, 200)"
-        }
-      } else if(this.type == "Model") {
-        return {
-          background: "rgb(125, 125, 255)"
-        }
-      } else if(this.type == "Test") {
-        return {
-          background: "rgb(255, 211, 6)"
-        }
-      } else if(this.type == "Predict") {
-        return {
-          background: "rgb(92, 173, 173)"
-        }
-      } else {
-        return {
-          background: "rgb(100, 100, 100)"
-        }
-      }
+      const result = this.nodeTypeList.filter(item => item.value == this.type);
+      return {background: result[0].color};
     }
   },
   methods: {
     onDeleteNodeClick() {
         this.$emit('onDeleteNodeClick', this.id);
+    },
+    onTestClick() {
+      this.$emit('onTestClick', this.id);
+    },
+    onDownloadClick() {
+      this.$emit('onDownloadClick', this.id);
     },
     handleMousedown(e) {
       const target = e.target || e.srcElement;
