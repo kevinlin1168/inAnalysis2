@@ -633,6 +633,22 @@ export default {
               };
               this.scene.links.push(newLink)
               this.$emit('linkAdded', newLink)
+              let updateLinks = this.scene.links.filter((item) => {
+                return item.from === index
+              });
+              //clear file id
+              while(updateLinks.length != 0) {
+                let tempList = [];
+                updateLinks.forEach((link) => {
+                  this.setupComponent(link.from, link.to);
+                  this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)], 'isComplete', false);
+                  let temp = this.scene.links.filter((item) => {
+                    return item.from === link.to
+                  });
+                  tempList = tempList.concat(temp);
+                });
+                updateLinks = tempList;
+              } 
             }
           }
         }
@@ -1032,10 +1048,28 @@ export default {
         this.fullScreenLoading();
         post(file_upload_url, form).then((response) => {
             if (response.data.status == "success") {
-                this.loadingClose();
-                this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)], 'isComplete', true);
-                this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileID', response.data.data.fileUid);
-                this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileName', fileObj.name);
+              this.loadingClose();
+              this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)], 'isComplete', true);
+              this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileID', response.data.data.fileUid);
+              this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute, 'fileName', fileObj.name);
+              //delete link attribute
+              let uploadLinks = this.scene.links.filter((item) => {
+                return item.from === this.selectedNode.id
+              });
+              console.log('uploadLinks', uploadLinks);
+              //clear file id
+              while(uploadLinks.length != 0) {
+                let tempList = [];
+                uploadLinks.forEach((link) => {
+                  this.setupComponent(link.from, link.to);
+                  this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)], 'isComplete', false);
+                  let temp = this.scene.links.filter((item) => {
+                    return item.from === link.to
+                  });
+                  tempList = tempList.concat(temp);
+                });
+                uploadLinks = tempList;
+              } 
             }
         }).catch((error) => {
             this.loadingClose();
@@ -1053,6 +1087,9 @@ export default {
             if(resp.data.status == "success") {
               this.uploadFile(params);
             }
+          }).catch((error) => {
+            console.log('error', error);
+            this.uploadFile(params);
           })
         } else {
           this.uploadFile(params);
