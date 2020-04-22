@@ -83,6 +83,23 @@
           :reset='isShowPopup'
           @onSelectAlgorithmChange="onSelectAlgorithmChange"></trainModelComponent>
         </template>
+        <template v-else-if="selectedNode.type == 'Filter'">
+          <el-form :model="filterForm" ref="filterForm" :rules="filterRules">
+            <!-- <el-form-item label="Filter Type" prop="filterType">
+              <el-select v-model="filterForm.filterType" placeholder="please select filter type">
+                <el-option class="option" v-for="(item, index) in projectTypeOption" :label="item" :value="item" :key="index"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="Filter Value" prop="filterValue">
+              <el-input v-model="filterForm.filterValue" autocomplete="off"></el-input>
+            </el-form-item> -->
+            <el-form-item label="True" prop="portType">
+              <el-select v-model="filterForm.portType" placeholder="please select port">
+                  <el-option class="option" v-for="(item, index) in potyTypeOption" :label="item" :value="item" :key="index"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-form>
+        </template>
       </div>
       <div slot="footer" class="dialog-footer">
           <el-button @click="onEditCancelClick">Cancel</el-button>
@@ -343,7 +360,26 @@ export default {
         isShowSaveRPApopup: false,
         isShowTestImg: false,
         isShowTestPopup: false,
-
+        filterForm: {
+          portType: '',
+          filterType: '',
+          filterValue: ''
+        },
+        filterRules: {
+          portType: [
+            { required: true, message: 'please select port type', trigger: 'blur' }
+          ],
+          filterType: [
+            { required: true, message: 'please select filter type', trigger: 'blur' }
+          ],
+          filterValue: [
+            { required: true, message: 'please input filter value', trigger: 'blur' }
+          ]
+        },
+        potyTypeOption: [
+          'left port',
+          'right port'
+        ]
       };
     },
     methods:{
@@ -425,6 +461,10 @@ export default {
         }
         else if (type === 'bottom') {
           return [x + 120, y + 80];
+        } else if (type === 'bottom-left') {
+          return [x + 60, y + 80];
+        } else if (type === 'bottom-right') {
+          return [x + 180, y + 80];
         }
       },
       handleMove(e) {
@@ -486,7 +526,7 @@ export default {
 
         return true;
       },
-      setupComponent(from, index) {
+      setupComponent(from, index, fromPort = undefined) {
         let fromNode = this.findNodeWithID(from);
         let inputNode = this.findNodeWithID(index);
         if((fromNode.type == 'File' || fromNode.type == 'Preprocessing') && inputNode.type == 'Preprocessing') {
@@ -511,8 +551,6 @@ export default {
               this.scene.nodes[this.findNodeIndexWithID(index)].attribute['columnListTemp'] =  columnList.map(a => ({...a}));
               this.scene.nodes[this.findNodeIndexWithID(index)].attribute['isHasStringType'] = isHasStringType;
               this.scene.nodes[this.findNodeIndexWithID(index)].attribute['selectAllMissingValue'] = false;
-              console.log(this.scene.nodes[this.findNodeIndexWithID(index)]);
-              console.log('here')
             }
           }).catch(()=> {
           });
@@ -553,7 +591,27 @@ export default {
             this.scene.nodes[this.findNodeIndexWithID(index)].attribute['newFileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
           }
           return true;
-        } else if((fromNode.type == 'Model') && (inputNode.type == 'Test' || inputNode.type == 'Predict')) {
+        } else if((fromNode.type == 'Model') && (inputNode.type == 'Test' || inputNode.type == 'Predict' || inputNode.type == 'Filter')) {
+          return true;
+        } else if(fromNode.type == 'Filter') {
+          //還是在亂寫
+          console.log(fromPort)
+          if(fromPort == 'bottom-left') {
+            console.log(this.scene.nodes[this.findNodeIndexWithID(from)].attribute.left != undefined)
+            if(this.scene.nodes[this.findNodeIndexWithID(from)].attribute.left != undefined) {
+              this.scene.nodes[this.findNodeIndexWithID(from)].attribute.left['id'] = index;
+            } else {
+              console.log('here')
+              this.scene.nodes[this.findNodeIndexWithID(from)].attribute['left'] = {id: index};
+            }
+          } else if(fromPort == 'bottom-right') {
+            if(this.scene.nodes[this.findNodeIndexWithID(from)].attribute.right != undefined) {
+              this.scene.nodes[this.findNodeIndexWithID(from)].attribute.right['id'] = index;
+            } else {
+              this.scene.nodes[this.findNodeIndexWithID(from)].attribute['right'] = {id: index};
+            }
+          }
+          console.log(this.scene.nodes[this.findNodeIndexWithID(from)])
           return true;
         } else {
           this.$message({
@@ -618,8 +676,7 @@ export default {
           let verifyLink = this.verifyLinks(index, type, this.draggingLink.from)
           let verify = this.verifyComponent(this.draggingLink.from, index);
           if ((!(existed) && verifyLink && verify)) {
-            let isSuccess = this.setupComponent(this.draggingLink.from, index);
-            console.log('isSuccess', isSuccess)
+            let isSuccess = this.setupComponent(this.draggingLink.from, index, this.draggingLink.fromType);
             if(isSuccess) {
               let maxID = Math.max(0, ...this.scene.links.map((link) => {
                 return link.id
@@ -1018,6 +1075,32 @@ export default {
           this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
         } else if (node.type == 'Model') {
           this.doModelTrain(node.attribute.algoInputList, node.attribute.algoOutputList, node.attribute.parameterList, node.attribute.selectAlgorithm);
+        } else if (node.type == 'Filter') {
+          //我在亂寫
+          if(this.filterForm.portType == 'left port') {
+            if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left) {
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left['status'] = true;
+            } else {
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['left'] = {status: true};
+            }
+            if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right) {
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right['status'] = false;
+            } else {
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['right'] = {status: false};
+            }
+          } else {
+            if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left) {
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left['status'] = false;
+            } else {
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['left'] = {status: false};
+            }
+            if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right) {
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right['status'] = true;
+            } else {
+              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['right'] = {status: true};
+            }
+          }
+          console.log('node', node);
         }
         this.isShowPopup = false;
       },
@@ -1297,6 +1380,7 @@ export default {
       onRPARun() {
         let isError = false;
         this.scene.nodes.forEach((node) => {
+          node.isRoot = true;
           if(node.isComplete == false && (node.type != 'Test' && node.type != 'Predict')) {
             isError = true;
           }
@@ -1305,6 +1389,11 @@ export default {
             node.isComplete = false;
             node.attribute.modelID = '';
           }
+          this.scene.links.forEach((link) => {
+            if(link.to == node.id) {
+              node.isRoot = false;
+            }
+          })
         })
         if(!isError) {
           this.onContainerSave().then(() => {

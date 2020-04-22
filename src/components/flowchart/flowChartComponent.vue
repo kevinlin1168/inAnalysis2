@@ -2,15 +2,15 @@
   <div class="flowChartComponent" :style="nodeStyle" 
     v-bind:class="{selected: options.selected === id}"
     @mousedown="handleMousedown">
-    <div class="node-port node-input" v-if="type != 'Test' && type != 'Predict'"
+    <div class="node-port node-input" v-if="nodeInputType == 'one'"
       @mousedown="inputMouseDown"
       @mouseup="inputMouseUp($event, 'top')">
     </div>
-    <div class="node-left node-input" v-if="type == 'Test' || type == 'Predict'"
+    <div class="node-left node-input" v-if="nodeInputType == 'two'"
       @mousedown="inputMouseDown"
       @mouseup="inputMouseUp($event, 'top-left')">
     </div>
-    <div class="node-right node-input" v-if="type == 'Test' || type == 'Predict'"
+    <div class="node-right node-input" v-if="nodeInputType == 'two'"
       @mousedown="inputMouseDown"
       @mouseup="inputMouseUp($event, 'top-right')">
     </div>
@@ -46,8 +46,18 @@
         </template>
       </div>
     </div>
-    <div class="node-port node-output" 
-      @mousedown="outputMouseDown($event, 'bottom')">
+    <div v-if="nodeOutputType == 'one'">
+      <div class="node-port node-output"
+        @mousedown="outputMouseDown($event, 'bottom')">
+      </div>
+    </div>
+    <div v-if="nodeOutputType == 'two'">
+      <div class="node-left node-output" 
+        @mousedown="outputMouseDown($event, 'bottom-left')">
+      </div>
+      <div class="node-right node-output"
+        @mousedown="outputMouseDown($event, 'bottom-right')">
+      </div>
     </div>
   </div>
 </template>
@@ -139,6 +149,14 @@ export default {
     nodeColor() {
       const result = this.nodeTypeList.filter(item => item.value == this.type);
       return {background: result[0].color};
+    },
+    nodeInputType() {
+      const result = this.nodeTypeList.filter(item => item.value == this.type);
+      return result[0].input;
+    },
+    nodeOutputType() {
+      const result = this.nodeTypeList.filter(item => item.value == this.type);
+      return result[0].output;
     }
   },
   methods: {
