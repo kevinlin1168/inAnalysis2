@@ -85,14 +85,14 @@
         </template>
         <template v-else-if="selectedNode.type == 'Filter'">
           <el-form :model="filterForm" ref="filterForm" :rules="filterRules">
-            <!-- <el-form-item label="Filter Type" prop="filterType">
+            <el-form-item label="Filter Type" prop="filterType">
               <el-select v-model="filterForm.filterType" placeholder="please select filter type">
-                <el-option class="option" v-for="(item, index) in projectTypeOption" :label="item" :value="item" :key="index"></el-option>
+                <el-option class="option" v-for="(item, index) in selectedNode.attribute.metric" :label="item" :value="item" :key="index"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="Filter Value" prop="filterValue">
               <el-input v-model="filterForm.filterValue" autocomplete="off"></el-input>
-            </el-form-item> -->
+            </el-form-item>
             <el-form-item label="True" prop="portType">
               <el-select v-model="filterForm.portType" placeholder="please select port">
                   <el-option class="option" v-for="(item, index) in potyTypeOption" :label="item" :value="item" :key="index"></el-option>
@@ -373,7 +373,7 @@ export default {
             { required: true, message: 'please select filter type', trigger: 'blur' }
           ],
           filterValue: [
-            { required: true, message: 'please input filter value', trigger: 'blur' }
+            { type: 'number', required: true, message: 'please input filter value', trigger: 'blur' }
           ]
         },
         potyTypeOption: [
@@ -592,8 +592,12 @@ export default {
           }
           return true;
         } else if((fromNode.type == 'Model') && (inputNode.type == 'Test' || inputNode.type == 'Predict' || inputNode.type == 'Filter')) {
+          if(inputNode.type == 'Filter') {
+            this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
+          }
           return true;
         } else if(fromNode.type == 'Filter') {
+          this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
           //還是在亂寫
           console.log(fromPort)
           if(fromPort == 'bottom-left') {
@@ -1091,7 +1095,29 @@ export default {
           this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
         } else if (node.type == 'Model') {
           this.doModelTrain(node.attribute.algoInputList, node.attribute.algoOutputList, node.attribute.parameterList, node.attribute.selectAlgorithm);
+          let links = this.scene.links.filter((item) => {
+            return item.from === this.selectedNode.id
+          });
+          links.forEach((link) => {
+            let linkedNode = this.findNodeWithID(link.to);
+            if(linkedNode.type == 'Filter') {
+              let project = JSON.parse(window.localStorage.getItem('project'));
+              let form = {
+                  dataType: project.dataType,
+                  projectType: project.projectType,
+                  algoName: node.attribute.selectAlgorithm,
+                  token: window.localStorage.getItem('token')
+              }
+              post(analytic_getAnalyticAlgoParam_url, form).then((resp) => {
+                if(resp.data.status == 'success') {
+                  this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)].attribute, 'metric', resp.data.data.metric);
+                }
+              });
+            }
+          })
         } else if (node.type == 'Filter') {
+          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['metric'] = this.filterForm.filterType;
+          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['metricValue'] = this.filterForm.filterValue;
           //我在亂寫
           if(this.filterForm.portType == 'left port') {
             if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left) {
