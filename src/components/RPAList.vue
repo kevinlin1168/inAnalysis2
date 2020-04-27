@@ -10,7 +10,7 @@
                <div class="card-right-part">
                  <div class="right-top">
                    <p class="rpa-name">{{item.RPAName}}</p>
-                   <el-button type="text" @click="onExportRPAClick(item.RPAID)">Export</el-button>
+                   <el-button type="text" @click="onExportRPAClick(item.projectID)">Export</el-button>
                  </div>
                  <div class="right-middle">
                    <span class="project-type">Project Type: {{item.projectType}}</span>
@@ -31,6 +31,7 @@
 </template>
 <script>
 import { RPA_getRPA_url, project_getProjectInfo_url } from "@/config/api.js";
+import { exportRPA } from './services/RPAService'
 import { post } from "@/utils/requests/post.js";
 import organization from "@/assets/organization.png";
 export default {
@@ -81,8 +82,8 @@ export default {
         );
       }
     },
-    onExportRPAClick(RPAID) {
-        
+    onExportRPAClick(projectID) {
+      exportRPA(JSON.parse(window.localStorage.getItem('user')).userID, projectID, window.localStorage.getItem('token'))
     },
     fullScreenLoading() {
       this.loading = this.$loading({

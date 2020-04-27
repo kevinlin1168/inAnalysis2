@@ -87,7 +87,7 @@
           <el-form :model="filterForm" ref="filterForm" :rules="filterRules">
             <el-form-item label="Filter Type" prop="filterType">
               <el-select v-model="filterForm.filterType" placeholder="please select filter type">
-                <el-option class="option" v-for="(item, index) in selectedNode.attribute.metric" :label="item" :value="item" :key="index"></el-option>
+                <el-option class="option" v-for="(item, index) in selectedNode.attribute.metricList" :label="item" :value="item" :key="index"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="Filter Value" prop="filterValue">
@@ -197,7 +197,8 @@ import flowChartFile from './flowChartFile';
 import preprocessingComponent from '../preprocessingComponent';
 import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
-import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, RPA_saveRPA_url, RPA_loadRPA_url, RPA_exportRPA_url, RPA_importRPA_url, RPA_runRPA_url, model_deleteModelByUID_url, file_download_url } from '@/config/api.js';
+import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, model_deleteModelByUID_url, file_download_url } from '@/config/api.js';
+import { exportRPA, runRPA, saveRPA, loadRPA, importRPA } from '../services/RPAService'
 import { post } from '@/utils/requests/post.js';
 import { deleteFile } from '../util/deleteFile';
 import { nodeType } from './model/nodeType';
@@ -1110,7 +1111,7 @@ export default {
               }
               post(analytic_getAnalyticAlgoParam_url, form).then((resp) => {
                 if(resp.data.status == 'success') {
-                  this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)].attribute, 'metric', resp.data.data.metric);
+                  this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)].attribute, 'metricList', resp.data.data.metric);
                 }
               });
             }
@@ -1205,23 +1206,15 @@ export default {
         }
       },
       importRPAFile(params) {
-        let fileObj = params.file;
-        let form = new FormData();
-        form.append("file", fileObj);
-        form.append("userID", JSON.parse(window.localStorage.getItem('user')).userID);
-        form.append("projectID", this.projectID)
-        form.append("token", window.localStorage.getItem('token'))
         this.fullScreenLoading();
-        post(RPA_importRPA_url, form).then((response) => {
-            if (response.data.status == "success") {
-                this.loadingClose();
-                this.onContainerLoad();
-            }
+        importRPA(params.file, JSON.parse(window.localStorage.getItem('user')).userID, this.projectID, window.localStorage.getItem('token')).then(() => {
+          this.loadingClose();
+          this.onContainerLoad();
         }).catch((error) => {
-            this.loadingClose();
-            this.$message.error('Import RPA error please try again.');
-            console.error(error);
-        });
+          this.loadingClose();
+          this.$message.error('Import RPA error please try again.');
+          console.error(error);
+        })
 
         this.$refs.importRPA.clearFiles();
       },
@@ -1358,33 +1351,18 @@ export default {
       onContainerSave(name='', description='') {
         return new Promise((resolve, reject) => {
           let nodeTemp =  this.scene.nodes.map(a => ({...a}));
-          let form = {
-            userID: JSON.parse(window.localStorage.getItem('user')).userID,
-            projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
-            token: window.localStorage.getItem('token'),
-            name: name,
-            description: description,
-            RPAJson: JSON.stringify(this.scene)
-          }
-          console.log(form)
-          post(RPA_saveRPA_url, form).then((resp) => {
+          saveRPA(JSON.parse(window.localStorage.getItem('user')).userID, JSON.parse(window.localStorage.getItem('project')).projectID, window.localStorage.getItem('token'), name, description, JSON.stringify(this.scene)).then(() => {
             resolve();
-            console.log(resp);
           }).catch((error) => {
             reject(error);
             this.scene.nodes = nodeTemp.map(a => ({...a}));
             console.error('onContainerSaveError', error);
           })
-        });
+        })
       },
       onContainerLoad() {
         // this.clearNewNode();
-        let form = {
-          userID: JSON.parse(window.localStorage.getItem('user')).userID,
-          projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
-          token: window.localStorage.getItem('token'),
-        }
-        post(RPA_loadRPA_url, form).then((resp) => {
+        loadRPA(JSON.parse(window.localStorage.getItem('user')).userID, JSON.parse(window.localStorage.getItem('project')).projectID, window.localStorage.getItem('token')).then((resp) => {
           if(resp.data.data == "") {
             this.scene = {
               centerX: 1024,
@@ -1406,27 +1384,7 @@ export default {
       },
       onContainerExport() {
         this.onContainerSave().then(() => {
-          let form = {
-            userID: JSON.parse(window.localStorage.getItem('user')).userID,
-            projectID: JSON.parse(window.localStorage.getItem('project')).projectID,
-            token: window.localStorage.getItem('token'),
-          }
-          post(RPA_exportRPA_url, form).then((resp) => {
-            if (resp.data.status == 'error' && resp.data.msg == 'No version') {
-              this.$message({
-                type: 'error',
-                message: 'Please save a RPA version first'
-              });
-            } else {
-              let blob = new Blob([JSON.stringify(resp.data)], {type:resp.headers['content-type']});
-              let link = document.createElement('a');
-              link.href = window.URL.createObjectURL(blob);
-              link.download = 'export.json';
-              link.click();
-            }
-          }).catch((error) => {
-            console.error('onContainerExportError', error);
-          })
+          exportRPA(JSON.parse(window.localStorage.getItem('user')).userID, JSON.parse(window.localStorage.getItem('project')).projectID, window.localStorage.getItem('token'))
         })
       },
       fullScreenLoading() {
@@ -1460,15 +1418,10 @@ export default {
         })
         if(!isError) {
           this.onContainerSave().then(() => {
-            let form = {
-              userID: JSON.parse(window.localStorage.getItem('user')).userID,
-              projectID: this.projectID,
-              token: window.localStorage.getItem('token')
-            }
-            post(RPA_runRPA_url, form).then((response) => {
-              if (response.data.status == "success") {
-                this.onContainerLoad();
-              }
+            runRPA(JSON.parse(window.localStorage.getItem('user')).userID, this.projectID, window.localStorage.getItem('token')).then(() => {
+              this.onContainerLoad();
+            }).catch((error) => {
+              console.error('error', error)
             })
           })
         } else {
