@@ -834,11 +834,13 @@ export default {
           return node.id
         }))
         this.addTimes++;
+        let selectNode = this.nodeTypeList.filter((item) => {return item.value == this.selectNodeType});
         let newNode = {
           id: maxID+1,
           x: -700 + 20 * this.addTimes,
           y: -69 + 10 * this.addTimes,
           type: this.selectNodeType,
+          label: selectNode[0].label,
           isComplete: false, 
           attribute: {}
         }

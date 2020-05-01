@@ -23,11 +23,11 @@
           {{attribute.fileName}}
           <i class="el-icon-check" v-if="isComplete"></i> 
         </template> 
-        <template v-else>{{type}}
+        <template v-else>{{label}}
           <i class="el-icon-close" v-if="!isComplete"></i> 
         </template>
       </div>
-      <div class="node-type" v-else :style="nodeColor"> {{type}} 
+      <div class="node-type" v-else :style="nodeColor"> {{label}} 
         <i class="el-icon-check" v-if="isComplete"></i> 
         <i class="el-icon-close" v-else></i> 
       </div>
