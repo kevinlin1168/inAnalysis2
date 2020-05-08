@@ -1,8 +1,81 @@
+
 <template>
+
   <div class="flowChartContainer" 
     @mousemove="handleMove"
     @mouseup="handleUp">
-    <svg width="100%" :height="`${height}vh`">
+    <div class="left-menu-container">
+      <el-menu class="left-vertical-menu" @open="handleOpen" @close="handleClose" :collapse="isCollapse">
+        <div>
+          <button plain=true class="left-menu-btn el-icon-d-arrow-left" @click="isCollapse = !isCollapse"></button>
+        </div>
+        <el-submenu index="1">
+          <template slot="title">
+            <i class="el-icon-cpu"></i>
+            <span slot="title">Component</span>
+          </template>
+          <el-menu-item 
+                v-for="(item, index) in nodeTypeList"
+                :index="'1-'+index"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+                @click="onAddNodeClick(item.value)"
+                v-model="selectNodeType"
+                >
+              {{item.value}}
+              </el-menu-item>
+        </el-submenu>
+        <el-submenu index="2">
+          <template slot="title">
+            <i class="el-icon-help"></i>
+            <span slot="title">Action</span>
+          </template>
+        <el-upload
+                ref = "importRPA"
+                action="no use"
+                class="upload"
+                :http-request="importRPAFile"
+                :limit= "1"
+                :on-exceed = "handleExceed"
+                :multiple = "false"
+                :auto-upload= "true"
+                :show-file-list="false">
+          <el-menu-item
+          :disabled="scene.status == 'processing'"
+          index="2-1">
+          Import
+          </el-menu-item>
+        </el-upload>
+         <el-menu-item
+          @click="onContainerExport"
+          :disabled="scene.status == 'processing'"
+          index="2-2">
+          Export
+          </el-menu-item>
+           <el-menu-item
+           @click="onContainerLoad"
+          :disabled="scene.status == 'processing'"
+          index="2-3">
+          Reset
+          </el-menu-item>
+           <el-menu-item
+           @click="onSaveRPAClick"
+          :disabled="scene.status == 'processing'"
+          index="2-4">
+          Save
+          </el-menu-item>
+           <el-menu-item
+           @click="onRPARun"
+          :disabled="scene.status == 'processing'"
+          index="2-5">
+          Run
+          </el-menu-item>
+        </el-submenu>
+      </el-menu>
+    </div>
+    <svg width="100%">
+    <!-- :heght="`${height}vh`" -->
       <flowChartLink v-bind.sync="link" 
         v-for="(link, index) in lines" 
         :key="`link${index}`"
@@ -25,7 +98,7 @@
       @onDownloadClick="onDownloadClick">
     </flowChartComponent>
     <div class="el-controller">
-      <div class="el-select-block">
+      <!-- <div class="el-select-block">
         <el-select v-model="selectNodeType" placeholder="Please select a node" :disabled="scene.status == 'processing'">
           <el-option
             v-for="item in nodeTypeList"
@@ -35,8 +108,8 @@
           </el-option>
         </el-select>
         <el-button icon="el-icon-plus" @click="onAddNodeClick" :disabled="scene.status == 'processing'"></el-button>
-      </div>
-      <div class="el-button-block">
+      </div> -->
+      <!-- <div class="el-button-block">
         <el-upload
                 ref = "importRPA"
                 action="no use"
@@ -53,8 +126,9 @@
         <el-button @click="onContainerLoad" :disabled="scene.status == 'processing'">Reset</el-button>
         <el-button @click="onSaveRPAClick" :disabled="scene.status == 'processing'">Save</el-button>
         <el-button @click="onRPARun" :disabled="scene.status == 'processing'">Run</el-button>
-      </div>
+      </div> -->
     </div>
+
 
     <!--default popup-->
     <el-dialog :title='selectedNode.type' :visible.sync="isShowPopup" width="80%">
@@ -298,13 +372,16 @@ export default {
           return nodeType
         }
       },     
-      height: {
-        type: Number,
-        default: 75,
-      }
+      // height: {
+      //   type: Number,
+      //   default: 75,
+      // }
     },
     data() {
       return {
+        drawer: false,
+        direction: 'ltr',
+        isCollapse: true,
         action: {
           linking: false,
           dragging: null,
@@ -384,6 +461,12 @@ export default {
       };
     },
     methods:{
+      handleOpen(key, keyPath) {
+        console.log(key, keyPath);
+      },
+      handleClose(key, keyPath) {
+        console.log(key, keyPath);
+      },
       fetchData() {
         if(this.$route.name == 'RPA') {
           this.onContainerLoad();
@@ -829,17 +912,17 @@ export default {
           // this.$emit('linkBreak', deletedLink);
         }
       },
-      onAddNodeClick() {
+      onAddNodeClick(selectedNodeType) {
         let maxID = Math.max(0, ...this.scene.nodes.map((node) => {
           return node.id
         }))
         this.addTimes++;
-        let selectNode = this.nodeTypeList.filter((item) => {return item.value == this.selectNodeType});
+        let selectNode = this.nodeTypeList.filter((item) => {return item.value == selectedNodeType});
         let newNode = {
           id: maxID+1,
           x: -700 + 20 * this.addTimes,
           y: -69 + 10 * this.addTimes,
-          type: this.selectNodeType,
+          type: selectedNodeType,
           label: selectNode[0].label,
           isComplete: false, 
           attribute: {}
@@ -1441,25 +1524,67 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+.flowChartContainer {
+  display: flex;
+}
+  .el-upload {
+      display: block;
+      width: 100%;
+    }
+  .left-vertical-menu {
+    height: 100%;
+    &:not(.el-menu--collapse) {
+      width: 200px;
+    }
+    &.el-menu--collapse {
+       .left-menu-btn {
+        transform: rotate(180deg);
+        margin-right: 15px;
+      }
+    }
+    .left-menu-btn {
+      margin: 5px 10px 5px auto;
+      display: block;
+      border: none;
+      color: #909399;
+      transition: transform .3s;
+    }
+    .el-menu-item{
+      text-align: left;
+      color: #606266;
+      &.is-active {
+        color: #606266;
+      }
+    }
+  }
+  .el-menu--vertical {
+    .el-menu-item{
+      text-align: left;
+      color: #606266;
+      font-family: 'Avenir', Helvetica, Arial, sans-serif;
+      &.is-active {
+        color: #606266;
+      }
+    }
+  }
     .flowChartContainer {
+      // height: 100%;
       margin: 0;
       background: #ddd;
       position: relative;
       overflow: hidden;
       svg {
+        min-height: 705px;
         cursor: grab;
       }
       .el-controller{
         display: flex;
-        .el-button-block{
-          margin-left: auto;
-        }
+        // .el-button-block{
+        //   margin-left: auto;
+        // }
         .el-button {
           margin-left: 10px;
-        }
-        .upload{
-          display: inline-block;
         }
       }
     }
