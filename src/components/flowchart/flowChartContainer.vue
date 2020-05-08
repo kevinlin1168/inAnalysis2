@@ -164,8 +164,29 @@
                 <el-option class="option" v-for="(item, index) in selectedNode.attribute.metricList" :label="item" :value="item" :key="index"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="Filter Value" prop="filterValue">
-              <el-input v-model="filterForm.filterValue" autocomplete="off"></el-input>
+            <el-form-item  v-for="(item, index) in filterForm.filterValueList" :key="index" :label="'Logic ' + index">
+              <el-col :span="3" :offset="1">
+                <el-input v-model="item.lowerBound" placeholder="lower bound"></el-input>
+              </el-col>
+              <el-col :span="2" :offset="1">
+                <el-select v-model="item.logiclower" placeholder="logic">
+                  <el-option class="option" :lable="''" :value="''"></el-option>
+                  <el-option class="option" v-for="(item, index) in lowerBoundLogicType" :label="item.label" :value="item.value" :key="index"></el-option>
+                </el-select>
+              </el-col>
+              <el-col class="line" :span="3" :offset="1">metric value</el-col>
+              <el-col :span="2" :offset="1">
+                <el-select v-model="item.logicupper" placeholder="logic">
+                  <el-option class="option" :lable="''" :value="''"></el-option>
+                  <el-option class="option" v-for="(item, index) in upperBoundLogicType" :label="item.label" :value="item.value" :key="index"></el-option>
+                </el-select>
+              </el-col>
+              <el-col :span="3" :offset="1">
+                <el-input v-model="item.upperBound" placeholder="upper bound"></el-input>
+              </el-col>
+              <el-col :span="1" :offset="1">
+                <el-button @click.prevent="removeLogic(item)">Delete</el-button>
+              </el-col>
             </el-form-item>
             <el-form-item label="True" prop="portType">
               <el-select v-model="filterForm.portType" placeholder="please select port">
@@ -176,6 +197,7 @@
         </template>
       </div>
       <div slot="footer" class="dialog-footer">
+          <el-button @click="addLogic" v-if="selectedNode.type == 'Filter'">Add Logic</el-button>
           <el-button @click="onEditCancelClick">Cancel</el-button>
           <el-button type="primary" @click="onEditConfirmClick">Confirm</el-button>
       </div>
@@ -271,6 +293,7 @@ import flowChartFile from './flowChartFile';
 import preprocessingComponent from '../preprocessingComponent';
 import trainModelComponent from '../trainModelComponent';
 import { getMousePosition } from './assets/position';
+import { logicType } from './assets/logicType';
 import { file_upload_url, analytic_getPreprocessAlgo_url, file_getColumn_url, file_getFileList_url, analytic_getAnalyticAlgoParam_url, analytic_getAnalyticsAlgoByProject_url, analytic_getCorrelationAlgo_url, model_deleteModelByUID_url, file_download_url } from '@/config/api.js';
 import { exportRPA, runRPA, saveRPA, loadRPA, importRPA } from '../services/RPAService'
 import { post } from '@/utils/requests/post.js';
@@ -281,6 +304,8 @@ export default {
     name: "flowChartContainer",
     created: function() {
       this.fetchData();
+      this.lowerBoundLogicType = logicType.filter((logic) => {return logic.type.indexOf('lower') !== -1});
+      this.upperBoundLogicType = logicType.filter((logic) => {return logic.type.indexOf('upper') !== -1});
     },
     destroyed: function() {
       console.log('destroyed')
@@ -441,7 +466,12 @@ export default {
         filterForm: {
           portType: '',
           filterType: '',
-          filterValue: ''
+          filterValueList: [{
+            upperBound: '',
+            lowerBound: '',
+            logicupper: '',
+            logiclower: ''
+          }]
         },
         filterRules: {
           portType: [
@@ -449,15 +479,14 @@ export default {
           ],
           filterType: [
             { required: true, message: 'please select filter type', trigger: 'blur' }
-          ],
-          filterValue: [
-            { type: 'number', required: true, message: 'please input filter value', trigger: 'blur' }
           ]
         },
         potyTypeOption: [
           'left port',
           'right port'
-        ]
+        ],
+        lowerBoundLogicType: [],
+        upperBoundLogicType: []
       };
     },
     methods:{
@@ -677,6 +706,28 @@ export default {
           return true;
         } else if((fromNode.type == 'Model') && (inputNode.type == 'Test' || inputNode.type == 'Predict' || inputNode.type == 'Filter')) {
           if(inputNode.type == 'Filter') {
+            if(fromNode.attribute.selectAlgorithm != '' && fromNode.attribute.selectAlgorithm != undefined) {
+              let links = this.scene.links.filter((item) => {
+                return item.from === this.selectedNode.id
+              });
+              links.forEach((link) => {
+                let linkedNode = this.findNodeWithID(link.to);
+                if(linkedNode.type == 'Filter') {
+                  let project = JSON.parse(window.localStorage.getItem('project'));
+                  let form = {
+                      dataType: project.dataType,
+                      projectType: project.projectType,
+                      algoName: fromNode.attribute.selectAlgorithm,
+                      token: window.localStorage.getItem('token')
+                  }
+                  post(analytic_getAnalyticAlgoParam_url, form).then((resp) => {
+                    if(resp.data.status == 'success') {
+                      this.$set(this.scene.nodes[this.findNodeIndexWithID(link.to)].attribute, 'metricList', resp.data.data.metric);
+                    }
+                  });
+                }
+              })
+            }
             this.scene.nodes[this.findNodeIndexWithID(index)].attribute['fileID'] = this.scene.nodes[this.findNodeIndexWithID(from)].attribute['fileID'];
           }
           return true;
@@ -1179,8 +1230,10 @@ export default {
         this.$set(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)], 'isComplete', true);
         if(node.type == 'Preprocessing') {
           this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
+          this.isShowPopup = false;
         } else if (node.type == 'Model') {
           this.doModelTrain(node.attribute.algoInputList, node.attribute.algoOutputList, node.attribute.parameterList, node.attribute.selectAlgorithm);
+          this.isShowPopup = false;
           let links = this.scene.links.filter((item) => {
             return item.from === this.selectedNode.id
           });
@@ -1202,35 +1255,46 @@ export default {
             }
           })
         } else if (node.type == 'Filter') {
-          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['metric'] = this.filterForm.filterType;
-          this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['metricValue'] = this.filterForm.filterValue;
-          //我在亂寫
-          if(this.filterForm.portType == 'left port') {
-            if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left) {
-              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left['status'] = true;
+          this.$refs['filterForm'].validate((valid) => {
+            if(valid) {
+              if(this.checkLogic(this.filterForm.filterValueList)) {
+                this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['metric'] = this.filterForm.filterType;
+                this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['metricValue'] = this.transformLogic(this.filterForm.filterValueList);
+                //我在亂寫
+                if(this.filterForm.portType == 'left port') {
+                  if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left) {
+                    this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left['status'] = true;
+                  } else {
+                    this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['left'] = {status: true};
+                  }
+                  if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right) {
+                    this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right['status'] = false;
+                  } else {
+                    this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['right'] = {status: false};
+                  }
+                } else {
+                  if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left) {
+                    this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left['status'] = false;
+                  } else {
+                    this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['left'] = {status: false};
+                  }
+                  if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right) {
+                    this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right['status'] = true;
+                  } else {
+                    this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['right'] = {status: true};
+                  }
+                }
+                console.log('filter', this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)])
+                this.$refs['filterForm'].resetFields();
+                this.isShowPopup = false;
+              } else {
+                this.$message.error('Logic error. Please check your logic.')
+              }
             } else {
-              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['left'] = {status: true};
+              console.log('error', valid)
             }
-            if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right) {
-              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right['status'] = false;
-            } else {
-              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['right'] = {status: false};
-            }
-          } else {
-            if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left) {
-              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.left['status'] = false;
-            } else {
-              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['left'] = {status: false};
-            }
-            if(this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right) {
-              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute.right['status'] = true;
-            } else {
-              this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['right'] = {status: true};
-            }
-          }
-          console.log('node', node);
+          });
         }
-        this.isShowPopup = false;
       },
       uploadFile(params) {
         let fileObj = params.file;
@@ -1512,6 +1576,53 @@ export default {
         } else {
           this.$message.error('Node do not setup');
         }
+      },
+      addLogic() {
+        this.filterForm.filterValueList.push({
+          upperBound: '',
+          lowerBound: '',
+          logicupper: '',
+          logiclower: ''
+        })
+      },
+      removeLogic(item) {
+        let index = this.filterForm.filterValueList.indexOf(item)
+        if (index !== -1) {
+          this.filterForm.filterValueList.splice(index, 1)
+        }
+      },
+      checkLogic(logicList) {
+        let status = true;
+        logicList.forEach((logic) => {
+          if(logic.logicupper == '' && logic.logiclower == '') {
+            status = false;
+          } else if (logic.logicupper != '' && logic.upperBound == '') {
+            status = false;
+          } else if (logic.logiclower != '' && logic.lowerBound == '') {
+            status = false;
+          }
+        })
+        return status;
+      },
+      transformLogic(logicList) {
+        //轉乘python fuction 用 TODO
+        let execString = '';
+        logicList.forEach((logic) => {
+          let tempString = ''
+          if(logic.logicupper != '' && logic.logiclower != '') {
+            tempString = logic.lowerBound  + ' '  + logic.logiclower + ' x' + ' and ' + 'x ' + logic.logicupper + ' ' + logic.upperBound
+          } else if (logic.logicupper != '') {
+            tempString = 'x ' + logic.logicupper + ' ' + logic.upperBound
+          } else if (logic.logiclower != '') {
+            tempString = logic.lowerBound  + ' '  + logic.logiclower + ' x'
+          }
+          if(execString != '') {
+            execString += ' or ' + '(' + tempString + ')';
+          } else {
+            execString += '(' + tempString + ')';
+          }
+        })
+        return execString;
       }
     },
     components: {
