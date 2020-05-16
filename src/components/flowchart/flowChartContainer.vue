@@ -1637,7 +1637,15 @@ export default {
 
 <style lang="scss">
 .flowChartContainer {
-  display: flex;
+  // display: flex;
+  position: relative;
+  .left-menu-container {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 100%;
+    z-index: 10
+  }
 }
   .el-upload {
       display: block;
