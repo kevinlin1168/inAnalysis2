@@ -4,10 +4,10 @@
   <div class="flowChartContainer" 
     @mousemove="handleMove"
     @mouseup="handleUp">
-    <div class="left-menu-container">
-      <el-menu class="left-vertical-menu" @open="handleOpen" @close="handleClose" :collapse="isCollapse">
+    <div class="left menu-container">
+      <el-menu class="left vertical-menu" @open="leftHandleOpen" @close="leftHandleClose" :collapse="isLeftCollapse">
         <div>
-          <button plain=true class="left-menu-btn el-icon-d-arrow-left" @click="isCollapse = !isCollapse"></button>
+          <button plain=true class="left menu-btn el-icon-d-arrow-left" @click="isLeftCollapse = !isLeftCollapse"></button>
         </div>
         <el-submenu index="1">
           <template slot="title">
@@ -74,6 +74,85 @@
         </el-submenu>
       </el-menu>
     </div>
+    <div class="right menu-container">
+      <el-menu class="right vertical-menu" @open="righHandleOpen" @close="rightHandleClose" :collapse="!isShowPopup">
+        <div class="right-menu-block">
+          <div>
+              <button plain=true class="right menu-btn el-icon-close" @click="onEditCancelClick"></button>
+          </div>
+          <div>
+            <template v-if="selectedNode.type == 'Preprocessing'">
+              <preprocessingComponent
+              :reset='isShowPopup'
+              :normalizeOptionList='preprocessingConfig.normalizeOptionList'
+              :outlierOptionList='preprocessingConfig.outlierOptionList'
+              :characterProcessingOptionList='preprocessingConfig.characterProcessingOptionList'
+              :fileID='selectedNode.attribute.fileID'
+              :isHasStringType='selectedNode.attribute.isHasStringType'
+              :columnList='selectedNode.attribute.columnList'
+              :selectAllMissingValue='selectedNode.attribute.selectAllMissingValue'
+              :isShowPreview='false'>
+              </preprocessingComponent>
+            </template>
+            <template v-else-if="selectedNode.type == 'Model'">
+              <trainModelComponent
+              :algorithmList='trainModelConfig.algorithmList'
+              :correlationAlgorithmList='trainModelConfig.correlationAlgorithmList'
+              :parameterList='selectedNode.attribute.parameterList'
+              :columnList='selectedNode.attribute.columnList'
+              :algoInputList='selectedNode.attribute.algoInputList'
+              :algoOutputList='selectedNode.attribute.algoOutputList'
+              :reset='isShowPopup'
+              @onSelectAlgorithmChange="onSelectAlgorithmChange"></trainModelComponent>
+            </template>
+            <template v-else-if="selectedNode.type == 'Filter'">
+              <el-form :model="filterForm" ref="filterForm" :rules="filterRules">
+                <el-form-item label="Filter Type" prop="filterType">
+                  <el-select v-model="filterForm.filterType" placeholder="please select filter type">
+                    <el-option class="option" v-for="(item, index) in selectedNode.attribute.metricList" :label="item" :value="item" :key="index"></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item  v-for="(item, index) in filterForm.filterValueList" :key="index" :label="'Logic ' + index">
+                  <el-col :span="3" :offset="1">
+                    <el-input v-model="item.lowerBound" placeholder="lower bound"></el-input>
+                  </el-col>
+                  <el-col :span="2" :offset="1">
+                    <el-select v-model="item.logiclower" placeholder="logic">
+                      <el-option class="option" :lable="''" :value="''"></el-option>
+                      <el-option class="option" v-for="(item, index) in lowerBoundLogicType" :label="item.label" :value="item.value" :key="index"></el-option>
+                    </el-select>
+                  </el-col>
+                  <el-col class="line" :span="3" :offset="1">metric value</el-col>
+                  <el-col :span="2" :offset="1">
+                    <el-select v-model="item.logicupper" placeholder="logic">
+                      <el-option class="option" :lable="''" :value="''"></el-option>
+                      <el-option class="option" v-for="(item, index) in upperBoundLogicType" :label="item.label" :value="item.value" :key="index"></el-option>
+                    </el-select>
+                  </el-col>
+                  <el-col :span="3" :offset="1">
+                    <el-input v-model="item.upperBound" placeholder="upper bound"></el-input>
+                  </el-col>
+                  <el-col :span="1" :offset="1">
+                    <el-button @click.prevent="removeLogic(item)">Delete</el-button>
+                  </el-col>
+                </el-form-item>
+                <el-form-item label="True" prop="portType">
+                  <el-select v-model="filterForm.portType" placeholder="please select port">
+                      <el-option class="option" v-for="(item, index) in potyTypeOption" :label="item" :value="item" :key="index"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-form>
+            </template>
+          </div>
+          <!-- <div slot="footer" class="dialog-footer"> -->
+            <div>
+              <el-button @click="addLogic" v-if="selectedNode.type == 'Filter'">Add Logic</el-button>
+              <el-button @click="onEditCancelClick">Cancel</el-button>
+              <el-button type="primary" @click="onEditConfirmClick">Confirm</el-button>
+          </div>
+        </div>
+      </el-menu>
+    </div>
     <svg width="100%">
     <!-- :heght="`${height}vh`" -->
       <flowChartLink v-bind.sync="link" 
@@ -86,7 +165,7 @@
       v-for="(node, index) in scene.nodes" 
       :key="`node${index}`"
       :options="nodeOptions"
-      :isDisabled="scene.status == 'processing'"
+      :isDisabled="scene.status == 'processing' || isDisabled"
       @nodeSelected="nodeSelected(node.id, $event)"
       @linkingStart="linkingStart(node.id, $event)"
       @linkingStop="linkingStop(node.id, $event)"
@@ -131,22 +210,9 @@
 
 
     <!--default popup-->
-    <el-dialog :title='selectedNode.type' :visible.sync="isShowPopup" width="80%">
+    <!-- <el-dialog :title='selectedNode.type' :visible.sync="isShowPopup" width="80%">
       <div>
-        <template v-if="selectedNode.type == 'Preprocessing'">
-          <preprocessingComponent
-          :reset='isShowPopup'
-          :normalizeOptionList='preprocessingConfig.normalizeOptionList'
-          :outlierOptionList='preprocessingConfig.outlierOptionList'
-          :characterProcessingOptionList='preprocessingConfig.characterProcessingOptionList'
-          :fileID='selectedNode.attribute.fileID'
-          :isHasStringType='selectedNode.attribute.isHasStringType'
-          :columnList='selectedNode.attribute.columnList'
-          :selectAllMissingValue='selectedNode.attribute.selectAllMissingValue'
-          :isShowPreview='false'>
-          </preprocessingComponent>
-        </template>
-        <template v-else-if="selectedNode.type == 'Model'">
+        <template v-if="selectedNode.type == 'Model'">
           <trainModelComponent
           :algorithmList='trainModelConfig.algorithmList'
           :correlationAlgorithmList='trainModelConfig.correlationAlgorithmList'
@@ -201,7 +267,7 @@
           <el-button @click="onEditCancelClick">Cancel</el-button>
           <el-button type="primary" @click="onEditConfirmClick">Confirm</el-button>
       </div>
-    </el-dialog>
+    </el-dialog> -->
 
     <!-- add file pop up -->
     <el-dialog :title='"Upload File"' :visible.sync="isShowUploadFilePopup" width="400px" :before-close="onUploadSelectFileCloce">
@@ -404,9 +470,8 @@ export default {
     },
     data() {
       return {
-        drawer: false,
-        direction: 'ltr',
-        isCollapse: true,
+        isDisabled: false,
+        isLeftCollapse: true,
         action: {
           linking: false,
           dragging: null,
@@ -490,10 +555,10 @@ export default {
       };
     },
     methods:{
-      handleOpen(key, keyPath) {
+      leftHandleOpen(key, keyPath) {
         console.log(key, keyPath);
       },
-      handleClose(key, keyPath) {
+      leftHandleClose(key, keyPath) {
         console.log(key, keyPath);
       },
       fetchData() {
@@ -1086,6 +1151,7 @@ export default {
           });
         } else {
           this.isShowPopup = true;
+          this.isDisabled = !this.isDisabled;
         }
         // console.log(this.findNodeIndexWithID(id));
         // console.log(this.scene.nodes[this.findNodeIndexWithID(id)])
@@ -1113,6 +1179,7 @@ export default {
           this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)].attribute['algoOutputList'] = algoOutputList;
         }
         this.isShowPopup = false;
+        this.isDisabled = !this.isDisabled;
       },
       doFilePreprocessing(fileID, columnList) {
         let action = [];
@@ -1231,9 +1298,11 @@ export default {
         if(node.type == 'Preprocessing') {
           this.doFilePreprocessing(node.attribute.fileID, node.attribute.columnList);
           this.isShowPopup = false;
+          this.isDisabled = !this.isDisabled;
         } else if (node.type == 'Model') {
           this.doModelTrain(node.attribute.algoInputList, node.attribute.algoOutputList, node.attribute.parameterList, node.attribute.selectAlgorithm);
           this.isShowPopup = false;
+          this.isDisabled = !this.isDisabled;
           let links = this.scene.links.filter((item) => {
             return item.from === this.selectedNode.id
           });
@@ -1287,6 +1356,8 @@ export default {
                 console.log('filter', this.scene.nodes[this.findNodeIndexWithID(this.selectedNode.id)])
                 this.$refs['filterForm'].resetFields();
                 this.isShowPopup = false;
+                this.isDisabled = !this.isDisabled;
+
               } else {
                 this.$message.error('Logic error. Please check your logic.')
               }
@@ -1637,36 +1708,127 @@ export default {
 
 <style lang="scss">
 .flowChartContainer {
-  // display: flex;
   position: relative;
-  .left-menu-container {
+  .menu-container {
     position: absolute;
-    left: 0px;
-    top: 0px;
     height: 100%;
-    z-index: 10
+    z-index: 10;
+    top: 0px;
+    &.left {
+      left: 0px;
+    }
+    &.right {
+      right: 0px;
+    }
+
   }
 }
   .el-upload {
       display: block;
       width: 100%;
     }
-  .left-vertical-menu {
+  .vertical-menu.el-menu {
     height: 100%;
+    border: none;
+    max-height: 705px;
+    overflow-y: auto;
+    background-color: white;
+    &.right {
+      width: 0;
+      .right-menu-block {
+          padding-left: 20px;
+          .el-steps {
+            display: none;
+          }
+          .el-form {
+            .el-form-item {
+              .line.el-col-3 {
+                width:40px;
+                line-height: normal;
+              }
+              .el-col-2 {
+                width: 90px;
+              }
+              .el-col-3 {
+                width: 115px;
+              }
+              .el-col-offset-1 {
+                margin-left: 15px;
+                .el-button {
+                  padding: 12px 5px;
+                }
+              }
+            }
+          }
+      }
+      &.el-menu--collapse{
+        .right-menu-block {
+          display: none;
+        }
+      }
+      &:not(.el-menu--collapse) {
+      width: 700px;
+      .preProcessing {
+        .el-col {
+          &.el-col-4 {
+            width: 21%
+          }
+          &.el-col-5 {
+            width: 26.3%
+          }
+          &.el-col-1 {
+            width: 5.26%
+          }
+        }
+      }
+      .selectBlockWrapper {
+        display: none;
+      }
+      .selectFeature {
+        width: 100%;
+        margin-left: 0px;
+      }
+      .selectLabelBlock {
+        align-items: flex-start;
+        .inputBlock {
+          width: 47%;
+          margin-left: 0px;
+        }
+        .outputBlock {
+          width: 47%;
+          margin-left: auto;
+        }
+      }
+      .parameter {
+        .el-tooltip {
+          margin-left: 0px;
+        }
+      }
+    }
+    }
     &:not(.el-menu--collapse) {
       width: 200px;
     }
     &.el-menu--collapse {
-       .left-menu-btn {
+       .menu-btn {
         transform: rotate(180deg);
-        margin-right: 15px;
+        &.left {
+          margin-right: 15px;
+        }
       }
     }
-    .left-menu-btn {
-      margin: 5px 10px 5px auto;
+    .menu-btn {
+      &.right {
+        padding-left: 0px;
+        padding-right: 0px;
+      }
+      &.left {
+        margin: 5px 10px 5px auto;
+      }
       display: block;
       border: none;
       color: #909399;
+      background-color: transparent;
       transition: transform .3s;
     }
     .el-menu-item{
