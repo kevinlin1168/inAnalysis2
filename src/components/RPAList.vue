@@ -1,8 +1,26 @@
 <template>
   <div class="RPAList_block">
+    <div> 
+      Project Type:  
+      <el-checkbox-group v-model="selectedProject" @change="fliterRPA">
+        <el-checkbox-button v-for="item in projectList" :label="item" :key="item">{{item}}</el-checkbox-button>
+      </el-checkbox-group>
+    </div>
+    <div> 
+      Data Type:  
+      <el-checkbox-group v-model="selectedData" @change="fliterRPA">
+        <el-checkbox-button v-for="item in dataList" :label="item" :key="item">{{item}}</el-checkbox-button>
+      </el-checkbox-group>
+    </div>
+    <div style="margin-top: 15px;">
+      <el-input placeholder="please input keyword" v-model="searchWord">
+        <el-button slot="append" icon="el-icon-search" @click="searchRPA"></el-button>
+      </el-input>
+    </div>
+    
     <el-row class="cardContainer">
         <el-col>
-            <el-card shadow="hover" class="clickable RPAList" v-for="item in RPAList" :key="item.RPAID">
+            <el-card shadow="hover" class="clickable RPAList" v-for="item in displayList" :key="item.RPAID">
              <div class="card-inner">
                <div class="card-left-part">
                  <el-image :src="testingImg" class="rpa-image"></el-image>
@@ -30,7 +48,7 @@
   </div>
 </template>
 <script>
-import { RPA_getRPA_url, project_getProjectInfo_url } from "@/config/api.js";
+import { RPA_getRPA_url, project_getProjectInfo_url, system_getDataProject_url, RPA_searchRPA_url  } from "@/config/api.js";
 import { exportRPA } from './services/RPAService'
 import { post } from "@/utils/requests/post.js";
 import organization from "@/assets/organization.png";
@@ -45,8 +63,14 @@ export default {
   data: function() {
     return {
         RPAList: [],
+        displayList: [],
+        projectList: [],
+        dataList: [],
+        selectedProject: [],
+        selectedData: [],
         testingImg: organization,
-        token: ''
+        token: '',
+        searchWord: ''
     };
   },
   methods: {
@@ -62,17 +86,9 @@ export default {
             if (response.data.status == "success") {
               this.RPAList = response.data.data.rpaList;
               for(let index in this.RPAList) {
-                  let projectFrom = {
-                    projectID: this.RPAList[index]['projectID'],
-                    token: this.token
-                  }
-                  post(project_getProjectInfo_url, projectFrom).then(resp => {
-                      if (resp.data.status == "success") {
-                        this.$set(this.RPAList[index], 'projectType', resp.data.data.project.projectType);
-                        this.$set(this.RPAList[index], 'dataType', resp.data.data.project.dataType);
-                      }
-                  })
+                this.getProjectInfo(index);
               }
+              this.displayList = this.RPAList;
             }
             this.loadingClose();
           },
@@ -80,7 +96,34 @@ export default {
             console.error("getRPAListError");
           }
         );
+        post(system_getDataProject_url, userForm).then((resp) => {
+          if(resp.data.status == 'success') {
+            let dataObject = resp.data.data;
+            this.dataList = Object.keys(dataObject);
+            this.selectedData = this.dataList;
+            let projectList = [];
+            this.dataList.forEach((key) => {
+              dataObject[key].forEach((item) => {
+                projectList.push(item);
+              })
+            })
+            this.projectList = this.unique(projectList);
+            this.selectedProject = this.projectList;
+          }
+        })
       }
+    },
+    getProjectInfo(index) {
+        let projectFrom = {
+          projectID: this.RPAList[index]['projectID'],
+          token: this.token
+        }
+        post(project_getProjectInfo_url, projectFrom).then(resp => {
+            if (resp.data.status == "success") {
+              this.$set(this.RPAList[index], 'projectType', resp.data.data.project.projectType);
+              this.$set(this.RPAList[index], 'dataType', resp.data.data.project.dataType);
+            }
+        })
     },
     onExportRPAClick(projectID) {
       exportRPA(JSON.parse(window.localStorage.getItem('user')).userID, projectID, window.localStorage.getItem('token'))
@@ -95,6 +138,49 @@ export default {
     },
     loadingClose() {
       this.loading.close();
+    },
+    unique(arr) {
+      if (!Array.isArray(arr)) {
+          console.log('type error!')
+          return
+      }
+      var array =[];
+      for(var i = 0; i < arr.length; i++) {
+              if( !array.includes( arr[i]) ) {
+                      array.push(arr[i]);
+                }
+      }
+      return array
+    },
+    fliterRPA() {
+      this.displayList = this.RPAList.filter((RPA) => {
+        if (this.selectedProject.includes(RPA.projectType) && this.selectedData.includes(RPA.dataType)) {
+          return RPA
+        }
+      })
+    },
+    searchRPA() {
+      this.fullScreenLoading();
+      this.token = window.localStorage.getItem("token");
+      let userForm = {
+        token: this.token,
+        keyword: this.searchWord
+      };
+      post(RPA_searchRPA_url, userForm).then(
+        response => {
+          if (response.data.status == "success") {
+            this.RPAList = response.data.data.rpaList;
+            for(let index in this.RPAList) {
+              this.getProjectInfo(index);
+            }
+            this.displayList = this.RPAList;
+          }
+          this.loadingClose();
+        },
+        () => {
+          console.error("getRPAListError");
+        }
+      );
     }
   },
   components: {},

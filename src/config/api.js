@@ -68,6 +68,7 @@ export const RPA_exportRPA_url = RPAUrl + '/exportRPA';
 export const RPA_importRPA_url = RPAUrl + '/importRPA';
 export const RPA_runRPA_url = RPAUrl + '/runRPA';
 export const RPA_getRPA_url = RPAUrl + '/getRPA';
+export const RPA_searchRPA_url = RPAUrl + '/searchRPA';
 
 // course Api for TA
 export const course_addCourse_url = courseUrl + '/addCourse';

@@ -75,7 +75,7 @@
       </el-menu>
     </div>
     <div class="right menu-container">
-      <el-menu class="right vertical-menu" @open="righHandleOpen" @close="rightHandleClose" :collapse="!isShowPopup">
+      <el-menu class="right vertical-menu" :collapse="!isShowPopup">
         <div class="right-menu-block">
           <div>
               <button plain=true class="right menu-btn el-icon-close" @click="onEditCancelClick"></button>
