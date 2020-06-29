@@ -30,6 +30,7 @@
                 </el-col>
             </el-row>
             <el-row class="parametersBlock" v-if="selectAlgorithm !== '' && parameterList !== []">
+                Hyperparameter
                 <el-col :span="12">
                     <template v-for="(parameter, index) in parameterList" >
                         <el-row v-if="(index % 2) === 0" class="parameterItem" :key="parameter.name">
