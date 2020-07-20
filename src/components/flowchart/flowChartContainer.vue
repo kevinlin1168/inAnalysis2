@@ -1319,6 +1319,7 @@ export default {
                 });
                 uploadLinks = tempList;
               } 
+              this.onContainerSave();
             }
         }).catch((error) => {
             this.loadingClose();
