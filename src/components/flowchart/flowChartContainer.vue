@@ -23,7 +23,7 @@
                 @click="onAddNodeClick(item.value)"
                 v-model="selectNodeType"
                 >
-              {{item.value}}
+              {{item.label}}
               </el-menu-item>
         </el-submenu>
         <el-submenu index="2">
@@ -176,98 +176,6 @@
       @onSelectFileClick="onSelectFileClick"
       @onDownloadClick="onDownloadClick">
     </flowChartComponent>
-    <div class="el-controller">
-      <!-- <div class="el-select-block">
-        <el-select v-model="selectNodeType" placeholder="Please select a node" :disabled="scene.status == 'processing'">
-          <el-option
-            v-for="item in nodeTypeList"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value">
-          </el-option>
-        </el-select>
-        <el-button icon="el-icon-plus" @click="onAddNodeClick" :disabled="scene.status == 'processing'"></el-button>
-      </div> -->
-      <!-- <div class="el-button-block">
-        <el-upload
-                ref = "importRPA"
-                action="no use"
-                class="upload"
-                :http-request="importRPAFile"
-                :limit= "1"
-                :on-exceed = "handleExceed"
-                :multiple = "false"
-                :auto-upload= "true"
-                :show-file-list="false">
-          <el-button :disabled="scene.status == 'processing'">Import</el-button>
-        </el-upload>
-        <el-button @click="onContainerExport" :disabled="scene.status == 'processing'">Export</el-button>
-        <el-button @click="onContainerLoad" :disabled="scene.status == 'processing'">Reset</el-button>
-        <el-button @click="onSaveRPAClick" :disabled="scene.status == 'processing'">Save</el-button>
-        <el-button @click="onRPARun" :disabled="scene.status == 'processing'">Run</el-button>
-      </div> -->
-    </div>
-
-
-    <!--default popup-->
-    <!-- <el-dialog :title='selectedNode.type' :visible.sync="isShowPopup" width="80%">
-      <div>
-        <template v-if="selectedNode.type == 'Model'">
-          <trainModelComponent
-          :algorithmList='trainModelConfig.algorithmList'
-          :correlationAlgorithmList='trainModelConfig.correlationAlgorithmList'
-          :parameterList='selectedNode.attribute.parameterList'
-          :columnList='selectedNode.attribute.columnList'
-          :algoInputList='selectedNode.attribute.algoInputList'
-          :algoOutputList='selectedNode.attribute.algoOutputList'
-          :reset='isShowPopup'
-          @onSelectAlgorithmChange="onSelectAlgorithmChange"></trainModelComponent>
-        </template>
-        <template v-else-if="selectedNode.type == 'Filter'">
-          <el-form :model="filterForm" ref="filterForm" :rules="filterRules">
-            <el-form-item label="Filter Type" prop="filterType">
-              <el-select v-model="filterForm.filterType" placeholder="please select filter type">
-                <el-option class="option" v-for="(item, index) in selectedNode.attribute.metricList" :label="item" :value="item" :key="index"></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item  v-for="(item, index) in filterForm.filterValueList" :key="index" :label="'Logic ' + index">
-              <el-col :span="3" :offset="1">
-                <el-input v-model="item.lowerBound" placeholder="lower bound"></el-input>
-              </el-col>
-              <el-col :span="2" :offset="1">
-                <el-select v-model="item.logiclower" placeholder="logic">
-                  <el-option class="option" :lable="''" :value="''"></el-option>
-                  <el-option class="option" v-for="(item, index) in lowerBoundLogicType" :label="item.label" :value="item.value" :key="index"></el-option>
-                </el-select>
-              </el-col>
-              <el-col class="line" :span="3" :offset="1">metric value</el-col>
-              <el-col :span="2" :offset="1">
-                <el-select v-model="item.logicupper" placeholder="logic">
-                  <el-option class="option" :lable="''" :value="''"></el-option>
-                  <el-option class="option" v-for="(item, index) in upperBoundLogicType" :label="item.label" :value="item.value" :key="index"></el-option>
-                </el-select>
-              </el-col>
-              <el-col :span="3" :offset="1">
-                <el-input v-model="item.upperBound" placeholder="upper bound"></el-input>
-              </el-col>
-              <el-col :span="1" :offset="1">
-                <el-button @click.prevent="removeLogic(item)">Delete</el-button>
-              </el-col>
-            </el-form-item>
-            <el-form-item label="True" prop="portType">
-              <el-select v-model="filterForm.portType" placeholder="please select port">
-                  <el-option class="option" v-for="(item, index) in potyTypeOption" :label="item" :value="item" :key="index"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-form>
-        </template>
-      </div>
-      <div slot="footer" class="dialog-footer">
-          <el-button @click="addLogic" v-if="selectedNode.type == 'Filter'">Add Logic</el-button>
-          <el-button @click="onEditCancelClick">Cancel</el-button>
-          <el-button type="primary" @click="onEditConfirmClick">Confirm</el-button>
-      </div>
-    </el-dialog> -->
 
     <!-- add file pop up -->
     <el-dialog :title='"Upload File"' :visible.sync="isShowUploadFilePopup" width="400px" :before-close="onUploadSelectFileCloce">
@@ -1015,6 +923,7 @@ export default {
           return link.from !== id && link.to !== id
         })
         // this.$emit('nodeDelete', id)
+        this.onContainerSave()
       },
       linkDelete(id) {
         const deletedLink = this.scene.links.find((item) => {
@@ -1029,6 +938,8 @@ export default {
         }
       },
       onAddNodeClick(selectedNodeType) {
+        // let lastSelected = this.scene.nodes[this.findNodeIndexWithID(this.action.selected)];
+        // console.log('last', lastSelected);
         let maxID = Math.max(0, ...this.scene.nodes.map((node) => {
           return node.id
         }))
@@ -1043,6 +954,14 @@ export default {
           isComplete: false, 
           attribute: {}
         }
+        // if(!lastSelected) {
+        //   this.addTimes++;
+        //   newNode['x'] = -700 + 20 * this.addTimes;
+        //   newNode['y'] = -69 + 10 * this.addTimes;
+        // } else {
+        //   newNode['x'] = lastSelected.x;
+        //   newNode['y'] = lastSelected.y + 150;
+        // }
         this.scene.nodes.push(newNode);
       },
       onDownloadClick(id) {
