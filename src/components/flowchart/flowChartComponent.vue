@@ -27,7 +27,11 @@
           <i class="el-icon-close" v-if="!isComplete"></i> 
         </template>
       </div>
-      <div class="node-type" v-else :style="nodeColor"> {{label}} 
+      <div class="node-type" v-else :style="nodeColor">
+        <!-- <div style="align-items: center; display: inline-block"> -->
+          <i :class="nodeIcon" style="display:block width:100% height:100%"></i>
+        <!-- </div> -->
+        {{label}} 
         <i class="el-icon-check" v-if="isComplete"></i> 
         <i class="el-icon-close" v-else></i> 
       </div>
@@ -149,6 +153,10 @@ export default {
     nodeColor() {
       const result = this.nodeTypeList.filter(item => item.value == this.type);
       return {background: result[0].color};
+    },
+    nodeIcon() {
+      const result = this.nodeTypeList.filter(item => item.value == this.type);
+      return result[0].icon;
     },
     nodeInputType() {
       const result = this.nodeTypeList.filter(item => item.value == this.type);
