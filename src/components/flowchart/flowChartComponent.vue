@@ -28,8 +28,7 @@
         </template>
       </div>
       <div class="node-type" v-else :style="nodeColor">
-        <!-- <div style="align-items: center; display: inline-block"> -->
-          <i :class="nodeIcon" style="display:block width:100% height:100%"></i>
+          <i :class="nodeIcon" class="nodeIcon"></i>
         <!-- </div> -->
         {{label}} 
         <i class="el-icon-check" v-if="isComplete"></i> 
@@ -227,6 +226,9 @@ export default {
     opacity: .9;
     cursor: move;
     transform-origin: top left;
+     .nodeIcon {
+    min-height: initial;
+    }
     .node-main {
       text-align: center;
       .node-type {
